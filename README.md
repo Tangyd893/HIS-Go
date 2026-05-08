@@ -30,7 +30,9 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 | gRPC | 接口定义阶段 | 18 个 `.proto` 已编写，Server 注册和 `.pb.go` 代码生成待补齐 |
 | 数据库 | 部分完成 | `his_auth`/`his_user` 有完整表结构，其余服务为占位 SQL |
 | Docker | 配置就绪 | Dockerfile 和 docker-compose.yml 已修复，待验证全栈容器启动 |
-| Gateway JWT | 待接入 | JWT 鉴权中间件尚未接入 Gateway |
+| Gateway JWT | 已接入 | JWT 鉴权中间件已接入 Gateway，白名单路由放行，用户上下文透传至下游服务 |
+| 健康检查 | 已增强 | `/health` 存活检查 + `/ready` 就绪检查（含 DB、Redis 连通性） |
+| 数据库迁移 | 已补齐 | 15 个迁移脚本覆盖全部 17 个数据库，表结构完整匹配 Go 模型 |
 | 前端 | 待开发 | `frontend/` 目录为空 |
 | 测试 | 待开发 | 暂无自动化测试 |
 
@@ -226,15 +228,19 @@ HIS-Go/
 │   │   ├── config/                 # Viper 配置
 │   │   ├── middleware/              # CORS、限流、链路追踪、恢复
 │   │   ├── errors/                 # 统一错误码
-│   │   └── response/               # 统一响应
+│   │   ├── response/               # 统一响应
+│   │   └── health/                 # 健康检查
 │   ├── configs/                    # 配置文件
 │   │   └── config.yaml             # 默认配置
 │   ├── sql/                        # 数据库初始化脚本
-│   │   ├── init_all.sql            # 全量建库/建表脚本
+│   │   ├── init_all.sql            # 全量建库脚本
 │   │   └── seed_data.sql           # 基础数据/字典数据
 │   ├── scripts/                    # 辅助脚本
 │   │   ├── proto_gen.sh            # Proto 代码生成
 │   │   └── db_init.sh              # 数据库初始化
+│   ├── migrations/                 # 版本化数据库迁移
+│   │   ├── 001_init_all_db.sql     # 创建所有数据库
+│   │   └── ...                     # 15 个迁移脚本
 │   ├── go.mod                      # Go Module 定义
 │   └── go.sum                      # 依赖校验
 ├── docker/                         # Docker 部署配置
@@ -260,6 +266,8 @@ HIS-Go/
 `his_auth` `his_user` `his_registration` `his_clinic` `his_emr` `his_prescription` `his_billing` `his_pharmacy` `his_examination` `his_inpatient` `his_schedule` `his_outpatient` `his_followup` `his_health_record` `his_notification` `his_statistics` `his_system`
 
 建表脚本位于 `backend/sql/init_all.sql`，种子数据位于 `backend/sql/seed_data.sql`。
+
+版本化迁移脚本位于 `backend/migrations/`，按编号顺序执行即可初始化全部表结构。
 
 ## RabbitMQ 消息可靠性设计要点
 

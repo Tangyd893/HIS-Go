@@ -15,6 +15,7 @@ import (
 	"his-go/internal/auth/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -72,7 +73,13 @@ func main() {
 	authSvc := service.NewAuthService(authRepo, jwtSvc, rdb)
 	authHandler := handler.NewAuthHandler(authSvc)
 
-	router := setupAuthRouter(cfg, authHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupAuthRouter(cfg, authHandler, deps)
 
 	go startGrpcServer(cfg)
 
@@ -85,16 +92,15 @@ func main() {
 	}
 }
 
-func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler) *gin.Engine {
+func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-auth"})
-	})
+	router.GET("/health", health.HealthHandler("his-auth"))
+	router.GET("/ready", health.ReadinessHandler("his-auth", deps))
 
 	api := router.Group("/api/auth")
 	{

@@ -13,8 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"his-go/pkg/config"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
+	"his-go/pkg/security/auth"
+	"his-go/pkg/security/jwt"
 )
 
 var serviceRoutes = map[string]string{
@@ -57,6 +60,14 @@ var dockerServiceMapping = map[string]string{
 	"/api/emr":           "his-emr",
 }
 
+var jwtWhitelist = []string{
+	"/health",
+	"/api/auth/login",
+	"/api/auth/refresh",
+}
+
+var jwtSvc *jwt.JWTService
+
 func main() {
 	cfg, err := config.Load("configs/config.yaml")
 	if err != nil {
@@ -76,6 +87,8 @@ func main() {
 		loadRoutesFromNacos(cfg)
 	}
 
+	jwtSvc = initJWT(cfg)
+
 	router := setupRouter(cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
@@ -85,6 +98,24 @@ func main() {
 	if err := http.ListenAndServe(addr, router); err != nil {
 		logger.Fatal("网关服务启动失败: " + err.Error())
 	}
+}
+
+func initJWT(cfg *config.Config) *jwt.JWTService {
+	if cfg.JWT.PublicKey != "" {
+		svc, err := jwt.NewVerifyOnlyJWTService(cfg.JWT.PublicKey)
+		if err != nil {
+			logger.Fatal("初始化 JWT 验证服务失败: " + err.Error())
+		}
+		logger.Info("JWT 验证模式 RS256")
+		return svc
+	}
+
+	secret := cfg.JWT.PrivateKey
+	if secret == "" {
+		secret = "his-go-default-secret"
+	}
+	logger.Info("JWT 验证模式 HS256")
+	return jwt.NewSimpleJWTService(secret, cfg.JWT.ExpireHour)
 }
 
 func switchToDockerRoutes() {
@@ -114,16 +145,26 @@ func setupRouter(cfg *config.Config) *gin.Engine {
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Tracing())
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "UP",
-			"service": "his-gateway",
-		})
-	})
+	router.GET("/health", health.HealthHandler("his-gateway"))
+	router.GET("/ready", health.ReadinessHandler("his-gateway", nil))
 
-	router.Any("/api/*path", proxyHandler)
+	router.Any("/api/*path", gatewayJwtAuth(), proxyHandler)
 
 	return router
+}
+
+func gatewayJwtAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		reqPath := c.Request.URL.Path
+		for _, path := range jwtWhitelist {
+			if strings.HasPrefix(reqPath, path) {
+				c.Next()
+				return
+			}
+		}
+
+		auth.JwtAuth(jwtSvc)(c)
+	}
 }
 
 func proxyHandler(c *gin.Context) {
@@ -169,6 +210,14 @@ func proxyHandler(c *gin.Context) {
 
 		if requestID := c.GetString("requestID"); requestID != "" {
 			req.Header.Set("X-Request-ID", requestID)
+		}
+
+		if userCtx := auth.GetUserContext(c); userCtx != nil {
+			req.Header.Set("X-User-ID", userCtx.UserID)
+			req.Header.Set("X-Username", userCtx.Username)
+			req.Header.Set("X-User-Role", userCtx.Role)
+			req.Header.Set("X-User-Dept", userCtx.DeptID)
+			req.Header.Set("X-User-Perms", strings.Join(userCtx.Perms, ","))
 		}
 	}
 

@@ -65,6 +65,19 @@ func NewSimpleJWTService(secret string, expireHour int) *JWTService {
 	}
 }
 
+// NewVerifyOnlyJWTService 创建仅用于验证的 JWT 服务（RS256 — 网关专用）
+func NewVerifyOnlyJWTService(publicKeyPEM string) (*JWTService, error) {
+	publicKey, err := parsePublicKey(publicKeyPEM)
+	if err != nil {
+		return nil, err
+	}
+	return &JWTService{
+		publicKey:  publicKey,
+		expireHour: 2,
+		useHMAC:    false,
+	}, nil
+}
+
 // GenerateToken 生成 JWT Token
 func (s *JWTService) GenerateToken(claims *Claims) (string, error) {
 	claims.RegisteredClaims = jwtlib.RegisteredClaims{
