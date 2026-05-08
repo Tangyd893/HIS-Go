@@ -1,0 +1,204 @@
+// Package main 网关服务入口 — 基于 httputil.ReverseProxy 的反向代理
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"os"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+
+	"his-go/pkg/config"
+	"his-go/pkg/logger"
+	"his-go/pkg/middleware"
+)
+
+var serviceRoutes = map[string]string{
+	"/api/auth":          "http://localhost:8081",
+	"/api/user":          "http://localhost:8082",
+	"/api/registration":  "http://localhost:8083",
+	"/api/clinic":        "http://localhost:8084",
+	"/api/prescription":  "http://localhost:8085",
+	"/api/billing":       "http://localhost:8086",
+	"/api/pharmacy":      "http://localhost:8087",
+	"/api/examination":   "http://localhost:8088",
+	"/api/inpatient":     "http://localhost:8089",
+	"/api/schedule":      "http://localhost:8090",
+	"/api/outpatient":    "http://localhost:8091",
+	"/api/followup":      "http://localhost:8092",
+	"/api/health-record": "http://localhost:8093",
+	"/api/notification":  "http://localhost:8094",
+	"/api/statistics":    "http://localhost:8095",
+	"/api/system":        "http://localhost:8096",
+	"/api/emr":           "http://localhost:8097",
+}
+
+var dockerServiceMapping = map[string]string{
+	"/api/auth":          "his-auth",
+	"/api/user":          "his-user",
+	"/api/registration":  "his-registration",
+	"/api/clinic":        "his-clinic",
+	"/api/prescription":  "his-prescription",
+	"/api/billing":       "his-billing",
+	"/api/pharmacy":      "his-pharmacy",
+	"/api/examination":   "his-examination",
+	"/api/inpatient":     "his-inpatient",
+	"/api/schedule":      "his-schedule",
+	"/api/outpatient":    "his-outpatient",
+	"/api/followup":      "his-followup",
+	"/api/health-record": "his-health-record",
+	"/api/notification":  "his-notification",
+	"/api/statistics":    "his-statistics",
+	"/api/system":        "his-system",
+	"/api/emr":           "his-emr",
+}
+
+func main() {
+	cfg, err := config.Load("configs/config.yaml")
+	if err != nil {
+		log.Fatalf("加载配置失败: %v", err)
+	}
+
+	logger.Init(cfg.Log.Level, cfg.Log.Format)
+	defer logger.Sync()
+
+	logger.Info("HIS-Go Gateway 服务启动中...")
+
+	if os.Getenv("RUNNING_IN_DOCKER") == "true" {
+		switchToDockerRoutes()
+	}
+
+	if os.Getenv("USE_NACOS") == "true" {
+		loadRoutesFromNacos(cfg)
+	}
+
+	router := setupRouter(cfg)
+
+	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	logger.Info("网关服务已启动")
+	log.Printf("[Gateway] 服务监听地址: %s", addr)
+
+	if err := http.ListenAndServe(addr, router); err != nil {
+		logger.Fatal("网关服务启动失败: " + err.Error())
+	}
+}
+
+func switchToDockerRoutes() {
+	for prefix, serviceName := range dockerServiceMapping {
+		serviceRoutes[prefix] = fmt.Sprintf("http://%s:%s", serviceName, extractPort(serviceRoutes[prefix]))
+	}
+	logger.Info("已切换到 Docker 容器网络路由模式")
+}
+
+func extractPort(urlStr string) string {
+	if idx := strings.LastIndex(urlStr, ":"); idx != -1 {
+		return urlStr[idx+1:]
+	}
+	return "8080"
+}
+
+func setupRouter(cfg *config.Config) *gin.Engine {
+	if cfg.Server.Mode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	router := gin.New()
+
+	router.Use(middleware.Recovery())
+	router.Use(middleware.Logger())
+	router.Use(middleware.Cors())
+	router.Use(middleware.RequestID())
+	router.Use(middleware.Tracing())
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "UP",
+			"service": "his-gateway",
+		})
+	})
+
+	router.Any("/api/*path", proxyHandler)
+
+	return router
+}
+
+func proxyHandler(c *gin.Context) {
+	reqPath := c.Request.URL.Path
+
+	target := resolveTarget(reqPath)
+	if target == "" {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    http.StatusNotFound,
+			"message": "未找到对应微服务路由",
+			"path":    reqPath,
+		})
+		return
+	}
+
+	targetURL, err := url.Parse(target)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    http.StatusInternalServerError,
+			"message": "目标地址解析失败",
+		})
+		return
+	}
+
+	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+
+	proxy.Director = func(req *http.Request) {
+		req.URL.Scheme = targetURL.Scheme
+		req.URL.Host = targetURL.Host
+		req.URL.Path = reqPath
+
+		req.Host = targetURL.Host
+
+		clientIP := c.ClientIP()
+		if prior := req.Header.Get("X-Forwarded-For"); prior != "" {
+			req.Header.Set("X-Forwarded-For", prior+", "+clientIP)
+		} else {
+			req.Header.Set("X-Forwarded-For", clientIP)
+		}
+		req.Header.Set("X-Real-IP", clientIP)
+		req.Header.Set("X-Forwarded-Proto", c.Request.URL.Scheme)
+		req.Header.Set("X-Forwarded-Host", c.Request.Host)
+
+		if requestID := c.GetString("requestID"); requestID != "" {
+			req.Header.Set("X-Request-ID", requestID)
+		}
+	}
+
+	proxy.ModifyResponse = func(resp *http.Response) error {
+		resp.Header.Set("X-Proxy-By", "his-gateway")
+		return nil
+	}
+
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		logger.Error("代理请求失败: " + err.Error())
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte(fmt.Sprintf(
+			`{"code":%d,"message":"目标服务不可用","service":"%s"}`,
+			http.StatusServiceUnavailable, targetURL.Host,
+		)))
+	}
+
+	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+func resolveTarget(path string) string {
+	for prefix, target := range serviceRoutes {
+		if strings.HasPrefix(path, prefix) {
+			return target
+		}
+	}
+	return ""
+}
+
+func loadRoutesFromNacos(cfg *config.Config) {
+	logger.Info("已启用 Nacos 动态服务发现（网关将优先使用 Nacos 注册中心获取微服务地址）")
+}

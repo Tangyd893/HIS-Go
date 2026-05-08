@@ -1,0 +1,103 @@
+// Package main 处方管理服务入口
+package main
+
+import (
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"his-go/internal/prescription/handler"
+	"his-go/internal/prescription/repository"
+	"his-go/internal/prescription/service"
+	"his-go/pkg/config"
+	"his-go/pkg/database"
+	"his-go/pkg/logger"
+	"his-go/pkg/middleware"
+	"his-go/pkg/redis"
+)
+
+func main() {
+	cfg, err := config.Load("configs/config.yaml")
+	if err != nil {
+		log.Fatalf("加载配置失败: %v", err)
+	}
+
+	cfg.Server.Port = 8085
+
+	logger.Init(cfg.Log.Level, cfg.Log.Format)
+	defer logger.Sync()
+
+	logger.Info("HIS-Prescription 服务启动中...")
+
+	db, err := database.NewPostgres(
+		cfg.Database.Host, cfg.Database.Port,
+		cfg.Database.User, cfg.Database.Password,
+		"his_prescription", cfg.Database.SSLMode,
+		cfg.Database.MaxIdleConns, cfg.Database.MaxOpenConns, cfg.Database.ConnMaxLifetime,
+	)
+	if err != nil {
+		logger.Fatal("数据库连接失败: " + err.Error())
+	}
+
+	rdb, err := redis.NewClient(
+		cfg.Redis.Host, cfg.Redis.Port,
+		cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.PoolSize,
+	)
+	if err != nil {
+		logger.Fatal("Redis 连接失败: " + err.Error())
+	}
+	_ = rdb
+
+	prescRepo := repository.NewPrescriptionRepository(db)
+	prescSvc := service.NewPrescriptionService(prescRepo)
+	prescHandler := handler.NewPrescriptionHandler(prescSvc)
+
+	router := setupPrescriptionRouter(cfg, prescHandler)
+
+	go startGrpcServer(cfg)
+
+	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	logger.Info("处方管理服务已启动")
+	log.Printf("[Prescription] 服务监听地址: %s", addr)
+
+	if err := http.ListenAndServe(addr, router); err != nil {
+		logger.Fatal("服务启动失败: " + err.Error())
+	}
+}
+
+func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.PrescriptionHandler) *gin.Engine {
+	if cfg.Server.Mode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	router := gin.New()
+	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-prescription"})
+	})
+
+	api := router.Group("/api/prescription")
+	{
+		api.POST("/create", prescHandler.CreatePrescription)
+		api.GET("/:id", prescHandler.GetPrescription)
+		api.GET("/list", prescHandler.ListPrescriptions)
+		api.POST("/review", prescHandler.ReviewPrescription)
+		api.POST("/cancel/:id", prescHandler.CancelPrescription)
+	}
+
+	return router
+}
+
+func startGrpcServer(cfg *config.Config) {
+	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9085)
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		logger.Error("gRPC 监听失败: " + err.Error())
+		return
+	}
+	log.Printf("[Prescription] gRPC 服务监听地址: %s", addr)
+	_ = lis
+}

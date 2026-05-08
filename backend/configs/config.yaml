@@ -1,0 +1,58 @@
+# 服务默认配置文件
+server:
+  name: his-service
+  host: 0.0.0.0
+  port: 8080
+  mode: debug
+
+database:
+  driver: postgres
+  host: 127.0.0.1
+  port: 5432
+  user: his_admin
+  password: change_me_123
+  dbname: his_db
+  sslmode: disable
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 3600
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: change_me_456
+  db: 0
+  pool_size: 100
+
+rabbitmq:
+  host: 127.0.0.1
+  port: 5672
+  user: admin
+  password: change_me_789
+  vhost: /
+
+jwt:
+  private_key: ""
+  public_key: ""
+  expire_hour: 2
+
+nacos:
+  host: 127.0.0.1
+  port: 8848
+  namespace: ""
+  group: DEFAULT_GROUP
+
+minio:
+  endpoint: 127.0.0.1:9000
+  access_key: minioadmin
+  secret_key: change_me_012
+  bucket: his-files
+  use_ssl: false
+
+log:
+  level: info
+  format: console
+
+grpc:
+  host: 0.0.0.0
+  port: 9080

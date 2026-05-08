@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package emr;
+
+option go_package = "his-go/api/proto/emr";
+
+import "common/common.proto";
+
+// 病历记录
+message MedicalRecord {
+  string id = 1;
+  string patient_id = 2;
+  string clinic_record_id = 3;
+  string template_id = 4;
+  string chief_complaint = 5;     // 主诉
+  string present_illness = 6;     // 现病史
+  string past_history = 7;        // 既往史
+  string physical_exam = 8;       // 体格检查
+  string auxiliary_exam = 9;      // 辅助检查
+  string diagnosis = 10;          // 诊断
+  string treatment_plan = 11;     // 处理计划
+  int32 quality_level = 12;       // 质控等级
+  int32 status = 13;              // 0-草稿 1-已完成 2-已质控 3-已归档
+  string created_at = 14;
+}
+
+// 病历模板
+message RecordTemplate {
+  string id = 1;
+  string name = 2;
+  string dept_id = 3;
+  string content = 4;
+  int32 type = 5;
+}
+
+// CDSS 校验请求
+message CDSSCheckRequest {
+  string patient_id = 1;
+  string drug_id = 2;
+  string diagnosis = 3;
+}
+
+// CDSS 校验结果
+message CDSSCheckResult {
+  bool safe = 1;
+  repeated string warnings = 2;
+  repeated string suggestions = 3;
+}
+
+// 电子病历服务
+service EMRService {
+  rpc CreateRecord(MedicalRecord) returns (MedicalRecord);
+  rpc GetRecord(common.IdRequest) returns (MedicalRecord);
+  rpc ListRecords(RecordListRequest) returns (RecordListResponse);
+  rpc QualityControl(common.IdRequest) returns (MedicalRecord);
+  rpc ListTemplates(common.Empty) returns (TemplateListResponse);
+  rpc CDSSCheck(CDSSCheckRequest) returns (CDSSCheckResult);
+}
+
+message RecordListRequest {
+  common.PageRequest page = 1;
+  string patient_id = 2;
+  int32 status = 3;
+}
+
+message RecordListResponse {
+  common.BaseResponse base = 1;
+  repeated MedicalRecord records = 2;
+  common.PageResponse page = 3;
+}
+
+message TemplateListResponse {
+  common.BaseResponse base = 1;
+  repeated RecordTemplate templates = 2;
+}

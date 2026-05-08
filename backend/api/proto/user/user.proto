@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "his-go/api/proto/user";
+
+import "common/common.proto";
+
+// 患者信息
+message PatientInfo {
+  string id = 1;
+  string name = 2;
+  string id_card = 3;
+  string phone = 4;
+  string gender = 5;
+  int32 age = 6;
+  string address = 7;
+  string allergy_history = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+// 患者列表请求
+message PatientListRequest {
+  common.PageRequest page = 1;
+  string name = 2;
+  string phone = 3;
+  string id_card = 4;
+}
+
+// 患者列表响应
+message PatientListResponse {
+  common.BaseResponse base = 1;
+  repeated PatientInfo patients = 2;
+  common.PageResponse page = 3;
+}
+
+// 科室信息
+message DepartmentInfo {
+  string id = 1;
+  string name = 2;
+  string parent_id = 3;
+  string description = 4;
+  int32 sort_order = 5;
+}
+
+// 员工信息
+message EmployeeInfo {
+  string id = 1;
+  string name = 2;
+  string phone = 3;
+  string dept_id = 4;
+  string title = 5;
+  string specialty = 6;
+  string introduction = 7;
+}
+
+// 用户管理服务
+service UserService {
+  rpc GetPatient(common.IdRequest) returns (PatientInfo);
+  rpc ListPatients(PatientListRequest) returns (PatientListResponse);
+  rpc CreatePatient(PatientInfo) returns (PatientInfo);
+  rpc UpdatePatient(PatientInfo) returns (PatientInfo);
+  rpc ListDepartments(common.Empty) returns (DepartmentListResponse);
+  rpc GetEmployee(common.IdRequest) returns (EmployeeInfo);
+  rpc ListEmployees(EmployeeListRequest) returns (EmployeeListResponse);
+}
+
+message DepartmentListResponse {
+  common.BaseResponse base = 1;
+  repeated DepartmentInfo departments = 2;
+}
+
+message EmployeeListRequest {
+  common.PageRequest page = 1;
+  string dept_id = 2;
+  string name = 3;
+}
+
+message EmployeeListResponse {
+  common.BaseResponse base = 1;
+  repeated EmployeeInfo employees = 2;
+  common.PageResponse page = 3;
+}

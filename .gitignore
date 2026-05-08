@@ -1,0 +1,50 @@
+# 二进制文件
+backend/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试文件
+*.test
+*.out
+coverage.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 日志
+logs/
+*.log
+
+# 环境变量（含密码）
+.env
+docker/.env
+*.env.local
+
+# 临时文件
+tmp/
+temp/
+/tmp/
+
+# 依赖
+vendor/
+frontend/**/node_modules/
+
+# 构建输出
+/dist/
+frontend/**/dist/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Proto 生成的代码
+backend/api/proto/**/*.pb.go
+
+# 工作日志
+todo/

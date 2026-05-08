@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package followup;
+
+option go_package = "his-go/api/proto/followup";
+
+import "common/common.proto";
+
+// 随访计划
+message FollowupPlan {
+  string id = 1;
+  string patient_id = 2;
+  string template_id = 3;
+  string plan_name = 4;
+  string start_date = 5;
+  string end_date = 6;
+  int32 frequency = 7; // 1-每周 2-每两周 3-每月
+  repeated FollowupTask tasks = 8;
+  int32 status = 9;
+}
+
+// 随访任务
+message FollowupTask {
+  string id = 1;
+  string plan_id = 2;
+  string assignee_id = 3;
+  string execute_date = 4;
+  int32 type = 5; // 1-电话 2-问卷 3-上门
+  string content = 6;
+  int32 status = 7;
+}
+
+// 满意度调查
+message SatisfactionSurvey {
+  string id = 1;
+  string followup_task_id = 2;
+  string patient_id = 3;
+  int32 score = 4;
+  string feedback = 5;
+  string created_at = 6;
+}
+
+// 随访服务
+service FollowupService {
+  rpc CreatePlan(FollowupPlan) returns (FollowupPlan);
+  rpc GetPlan(common.IdRequest) returns (FollowupPlan);
+  rpc ExecuteTask(ExecuteTaskRequest) returns (FollowupTask);
+  rpc SubmitSurvey(SatisfactionSurvey) returns (SatisfactionSurvey);
+  rpc ListPlans(PlanListRequest) returns (PlanListResponse);
+}
+
+message ExecuteTaskRequest {
+  string task_id = 1;
+  string result = 2;
+}
+
+message PlanListRequest {
+  common.PageRequest page = 1;
+  string patient_id = 2;
+  int32 status = 3;
+}
+
+message PlanListResponse {
+  common.BaseResponse base = 1;
+  repeated FollowupPlan plans = 2;
+  common.PageResponse page = 3;
+}

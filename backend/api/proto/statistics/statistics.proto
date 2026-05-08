@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package statistics;
+
+option go_package = "his-go/api/proto/statistics";
+
+import "common/common.proto";
+
+// 运营统计
+message OperationStats {
+  int32 total_registrations = 1;
+  int32 total_clinic_visits = 2;
+  int32 total_prescriptions = 3;
+  double total_revenue = 4;
+  double today_revenue = 5;
+  int32 inpatient_count = 6;
+}
+
+// 科室工作量
+message DeptWorkload {
+  string dept_id = 1;
+  string dept_name = 2;
+  int32 visit_count = 3;
+  double revenue = 4;
+}
+
+// 收入趋势
+message RevenueTrend {
+  string date = 1;
+  double amount = 2;
+}
+
+// 统计服务
+service StatisticsService {
+  rpc GetOperationStats(StatsRequest) returns (OperationStats);
+  rpc GetDeptWorkload(StatsRequest) returns (DeptWorkloadResponse);
+  rpc GetRevenueTrend(StatsRequest) returns (RevenueTrendResponse);
+}
+
+message StatsRequest {
+  string start_date = 1;
+  string end_date = 2;
+}
+
+message DeptWorkloadResponse {
+  common.BaseResponse base = 1;
+  repeated DeptWorkload workloads = 2;
+}
+
+message RevenueTrendResponse {
+  common.BaseResponse base = 1;
+  repeated RevenueTrend trends = 2;
+}

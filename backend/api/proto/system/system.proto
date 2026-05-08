@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package system;
+
+option go_package = "his-go/api/proto/system";
+
+import "common/common.proto";
+
+// 字典类型
+message DictType {
+  string id = 1;
+  string dict_name = 2;
+  string dict_type = 3;
+  int32 status = 4;
+  string remark = 5;
+}
+
+// 字典项
+message DictItem {
+  string id = 1;
+  string dict_type = 2;
+  string label = 3;
+  string value = 4;
+  int32 sort_order = 5;
+  int32 status = 6;
+}
+
+// 操作日志
+message OperationLog {
+  string id = 1;
+  string user_id = 2;
+  string username = 3;
+  string module = 4;
+  string action = 5;
+  string method = 6;
+  string url = 7;
+  string ip = 8;
+  string params = 9;
+  string result = 10;
+  int32 status = 11;
+  string created_at = 12;
+}
+
+// 系统参数
+message SystemParam {
+  string id = 1;
+  string param_name = 2;
+  string param_key = 3;
+  string param_value = 4;
+  string remark = 5;
+}
+
+// 系统管理服务
+service SystemService {
+  // 字典管理
+  rpc ListDictTypes(common.Empty) returns (DictTypeListResponse);
+  rpc ListDictItems(DictItemQueryRequest) returns (DictItemListResponse);
+  rpc CreateDictItem(DictItem) returns (DictItem);
+  // 参数管理
+  rpc ListParams(common.Empty) returns (ParamListResponse);
+  rpc UpdateParam(SystemParam) returns (SystemParam);
+  // 操作日志
+  rpc ListOperationLogs(LogListRequest) returns (LogListResponse);
+}
+
+message DictTypeListResponse {
+  common.BaseResponse base = 1;
+  repeated DictType types = 2;
+}
+
+message DictItemQueryRequest {
+  string dict_type = 1;
+}
+
+message DictItemListResponse {
+  common.BaseResponse base = 1;
+  repeated DictItem items = 2;
+}
+
+message ParamListResponse {
+  common.BaseResponse base = 1;
+  repeated SystemParam params = 2;
+}
+
+message LogListRequest {
+  common.PageRequest page = 1;
+  string user_id = 2;
+  string module = 3;
+  string start_date = 4;
+  string end_date = 5;
+}
+
+message LogListResponse {
+  common.BaseResponse base = 1;
+  repeated OperationLog logs = 2;
+  common.PageResponse page = 3;
+}

@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package pharmacy;
+
+option go_package = "his-go/api/proto/pharmacy";
+
+import "common/common.proto";
+
+// 药品信息
+message DrugInfo {
+  string id = 1;
+  string name = 2;
+  string generic_name = 3;
+  string specification = 4;
+  string manufacturer = 5;
+  string batch_no = 6;
+  double purchase_price = 7;
+  double retail_price = 8;
+  int32 stock = 9;
+  int32 min_stock = 10;
+  string expiry_date = 11;
+  int32 status = 12;
+}
+
+// 发药记录
+message DispenseRecord {
+  string id = 1;
+  string prescription_id = 2;
+  string patient_id = 3;
+  string drug_id = 4;
+  int32 quantity = 5;
+  string dispenser_id = 6;
+  string checker_id = 7;
+  int32 status = 8;
+  string created_at = 9;
+}
+
+// 药房服务
+service PharmacyService {
+  rpc ListDrugs(DrugListRequest) returns (DrugListResponse);
+  rpc GetDrug(common.IdRequest) returns (DrugInfo);
+  rpc AddStock(StockRequest) returns (DrugInfo);
+  rpc ReduceStock(StockRequest) returns (DrugInfo);
+  rpc DispenseDrug(DispenseRequest) returns (DispenseRecord);
+  rpc CheckExpiredDrugs(common.Empty) returns (ExpiredDrugResponse);
+}
+
+message DrugListRequest {
+  common.PageRequest page = 1;
+  string name = 2;
+  int32 status = 3;
+}
+
+message DrugListResponse {
+  common.BaseResponse base = 1;
+  repeated DrugInfo drugs = 2;
+  common.PageResponse page = 3;
+}
+
+message StockRequest {
+  string drug_id = 1;
+  int32 quantity = 2;
+  string note = 3;
+}
+
+message DispenseRequest {
+  string prescription_id = 1;
+}
+
+message ExpiredDrugResponse {
+  common.BaseResponse base = 1;
+  repeated DrugInfo expired_drugs = 2;
+}

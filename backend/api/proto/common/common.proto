@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package common;
+
+option go_package = "his-go/api/proto/common";
+
+// 分页请求
+message PageRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+// 分页响应
+message PageResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// 通用响应
+message BaseResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+// 用户上下文（微服务间透传）
+message UserContext {
+  string user_id = 1;
+  string username = 2;
+  string role = 3;
+  string dept_id = 4;
+  repeated string perms = 5;
+}
+
+// 空请求
+message Empty {}
+
+// 通用ID请求
+message IdRequest {
+  string id = 1;
+}

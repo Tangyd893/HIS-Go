@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package schedule;
+
+option go_package = "his-go/api/proto/schedule";
+
+import "common/common.proto";
+
+// 排班信息
+message ScheduleInfo {
+  string id = 1;
+  string doctor_id = 2;
+  string doctor_name = 3;
+  string dept_id = 4;
+  string dept_name = 5;
+  string work_date = 6;
+  int32 time_slot = 7; // 1-上午 2-下午 3-晚上
+  int32 max_patients = 8;
+  int32 current_patients = 9;
+  string room_no = 10;
+  int32 status = 11;
+}
+
+// 排班服务
+service ScheduleService {
+  rpc GenerateWeeklySchedules(GenerateRequest) returns (ScheduleListResponse);
+  rpc ListSchedules(ScheduleQueryRequest) returns (ScheduleListResponse);
+  rpc UpdateSchedule(ScheduleInfo) returns (ScheduleInfo);
+  rpc CancelSchedule(common.IdRequest) returns (common.BaseResponse);
+}
+
+message GenerateRequest {
+  string start_date = 1;
+  string end_date = 2;
+}
+
+message ScheduleQueryRequest {
+  string dept_id = 1;
+  string doctor_id = 2;
+  string start_date = 3;
+  string end_date = 4;
+}
+
+message ScheduleListResponse {
+  common.BaseResponse base = 1;
+  repeated ScheduleInfo schedules = 2;
+}

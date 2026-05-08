@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package clinic;
+
+option go_package = "his-go/api/proto/clinic";
+
+import "common/common.proto";
+
+// 接诊记录
+message ClinicRecord {
+  string id = 1;
+  string registration_id = 2;
+  string patient_id = 3;
+  string patient_name = 4;
+  string doctor_id = 5;
+  string chief_complaint = 6;
+  string present_illness = 7;
+  string diagnosis = 8;
+  string icd_code = 9;
+  string advice = 10;
+  int32 status = 11;
+  string visit_time = 12;
+  string created_at = 13;
+}
+
+// 检查申请
+message ExaminationRequest {
+  string id = 1;
+  string clinic_record_id = 2;
+  string patient_id = 3;
+  string exam_type = 4;
+  string exam_item = 5;
+  string body_part = 6;
+  string clinical_diagnosis = 7;
+  string note = 8;
+  int32 status = 9;
+}
+
+// 门诊服务
+service ClinicService {
+  rpc CreateClinicRecord(ClinicRecord) returns (ClinicRecord);
+  rpc GetClinicRecord(common.IdRequest) returns (ClinicRecord);
+  rpc ListClinicRecords(ClinicListRequest) returns (ClinicListResponse);
+  rpc CreateExaminationRequest(ExaminationRequest) returns (ExaminationRequest);
+}
+
+message ClinicListRequest {
+  common.PageRequest page = 1;
+  string patient_id = 2;
+  string doctor_id = 3;
+  string start_date = 4;
+  string end_date = 5;
+}
+
+message ClinicListResponse {
+  common.BaseResponse base = 1;
+  repeated ClinicRecord records = 2;
+  common.PageResponse page = 3;
+}

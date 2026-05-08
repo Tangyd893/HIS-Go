@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package billing;
+
+option go_package = "his-go/api/proto/billing";
+
+import "common/common.proto";
+
+// 账单信息
+message BillInfo {
+  string id = 1;
+  string patient_id = 2;
+  string registration_id = 3;
+  string bill_no = 4;
+  double total_amount = 5;
+  double paid_amount = 6;
+  int32 pay_method = 7; // 1-现金 2-微信 3-支付宝 4-医保
+  int32 status = 8; // 0-待支付 1-已支付 2-已退款 3-已取消
+  repeated BillDetail details = 9;
+  string created_at = 10;
+}
+
+// 账单明细
+message BillDetail {
+  string id = 1;
+  string bill_id = 2;
+  int32 item_type = 3; // 1-挂号费 2-检查费 3-药费 4-治疗费
+  string item_name = 4;
+  double unit_price = 5;
+  int32 quantity = 6;
+  double amount = 7;
+}
+
+// 支付请求
+message PayRequest {
+  string bill_id = 1;
+  int32 pay_method = 2;
+}
+
+// 收费服务
+service BillingService {
+  rpc CreateBill(BillInfo) returns (BillInfo);
+  rpc GetBill(common.IdRequest) returns (BillInfo);
+  rpc PayBill(PayRequest) returns (BillInfo);
+  rpc RefundBill(common.IdRequest) returns (BillInfo);
+  rpc ListBills(BillListRequest) returns (BillListResponse);
+}
+
+message BillListRequest {
+  common.PageRequest page = 1;
+  string patient_id = 2;
+  int32 status = 3;
+  string start_date = 4;
+  string end_date = 5;
+}
+
+message BillListResponse {
+  common.BaseResponse base = 1;
+  repeated BillInfo bills = 2;
+  common.PageResponse page = 3;
+}

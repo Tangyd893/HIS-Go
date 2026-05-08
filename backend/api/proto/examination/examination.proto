@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package examination;
+
+option go_package = "his-go/api/proto/examination";
+
+import "common/common.proto";
+
+// 检查报告
+message ExaminationReport {
+  string id = 1;
+  string patient_id = 2;
+  string patient_name = 3;
+  string examination_request_id = 4;
+  string exam_type = 5;
+  string exam_item = 6;
+  string body_part = 7;
+  string findings = 8;
+  string impression = 9;
+  string conclusion = 10;
+  string technician_id = 11;
+  string reviewer_id = 12;
+  int32 status = 13; // 0-待检查 1-已检查 2-已审核 3-已发布
+  string created_at = 14;
+}
+
+// 检查服务
+service ExaminationService {
+  rpc CreateReport(ExaminationReport) returns (ExaminationReport);
+  rpc GetReport(common.IdRequest) returns (ExaminationReport);
+  rpc ReviewReport(ReviewReportRequest) returns (ExaminationReport);
+  rpc ListReports(ReportListRequest) returns (ReportListResponse);
+}
+
+message ReviewReportRequest {
+  string report_id = 1;
+  bool approved = 2;
+  string comment = 3;
+}
+
+message ReportListRequest {
+  common.PageRequest page = 1;
+  string patient_id = 2;
+  int32 status = 3;
+}
+
+message ReportListResponse {
+  common.BaseResponse base = 1;
+  repeated ExaminationReport reports = 2;
+  common.PageResponse page = 3;
+}

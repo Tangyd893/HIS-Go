@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package health_record;
+
+option go_package = "his-go/api/proto/health_record";
+
+import "common/common.proto";
+
+// 健康档案总览
+message HealthRecordSummary {
+  string patient_id = 1;
+  string patient_name = 2;
+  int32 total_visits = 3;
+  int32 total_prescriptions = 4;
+  int32 total_examinations = 5;
+  repeated TimelineEvent timeline = 6;
+}
+
+// 时间轴事件
+message TimelineEvent {
+  string date = 1;
+  string event_type = 2; // visit, prescription, examination, followup
+  string description = 3;
+  string related_id = 4;
+}
+
+// 档案授权
+message RecordAuthorization {
+  string id = 1;
+  string patient_id = 2;
+  string doctor_id = 3;
+  string auth_time = 4;
+  string expire_time = 5;
+  int32 status = 6;
+}
+
+// 健康档案服务
+service HealthRecordService {
+  rpc GetSummary(common.IdRequest) returns (HealthRecordSummary);
+  rpc GetTimeline(common.IdRequest) returns (TimelineResponse);
+  rpc GrantAuthorization(RecordAuthorization) returns (RecordAuthorization);
+  rpc RevokeAuthorization(common.IdRequest) returns (common.BaseResponse);
+}
+
+message TimelineResponse {
+  common.BaseResponse base = 1;
+  repeated TimelineEvent events = 2;
+}

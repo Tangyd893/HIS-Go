@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package inpatient;
+
+option go_package = "his-go/api/proto/inpatient";
+
+import "common/common.proto";
+
+// 住院记录
+message InpatientRecord {
+  string id = 1;
+  string patient_id = 2;
+  string patient_name = 3;
+  string admission_date = 4;
+  string discharge_date = 5;
+  string dept_id = 6;
+  string room_no = 7;
+  string bed_no = 8;
+  string diagnosis = 9;
+  double deposit = 10;
+  double total_cost = 11;
+  int32 status = 12; // 0-待入院 1-住院中 2-已出院
+  repeated MedicalOrder orders = 13;
+}
+
+// 医嘱
+message MedicalOrder {
+  string id = 1;
+  string inpatient_id = 2;
+  string doctor_id = 3;
+  int32 order_type = 4; // 1-长期医嘱 2-临时医嘱
+  string content = 5;
+  string start_time = 6;
+  string end_time = 7;
+  int32 status = 8;
+}
+
+// 护理记录
+message NursingRecord {
+  string id = 1;
+  string inpatient_id = 2;
+  string nurse_id = 3;
+  string record_time = 4;
+  string content = 5;
+  string vital_signs = 6; // 生命体征 JSON
+}
+
+// 住院服务
+service InpatientService {
+  rpc AdmitPatient(AdmitRequest) returns (InpatientRecord);
+  rpc DischargePatient(common.IdRequest) returns (InpatientRecord);
+  rpc GetInpatient(common.IdRequest) returns (InpatientRecord);
+  rpc CreateMedicalOrder(MedicalOrder) returns (MedicalOrder);
+  rpc CreateNursingRecord(NursingRecord) returns (NursingRecord);
+  rpc ListInpatients(InpatientListRequest) returns (InpatientListResponse);
+}
+
+message AdmitRequest {
+  string patient_id = 1;
+  string dept_id = 2;
+  string room_no = 3;
+  string bed_no = 4;
+  string diagnosis = 5;
+  double deposit = 6;
+}
+
+message InpatientListRequest {
+  common.PageRequest page = 1;
+  string dept_id = 2;
+  int32 status = 3;
+}
+
+message InpatientListResponse {
+  common.BaseResponse base = 1;
+  repeated InpatientRecord records = 2;
+  common.PageResponse page = 3;
+}

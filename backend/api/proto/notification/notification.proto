@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "his-go/api/proto/notification";
+
+import "common/common.proto";
+
+// 通知消息
+message Notification {
+  string id = 1;
+  string template_id = 2;
+  string receiver_id = 3;
+  string title = 4;
+  string content = 5;
+  int32 channel = 6; // 1-SMS 2-邮件 3-站内信 4-微信模板
+  int32 status = 7;
+  string send_time = 8;
+  string created_at = 9;
+}
+
+// 通知模板
+message NotificationTemplate {
+  string id = 1;
+  string name = 2;
+  string title_template = 3;
+  string content_template = 4;
+  int32 channel = 5;
+  repeated string params = 6;
+}
+
+// 通知服务
+service NotificationService {
+  rpc SendNotification(Notification) returns (Notification);
+  rpc BatchSend(BatchSendRequest) returns (BatchSendResponse);
+  rpc ListTemplates(common.Empty) returns (TemplateListResponse);
+  rpc CreateTemplate(NotificationTemplate) returns (NotificationTemplate);
+}
+
+message BatchSendRequest {
+  repeated string receiver_ids = 1;
+  string template_id = 2;
+  map<string,string> params = 3;
+}
+
+message BatchSendResponse {
+  common.BaseResponse base = 1;
+  int32 success_count = 2;
+  int32 fail_count = 3;
+}
+
+message TemplateListResponse {
+  common.BaseResponse base = 1;
+  repeated NotificationTemplate templates = 2;
+}

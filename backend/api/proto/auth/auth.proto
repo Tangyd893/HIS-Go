@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "his-go/api/proto/auth";
+
+import "common/common.proto";
+
+// 登录请求
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// 登录响应
+message LoginResponse {
+  string token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+  UserInfo user_info = 4;
+}
+
+// 用户信息
+message UserInfo {
+  string user_id = 1;
+  string username = 2;
+  string real_name = 3;
+  string avatar = 4;
+  string role = 5;
+  string dept_id = 6;
+  repeated string perms = 7;
+}
+
+// 认证服务
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(common.IdRequest) returns (LoginResponse);
+  rpc Logout(common.IdRequest) returns (common.BaseResponse);
+  rpc ValidateToken(common.IdRequest) returns (common.BaseResponse);
+}
