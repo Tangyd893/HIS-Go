@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/emr"
+	grpcemr "his-go/internal/emr"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupEMRRouter(cfg, emrHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(emrSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("电子病历服务已启动")
@@ -92,13 +96,20 @@ func setupEMRRouter(cfg *config.Config, emrHandler *handler.EMRHandler) *gin.Eng
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.EMRService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9097)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcemr.NewEMRGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	emr.RegisterEMRServiceServer(s, grpcSrv)
+
 	log.Printf("[EMR] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

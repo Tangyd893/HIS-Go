@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/outpatient"
+	grpcoutpat "his-go/internal/outpatient"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupOutpatientRouter(cfg, outpatientHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(outpatientSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("院外患者服务已启动")
@@ -85,20 +89,29 @@ func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.Outpat
 		api.GET("/consultation/:id", outpatientHandler.GetConsultation)
 		api.GET("/consultations", outpatientHandler.ListConsultations)
 		api.POST("/message", outpatientHandler.SendMessage)
+		api.GET("/messages", outpatientHandler.GetMessages)
 		api.POST("/contract", outpatientHandler.CreateChronicContract)
 		api.POST("/health-data", outpatientHandler.ReportHealthData)
+		api.GET("/health-data", outpatientHandler.ListHealthData)
 	}
 
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.OutpatientService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9091)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcoutpat.NewOutpatientGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	outpatient.RegisterOutpatientServiceServer(s, grpcSrv)
+
 	log.Printf("[Outpatient] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

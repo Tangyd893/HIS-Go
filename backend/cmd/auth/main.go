@@ -10,11 +10,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"his-go/api/proto/auth"
+	grpcauth "his-go/internal/auth"
 	"his-go/internal/auth/handler"
 	"his-go/internal/auth/repository"
 	"his-go/internal/auth/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	hisgrpc "his-go/pkg/grpc"
 	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
@@ -81,7 +84,7 @@ func main() {
 
 	router := setupAuthRouter(cfg, authHandler, deps)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(authSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("认证服务已启动")
@@ -112,13 +115,20 @@ func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps 
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(authSvc *service.AuthService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9081)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcServer := grpcauth.NewAuthGrpcServer(authSvc)
+	s := hisgrpc.NewGrpcServer()
+	auth.RegisterAuthServiceServer(s, grpcServer)
+
 	log.Printf("[Auth] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/examination"
+	grpcexam "his-go/internal/examination"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupExaminationRouter(cfg, examHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(examSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("检查检验服务已启动")
@@ -90,13 +94,20 @@ func setupExaminationRouter(cfg *config.Config, examHandler *handler.Examination
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.ExaminationService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9088)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcexam.NewExaminationGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	examination.RegisterExaminationServiceServer(s, grpcSrv)
+
 	log.Printf("[Examination] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

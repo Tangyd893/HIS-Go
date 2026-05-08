@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/prescription"
+	grpcps "his-go/internal/prescription"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupPrescriptionRouter(cfg, prescHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(prescSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("处方管理服务已启动")
@@ -91,13 +95,20 @@ func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.Prescript
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.PrescriptionService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9085)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcps.NewPrescriptionGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	prescription.RegisterPrescriptionServiceServer(s, grpcSrv)
+
 	log.Printf("[Prescription] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

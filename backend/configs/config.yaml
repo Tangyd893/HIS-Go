@@ -10,7 +10,7 @@ database:
   host: 127.0.0.1
   port: 5432
   user: his_admin
-  password: change_me_123
+  password: "" # 通过 DB_PASSWORD 环境变量注入
   dbname: his_db
   sslmode: disable
   max_idle_conns: 10
@@ -20,7 +20,7 @@ database:
 redis:
   host: 127.0.0.1
   port: 6379
-  password: change_me_456
+  password: "" # 通过 REDIS_PASSWORD 环境变量注入
   db: 0
   pool_size: 100
 
@@ -28,7 +28,7 @@ rabbitmq:
   host: 127.0.0.1
   port: 5672
   user: admin
-  password: change_me_789
+  password: "" # 通过 MQ_PASSWORD 环境变量注入
   vhost: /
 
 jwt:
@@ -44,8 +44,8 @@ nacos:
 
 minio:
   endpoint: 127.0.0.1:9000
-  access_key: minioadmin
-  secret_key: change_me_012
+  access_key: "" # 通过 MINIO_ACCESS_KEY 环境变量注入
+  secret_key: "" # 通过 MINIO_SECRET_KEY 环境变量注入
   bucket: his-files
   use_ssl: false
 

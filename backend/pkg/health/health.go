@@ -49,7 +49,9 @@ func ReadinessHandler(serviceName string, deps *Dependencies) gin.HandlerFunc {
 
 		if deps.DB != nil {
 			start := time.Now()
-			if err := deps.DB.Ping(); err != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), checkTimeout)
+			defer cancel()
+			if err := deps.DB.PingContext(ctx); err != nil {
 				healthy = false
 				details["database"] = "DOWN: " + err.Error()
 			} else {

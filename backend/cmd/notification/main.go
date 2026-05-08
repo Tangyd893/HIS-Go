@@ -18,6 +18,10 @@ import (
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/notification"
+	grpcnotif "his-go/internal/notification"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -68,7 +72,7 @@ func main() {
 
 	router := setupNotificationRouter(cfg, notifHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(notifSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("消息通知服务已启动")
@@ -101,13 +105,20 @@ func setupNotificationRouter(cfg *config.Config, notifHandler *handler.Notificat
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.NotificationService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9094)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcnotif.NewNotificationGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	notification.RegisterNotificationServiceServer(s, grpcSrv)
+
 	log.Printf("[Notification] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

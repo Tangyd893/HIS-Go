@@ -18,6 +18,10 @@ import (
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/billing"
+	grpcbill "his-go/internal/billing"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -67,7 +71,7 @@ func main() {
 
 	router := setupBillingRouter(cfg, billingHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(billingSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("收费结算服务已启动")
@@ -101,13 +105,20 @@ func setupBillingRouter(cfg *config.Config, billingHandler *handler.BillingHandl
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.BillingService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9086)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcbill.NewBillingGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	billing.RegisterBillingServiceServer(s, grpcSrv)
+
 	log.Printf("[Billing] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/system"
+	grpcsys "his-go/internal/system"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupSystemRouter(cfg, sysHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(sysSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("系统管理服务已启动")
@@ -92,13 +96,20 @@ func setupSystemRouter(cfg *config.Config, sysHandler *handler.SystemHandler) *g
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.SystemService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9096)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcsys.NewSystemGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	system.RegisterSystemServiceServer(s, grpcSrv)
+
 	log.Printf("[System] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

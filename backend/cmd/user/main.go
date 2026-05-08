@@ -9,11 +9,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"his-go/api/proto/user"
+	grpcuser "his-go/internal/user"
 	"his-go/internal/user/handler"
 	"his-go/internal/user/repository"
 	"his-go/internal/user/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	hisgrpc "his-go/pkg/grpc"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +62,7 @@ func main() {
 
 	router := setupUserRouter(cfg, userHandler)
 
-	go startUserGrpcServer(cfg)
+	go startUserGrpcServer(userSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("用户服务已启动")
@@ -91,13 +94,20 @@ func setupUserRouter(cfg *config.Config, userHandler *handler.UserHandler) *gin.
 	return router
 }
 
-func startUserGrpcServer(cfg *config.Config) {
+func startUserGrpcServer(userSvc *service.UserService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9082)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcuser.NewUserGrpcServer(userSvc)
+	s := hisgrpc.NewGrpcServer()
+	user.RegisterUserServiceServer(s, grpcSrv)
+
 	log.Printf("[User] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

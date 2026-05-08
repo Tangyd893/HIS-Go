@@ -18,6 +18,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/registration"
+	grpcreg "his-go/internal/registration"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -62,7 +66,7 @@ func main() {
 
 	router := setupRegistrationRouter(cfg, regHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(regSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("挂号预约服务已启动")
@@ -96,13 +100,20 @@ func setupRegistrationRouter(cfg *config.Config, regHandler *handler.Registratio
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.RegistrationService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9083)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcreg.NewRegistrationGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	registration.RegisterRegistrationServiceServer(s, grpcSrv)
+
 	log.Printf("[Registration] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

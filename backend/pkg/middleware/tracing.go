@@ -8,9 +8,9 @@ import (
 // Tracing 链路追踪中间件
 func Tracing() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		requestID, _ := c.Get("requestID")
-		if requestID != nil {
-			c.Header("X-Trace-ID", requestID.(string))
+		requestID, exists := c.Get("requestID")
+		if requestID, ok := requestID.(string); exists && ok {
+			c.Header("X-Trace-ID", requestID)
 		}
 		c.Next()
 	}

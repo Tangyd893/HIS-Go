@@ -9,6 +9,7 @@ import (
 	"time"
 
 	jwtlib "github.com/golang-jwt/jwt/v5"
+	"his-go/pkg/logger"
 )
 
 var (
@@ -53,10 +54,11 @@ func NewJWTService(privateKeyPEM, publicKeyPEM string, expireHour int) (*JWTServ
 	}, nil
 }
 
-// NewSimpleJWTService 创建简化版 JWT 服务（HS256 对称加密）
+// NewSimpleJWTService 创建简化版 JWT 服务（HS256 对称加密，仅限开发环境）
 func NewSimpleJWTService(secret string, expireHour int) *JWTService {
 	if secret == "" {
 		secret = "his-go-default-secret"
+		logger.Warn("JWT 使用默认 HS256 密钥，严禁用于生产环境")
 	}
 	return &JWTService{
 		hmacSecret: []byte(secret),
@@ -154,5 +156,9 @@ func parsePublicKey(pemStr string) (*rsa.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pub.(*rsa.PublicKey), nil
+	rsaKey, ok := pub.(*rsa.PublicKey)
+	if !ok {
+		return nil, errors.New("公钥类型不是 RSA")
+	}
+	return rsaKey, nil
 }

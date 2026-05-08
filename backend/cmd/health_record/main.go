@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/health_record"
+	grpchr "his-go/internal/health_record"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupHealthRecordRouter(cfg, hrHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(hrSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("健康档案服务已启动")
@@ -90,13 +94,20 @@ func setupHealthRecordRouter(cfg *config.Config, hrHandler *handler.HealthRecord
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.HealthRecordService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9093)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpchr.NewHealthRecordGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	health_record.RegisterHealthRecordServiceServer(s, grpcSrv)
+
 	log.Printf("[HealthRecord] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

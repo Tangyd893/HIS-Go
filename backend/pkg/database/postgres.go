@@ -4,6 +4,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 func NewPostgres(host string, port int, user, password, dbname, sslMode string, maxIdleConns, maxOpenConns int, connMaxLifetime int) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s TimeZone=Asia/Shanghai",
-		host, port, user, password, dbname, sslMode,
+		host, port, url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(dbname), sslMode,
 	)
 
 	logLevel := gormlogger.Warn

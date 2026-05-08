@@ -62,6 +62,7 @@ var dockerServiceMapping = map[string]string{
 
 var jwtWhitelist = []string{
 	"/health",
+	"/ready",
 	"/api/auth/login",
 	"/api/auth/refresh",
 }
@@ -157,12 +158,11 @@ func gatewayJwtAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		reqPath := c.Request.URL.Path
 		for _, path := range jwtWhitelist {
-			if strings.HasPrefix(reqPath, path) {
+			if reqPath == path {
 				c.Next()
 				return
 			}
 		}
-
 		auth.JwtAuth(jwtSvc)(c)
 	}
 }

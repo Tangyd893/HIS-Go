@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"his-go/internal/auth/service"
@@ -75,10 +73,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	result, err := h.svc.RefreshToken(req.Token)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, response.Response{
-			Code:    apperrors.CodeUnauthorized,
-			Message: err.Error(),
-		})
+		response.FailWithMsg(c, apperrors.CodeUnauthorized, err.Error())
 		return
 	}
 

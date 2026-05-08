@@ -19,6 +19,10 @@ import (
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/pharmacy"
+	grpcpharm "his-go/internal/pharmacy"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -72,7 +76,7 @@ func main() {
 
 	router := setupPharmacyRouter(cfg, pharmacyHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(pharmacySvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("药房管理服务已启动")
@@ -106,13 +110,20 @@ func setupPharmacyRouter(cfg *config.Config, pharmacyHandler *handler.PharmacyHa
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.PharmacyService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9087)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcpharm.NewPharmacyGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	pharmacy.RegisterPharmacyServiceServer(s, grpcSrv)
+
 	log.Printf("[Pharmacy] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

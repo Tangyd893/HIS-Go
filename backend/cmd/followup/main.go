@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/followup"
+	grpcfup "his-go/internal/followup"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupFollowupRouter(cfg, followupHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(followupSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("随访管理服务已启动")
@@ -91,13 +95,20 @@ func setupFollowupRouter(cfg *config.Config, followupHandler *handler.FollowupHa
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.FollowupService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9092)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcfup.NewFollowupGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	followup.RegisterFollowupServiceServer(s, grpcSrv)
+
 	log.Printf("[Followup] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

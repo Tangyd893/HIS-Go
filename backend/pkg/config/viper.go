@@ -3,7 +3,9 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 
 	"github.com/spf13/viper"
 )
@@ -168,7 +170,10 @@ func overrideFromEnv(cfg *Config) {
 }
 
 func parseIntEnv(v string) int {
-	var result int
-	fmt.Sscanf(v, "%d", &result)
-	return result
+	parsed, err := strconv.Atoi(v)
+	if err != nil {
+		log.Printf("配置解析警告: 无法将 '%s' 转换为整数，使用默认值 0", v)
+		return 0
+	}
+	return parsed
 }

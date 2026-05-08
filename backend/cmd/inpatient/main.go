@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/inpatient"
+	grpcinpat "his-go/internal/inpatient"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupInpatientRouter(cfg, inpatientHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(inpatientSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("住院管理服务已启动")
@@ -92,13 +96,20 @@ func setupInpatientRouter(cfg *config.Config, inpatientHandler *handler.Inpatien
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.InpatientService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9089)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcinpat.NewInpatientGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	inpatient.RegisterInpatientServiceServer(s, grpcSrv)
+
 	log.Printf("[Inpatient] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }

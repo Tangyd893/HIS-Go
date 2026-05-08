@@ -43,8 +43,7 @@ frontend/**/dist/
 .DS_Store
 Thumbs.db
 
-# Proto 生成的代码
-backend/api/proto/**/*.pb.go
+# Proto 生成的代码已提交到仓库，方便直接编译
 
 # 工作日志
 todo/

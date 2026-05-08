@@ -17,6 +17,10 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+
+	"his-go/api/proto/schedule"
+	grpcsched "his-go/internal/schedule"
+	hisgrpc "his-go/pkg/grpc"
 )
 
 func main() {
@@ -57,7 +61,7 @@ func main() {
 
 	router := setupScheduleRouter(cfg, scheduleHandler)
 
-	go startGrpcServer(cfg)
+	go startGrpcServer(scheduleSvc, cfg)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	logger.Info("排班管理服务已启动")
@@ -90,13 +94,20 @@ func setupScheduleRouter(cfg *config.Config, scheduleHandler *handler.ScheduleHa
 	return router
 }
 
-func startGrpcServer(cfg *config.Config) {
+func startGrpcServer(svc *service.ScheduleService, cfg *config.Config) {
 	addr := fmt.Sprintf("%s:%d", cfg.Grpc.Host, 9090)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("gRPC 监听失败: " + err.Error())
 		return
 	}
+
+	grpcSrv := grpcsched.NewScheduleGrpcServer(svc)
+	s := hisgrpc.NewGrpcServer()
+	schedule.RegisterScheduleServiceServer(s, grpcSrv)
+
 	log.Printf("[Schedule] gRPC 服务监听地址: %s", addr)
-	_ = lis
+	if err := s.Serve(lis); err != nil {
+		logger.Error("gRPC 服务启动失败: " + err.Error())
+	}
 }
