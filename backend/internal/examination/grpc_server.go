@@ -39,6 +39,7 @@ func (s *ExaminationGrpcServer) GetReport(ctx context.Context, req *common.IdReq
 }
 
 // ReviewReport 审核检查报告
+// 注意: proto ReviewReportRequest 缺少 reviewer_id 字段，待补齐后从请求中获取
 func (s *ExaminationGrpcServer) ReviewReport(ctx context.Context, req *examination.ReviewReportRequest) (*examination.ExaminationReport, error) {
 	if err := s.svc.Review(req.ReportId, "", req.Approved, req.Comment); err != nil {
 		return nil, err

@@ -53,26 +53,36 @@ func Sync() {
 
 // Debug 调试日志
 func Debug(msg string, fields ...zap.Field) {
-	Log.Debug(msg, fields...)
+	if Log != nil {
+		Log.Debug(msg, fields...)
+	}
 }
 
 // Info 信息日志
 func Info(msg string, fields ...zap.Field) {
-	Log.Info(msg, fields...)
+	if Log != nil {
+		Log.Info(msg, fields...)
+	}
 }
 
 // Warn 警告日志
 func Warn(msg string, fields ...zap.Field) {
-	Log.Warn(msg, fields...)
+	if Log != nil {
+		Log.Warn(msg, fields...)
+	}
 }
 
 // Error 错误日志
 func Error(msg string, fields ...zap.Field) {
-	Log.Error(msg, fields...)
+	if Log != nil {
+		Log.Error(msg, fields...)
+	}
 }
 
 // Fatal 致命日志（会退出程序）
 func Fatal(msg string, fields ...zap.Field) {
-	Log.Fatal(msg, fields...)
+	if Log != nil {
+		Log.Fatal(msg, fields...)
+	}
 	os.Exit(1)
 }

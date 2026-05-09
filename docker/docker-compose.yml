@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ========== 基础设施 ==========
   nacos:
@@ -23,17 +21,18 @@ services:
     image: postgres:17-alpine
     container_name: his-postgres
     environment:
-      POSTGRES_USER: his_admin
-      POSTGRES_PASSWORD: change_me_123
+      POSTGRES_USER: ${POSTGRES_USER:-his_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_123}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../backend/sql:/docker-entrypoint-initdb.d
+      - ../backend/migrations:/docker-entrypoint-initdb.d
+      - ../backend/sql:/sql-init
     networks:
       - his-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U his_admin"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-his_admin}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,7 +40,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: his-redis
-    command: redis-server --requirepass change_me_456 --appendonly yes
+    command: redis-server --requirepass ${REDIS_PASSWORD:-change_me_456} --appendonly yes
     ports:
       - "6379:6379"
     volumes:
@@ -49,7 +48,7 @@ services:
     networks:
       - his-net
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "change_me_456", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-change_me_456}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,8 +57,8 @@ services:
     image: rabbitmq:4.0-management-alpine
     container_name: his-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: change_me_789
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-change_me_789}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -77,8 +76,8 @@ services:
     image: minio/minio:latest
     container_name: his-minio
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: change_me_012
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me_012}
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -106,9 +105,7 @@ services:
       - "8080:8080"
     environment:
       - RUNNING_IN_DOCKER=true
-      - DB_HOST=postgresql
-      - REDIS_HOST=redis
-      - MQ_HOST=rabbitmq
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:
       nacos:
         condition: service_healthy
@@ -129,8 +126,13 @@ services:
       - "9081:9081"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -153,8 +155,11 @@ services:
       - "9082:9082"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -177,8 +182,11 @@ services:
       - "9083:9083"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -201,8 +209,11 @@ services:
       - "9084:9084"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -223,8 +234,11 @@ services:
       - "9085:9085"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -245,8 +259,11 @@ services:
       - "9086:9086"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -267,8 +284,11 @@ services:
       - "9087:9087"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -289,8 +309,11 @@ services:
       - "9088:9088"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -311,8 +334,11 @@ services:
       - "9089:9089"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -333,8 +359,11 @@ services:
       - "9090:9090"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -355,8 +384,11 @@ services:
       - "9091:9091"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -377,8 +409,11 @@ services:
       - "9092:9092"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -399,8 +434,11 @@ services:
       - "9093:9093"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -421,8 +459,11 @@ services:
       - "9094:9094"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -445,8 +486,11 @@ services:
       - "9095:9095"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -467,8 +511,11 @@ services:
       - "9096:9096"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -489,8 +536,11 @@ services:
       - "9097:9097"
     environment:
       - DB_HOST=postgresql
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
     depends_on:
       postgresql:
         condition: service_healthy

@@ -77,6 +77,8 @@ func (s *HealthRecordGrpcServer) GrantAuthorization(ctx context.Context, req *he
 }
 
 // RevokeAuthorization 撤销档案授权
+// 注意: proto RevokeAuthorization RPC 当前使用 common.IdRequest（仅含 id），
+// 但 service 层需要 patient_id + doctor_id，待 proto 增加 RevokeAuthorizationRequest 消息后补全
 func (s *HealthRecordGrpcServer) RevokeAuthorization(ctx context.Context, req *common.IdRequest) (*common.BaseResponse, error) {
 	if err := s.svc.RevokeAuthorization("", req.Id); err != nil {
 		return nil, err

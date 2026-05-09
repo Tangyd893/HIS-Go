@@ -39,6 +39,8 @@ func (s *RegistrationGrpcServer) ListSchedules(ctx context.Context, req *registr
 }
 
 // Register 挂号
+// 注意: proto RegistrationRequest 当前缺少 patient_name 和 registration_date 字段，
+// 待 proto 补齐后从请求中获取
 func (s *RegistrationGrpcServer) Register(ctx context.Context, req *registration.RegistrationRequest) (*registration.RegistrationInfo, error) {
 	today := time.Now().Format("2006-01-02")
 	reg, err := s.svc.Register(req.PatientId, "", req.ScheduleId, today)
@@ -70,9 +72,15 @@ func (s *RegistrationGrpcServer) GetQueueStatus(ctx context.Context, req *common
 	if err != nil {
 		return nil, err
 	}
+
+	reg, err := s.svc.GetByID(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	return &registration.QueueStatus{
 		RegistrationId: req.Id,
-		QueueNumber:    0,
+		QueueNumber:    int32(reg.QueueNumber),
 		CurrentNumber:  0,
 		WaitCount:      int32(rank),
 		Status:         "waiting",
@@ -85,7 +93,12 @@ func (s *RegistrationGrpcServer) CallNext(ctx context.Context, req *common.IdReq
 	if err != nil {
 		return nil, err
 	}
-	return &registration.RegistrationInfo{Id: memberID, Status: 2}, nil
+
+	reg, err := s.svc.GetByID(memberID)
+	if err != nil {
+		return nil, err
+	}
+	return registrationToProto(reg), nil
 }
 
 // ---- 转换辅助函数 ----

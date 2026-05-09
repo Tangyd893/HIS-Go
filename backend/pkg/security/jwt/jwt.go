@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"strings"
 	"time"
 
 	jwtlib "github.com/golang-jwt/jwt/v5"
@@ -95,6 +96,10 @@ func (s *JWTService) GenerateToken(claims *Claims) (string, error) {
 		return token.SignedString(s.hmacSecret)
 	}
 
+	if s.privateKey == nil {
+		return "", errors.New("私钥未配置，无法签发 Token")
+	}
+
 	token := jwtlib.NewWithClaims(jwtlib.SigningMethodRS256, claims)
 	return token.SignedString(s.privateKey)
 }
@@ -132,6 +137,7 @@ func (s *JWTService) RefreshToken(claims *Claims) (string, error) {
 }
 
 func parsePrivateKey(pemStr string) (*rsa.PrivateKey, error) {
+	pemStr = normalizePEM(pemStr)
 	block, _ := pem.Decode([]byte(pemStr))
 	if block == nil {
 		return nil, errors.New("解析私钥失败")
@@ -148,6 +154,7 @@ func parsePrivateKey(pemStr string) (*rsa.PrivateKey, error) {
 }
 
 func parsePublicKey(pemStr string) (*rsa.PublicKey, error) {
+	pemStr = normalizePEM(pemStr)
 	block, _ := pem.Decode([]byte(pemStr))
 	if block == nil {
 		return nil, errors.New("解析公钥失败")
@@ -161,4 +168,13 @@ func parsePublicKey(pemStr string) (*rsa.PublicKey, error) {
 		return nil, errors.New("公钥类型不是 RSA")
 	}
 	return rsaKey, nil
+}
+
+// normalizePEM 将环境变量中的 \n 字面量转换为真正的换行符，同时保持方括号内无多余空格
+func normalizePEM(s string) string {
+	if strings.Contains(s, "\\n") {
+		s = strings.ReplaceAll(s, "\\n", "\n")
+	}
+	s = strings.TrimPrefix(s, "\n")
+	return s
 }

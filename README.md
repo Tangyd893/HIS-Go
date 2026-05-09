@@ -10,7 +10,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 
 - 18 个微服务模块，覆盖挂号→就诊→处方→收费→发药→住院全流程
 - 6 个院外服务（在线问诊、慢病管理、健康档案、随访管理）
-- Gateway 统一入口，路由转发（JWT 鉴权中间件待接入）
+- Gateway 统一入口，路由转发，JWT 鉴权中间件已接入
 - PostgreSQL 17 分库设计（Database per Service），18 个独立数据库
 - GORM 持久化 + 乐观锁 + 逻辑删除 + 自动填充
 - RabbitMQ 消息可靠性设计（Publisher Confirm、手动 ACK、死信队列、本地消息表）
@@ -21,20 +21,21 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 
 ## 当前完成度
 
-> 本项目处于**后端微服务骨架/原型阶段**，目录结构、模型分层、构建基线已落定，后续将按阶段补齐 gRPC、数据库迁移、Gateway 鉴权和自动化测试。
+> 本项目处于**后端基线已建立**阶段。18个服务可编译、158+个测试保护核心链路（涵盖14个业务模块）、gRPC/HTTP双协议完整、数据库迁移就绪、集成测试框架已搭建。后续将推进 Docker 全栈验证和前端开发。
 
-| 维度 | 状态 | 说明 |
-| --- | --- | --- |
-| 后端骨架 | 已完成 | 18 个服务入口、17 个领域模块，handler/service/repository/model 分层完整 |
-| 构建基线 | 已通过 | `go build ./cmd/...` 通过，`go fmt ./...` 零输出，`go.sum` 已生成 |
-| gRPC | 接口定义阶段 | 18 个 `.proto` 已编写，Server 注册和 `.pb.go` 代码生成待补齐 |
-| 数据库 | 部分完成 | `his_auth`/`his_user` 有完整表结构，其余服务为占位 SQL |
-| Docker | 配置就绪 | Dockerfile 和 docker-compose.yml 已修复，待验证全栈容器启动 |
-| Gateway JWT | 已接入 | JWT 鉴权中间件已接入 Gateway，白名单路由放行，用户上下文透传至下游服务 |
-| 健康检查 | 已增强 | `/health` 存活检查 + `/ready` 就绪检查（含 DB、Redis 连通性） |
-| 数据库迁移 | 已补齐 | 15 个迁移脚本覆盖全部 17 个数据库，表结构完整匹配 Go 模型 |
-| 前端 | 待开发 | `frontend/` 目录为空 |
-| 测试 | 待开发 | 暂无自动化测试 |
+| 维度          | 状态     | 说明                                                      |
+| ----------- | ------ | ------------------------------------------------------- |
+| 后端骨架        | 已完成    | 18 个服务入口、17 个领域模块，handler/service/repository/model 分层完整 |
+| 构建基线        | 已通过    | `go build ./cmd/...` 通过，`go fmt ./...` 零输出，`go.sum` 已生成 |
+| gRPC        | 已完成    | 18 个 `.proto` 已编写，gRPC Server 注册和 `.pb.go` 代码已生成           |
+| 数据库         | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，表结构完整匹配 Go 模型                  |
+| Docker      | 配置就绪   | Dockerfile 和 docker-compose.yml 已修复，`.env.example` 已提供              |
+| Gateway JWT | 已接入    | JWT 鉴权中间件已接入 Gateway，白名单路由放行，用户上下文透传至下游服务               |
+| 健康检查        | 已增强    | `/health` 存活检查 + `/ready` 就绪检查（含 DB、Redis 连通性）          |
+| 数据库迁移       | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，`db_init.sh` 支持按序执行             |
+| 测试          | 已建立    | 158+ 个单元测试覆盖 JWT/Redis锁/Auth/挂号/收费/药房/用户/排班/门诊/处方/随访/慢病/EMR/检查/错误码 |
+| 质量检查       | 已固化    | `gofmt`零输出 + `go vet`通过 + `go test`全绿 + `go build`通过        |
+| 前端          | 待开发    | `frontend/` 目录为空                                        |
 
 ## 技术栈
 
@@ -48,64 +49,64 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 
 ## 默认端口
 
-| 组件 | 地址 | 说明 |
-| --- | --- | --- |
-| API Gateway | `http://localhost:8080` | 统一入口，路由 `/api/*` |
-| his-auth | `http://localhost:8081` | 认证授权 (gRPC:9081) |
-| his-user | `http://localhost:8082` | 用户/患者/科室管理 (gRPC:9082) |
-| his-registration | `http://localhost:8083` | 挂号预约、排队叫号 (gRPC:9083) |
-| his-clinic | `http://localhost:8084` | 门诊诊疗 (gRPC:9084) |
-| his-prescription | `http://localhost:8085` | 处方管理 (gRPC:9085) |
-| his-billing | `http://localhost:8086` | 收费结算 (gRPC:9086) |
-| his-pharmacy | `http://localhost:8087` | 药房管理 (gRPC:9087) |
-| his-examination | `http://localhost:8088` | 检查检验 (gRPC:9088) |
-| his-inpatient | `http://localhost:8089` | 住院管理 (gRPC:9089) |
-| his-schedule | `http://localhost:8090` | 排班管理 (gRPC:9090) |
-| his-outpatient | `http://localhost:8091` | 院外患者服务 (gRPC:9091) |
-| his-followup | `http://localhost:8092` | 随访管理 (gRPC:9092) |
-| his-health-record | `http://localhost:8093` | 健康档案 (gRPC:9093) |
-| his-notification | `http://localhost:8094` | 消息通知 (gRPC:9094) |
-| his-statistics | `http://localhost:8095` | 数据统计 (gRPC:9095) |
-| his-system | `http://localhost:8096` | 系统管理 (gRPC:9096) |
-| his-emr | `http://localhost:8097` | 电子病历 (gRPC:9097) |
-| PostgreSQL | `localhost:5432` | `his_admin / change_me_123` |
-| Redis | `localhost:6379` | 密码 `change_me_456` |
-| RabbitMQ | `localhost:5672` | 管理端口 `15672`，`admin / change_me_789` |
-| Nacos | `http://localhost:8848/nacos` | `nacos / nacos` |
-| MinIO Console | `http://localhost:9001` | `minioadmin / change_me_012` |
+| 组件                | 地址                            | 说明                                   |
+| ----------------- | ----------------------------- | ------------------------------------ |
+| API Gateway       | `http://localhost:8080`       | 统一入口，路由 `/api/*`                     |
+| his-auth          | `http://localhost:8081`       | 认证授权 (gRPC:9081)                     |
+| his-user          | `http://localhost:8082`       | 用户/患者/科室管理 (gRPC:9082)               |
+| his-registration  | `http://localhost:8083`       | 挂号预约、排队叫号 (gRPC:9083)                |
+| his-clinic        | `http://localhost:8084`       | 门诊诊疗 (gRPC:9084)                     |
+| his-prescription  | `http://localhost:8085`       | 处方管理 (gRPC:9085)                     |
+| his-billing       | `http://localhost:8086`       | 收费结算 (gRPC:9086)                     |
+| his-pharmacy      | `http://localhost:8087`       | 药房管理 (gRPC:9087)                     |
+| his-examination   | `http://localhost:8088`       | 检查检验 (gRPC:9088)                     |
+| his-inpatient     | `http://localhost:8089`       | 住院管理 (gRPC:9089)                     |
+| his-schedule      | `http://localhost:8090`       | 排班管理 (gRPC:9090)                     |
+| his-outpatient    | `http://localhost:8091`       | 院外患者服务 (gRPC:9091)                   |
+| his-followup      | `http://localhost:8092`       | 随访管理 (gRPC:9092)                     |
+| his-health-record | `http://localhost:8093`       | 健康档案 (gRPC:9093)                     |
+| his-notification  | `http://localhost:8094`       | 消息通知 (gRPC:9094)                     |
+| his-statistics    | `http://localhost:8095`       | 数据统计 (gRPC:9095)                     |
+| his-system        | `http://localhost:8096`       | 系统管理 (gRPC:9096)                     |
+| his-emr           | `http://localhost:8097`       | 电子病历 (gRPC:9097)                     |
+| PostgreSQL        | `localhost:5432`              | `his_admin / change_me_123`          |
+| Redis             | `localhost:6379`              | 密码 `change_me_456`                   |
+| RabbitMQ          | `localhost:5672`              | 管理端口 `15672`，`admin / change_me_789` |
+| Nacos             | `http://localhost:8848/nacos` | `nacos / nacos`                      |
+| MinIO Console     | `http://localhost:9001`       | `minioadmin / change_me_012`         |
 
 ## 微服务边界
 
-| 服务 | 数据库 | 主要职责 |
-| --- | --- | --- |
-| Gateway | 无状态 | 统一入口、路由转发、JWT 认证、CORS、限流 |
-| his-auth | `his_auth` | 登录认证、Token 签发/刷新（RS256）、角色权限管理 |
-| his-user | `his_user` | 患者档案、员工管理、科室树 |
-| his-registration | `his_registration` | 号源管理、挂号预约、排队叫号、Redis 分布式锁 |
-| his-clinic | `his_clinic` | 接诊登记、诊断录入（ICD-10）、检查申请、转诊 |
-| his-emr | `his_emr` | SOAP 结构化病历、模板引擎、三级质控、CDSS |
-| his-prescription | `his_prescription` | 处方开具、审核、退回、处方状态流转 |
-| his-billing | `his_billing` | 多类型费用合并结算、支付、退费审批、日报表 |
-| his-pharmacy | `his_pharmacy` | 药品库存、入库、发药、效期预警（cron 定时） |
-| his-examination | `his_examination` | 检查执行、报告录入、审核流程 |
-| his-inpatient | `his_inpatient` | 入院登记、床位分配、医嘱下达、护理记录、出院结算 |
-| his-schedule | `his_schedule` | 医生排班、诊室安排、号源生成（乐观锁） |
-| his-outpatient | `his_outpatient` | 在线问诊、消息记录、慢病签约、健康自测 |
-| his-followup | `his_followup` | 随访计划自动生成、执行记录、满意度调查 |
-| his-health-record | `his_health_record` | 全生命周期健康档案总览、时间轴 |
-| his-notification | `his_notification` | 通知模板管理、SMS/邮件/站内信发送 |
-| his-statistics | `his_statistics` | 运营报表、挂号/收入趋势、科室工作量、医疗质量 |
-| his-system | `his_system` | 字典类型/字典项管理、参数配置、操作日志审计 |
+| 服务                | 数据库                 | 主要职责                           |
+| ----------------- | ------------------- | ------------------------------ |
+| Gateway           | 无状态                 | 统一入口、路由转发、JWT 认证、CORS、限流       |
+| his-auth          | `his_auth`          | 登录认证、Token 签发/刷新（RS256）、角色权限管理 |
+| his-user          | `his_user`          | 患者档案、员工管理、科室树                  |
+| his-registration  | `his_registration`  | 号源管理、挂号预约、排队叫号、Redis 分布式锁      |
+| his-clinic        | `his_clinic`        | 接诊登记、诊断录入（ICD-10）、检查申请、转诊      |
+| his-emr           | `his_emr`           | SOAP 结构化病历、模板引擎、三级质控、CDSS      |
+| his-prescription  | `his_prescription`  | 处方开具、审核、退回、处方状态流转              |
+| his-billing       | `his_billing`       | 多类型费用合并结算、支付、退费审批、日报表          |
+| his-pharmacy      | `his_pharmacy`      | 药品库存、入库、发药、效期预警（cron 定时）       |
+| his-examination   | `his_examination`   | 检查执行、报告录入、审核流程                 |
+| his-inpatient     | `his_inpatient`     | 入院登记、床位分配、医嘱下达、护理记录、出院结算       |
+| his-schedule      | `his_schedule`      | 医生排班、诊室安排、号源生成（乐观锁）            |
+| his-outpatient    | `his_outpatient`    | 在线问诊、消息记录、慢病签约、健康自测            |
+| his-followup      | `his_followup`      | 随访计划自动生成、执行记录、满意度调查            |
+| his-health-record | `his_health_record` | 全生命周期健康档案总览、时间轴                |
+| his-notification  | `his_notification`  | 通知模板管理、SMS/邮件/站内信发送            |
+| his-statistics    | `his_statistics`    | 运营报表、挂号/收入趋势、科室工作量、医疗质量        |
+| his-system        | `his_system`        | 字典类型/字典项管理、参数配置、操作日志审计         |
 
 ## 快速开始
 
 ### 环境要求
 
-| 工具 | 最低版本 | 用途 |
-| --- | --- | --- |
-| Docker | 20.10+ | PostgreSQL、Redis、RabbitMQ、Nacos、MinIO 容器 |
-| Go | 1.24+ | Go 编译与运行 |
-| Node.js | 24 (LTS) | 前端构建与开发服务器 |
+| 工具      | 最低版本     | 用途                                       |
+| ------- | -------- | ---------------------------------------- |
+| Docker  | 20.10+   | PostgreSQL、Redis、RabbitMQ、Nacos、MinIO 容器 |
+| Go      | 1.24+    | Go 编译与运行                                 |
+| Node.js | 24 (LTS) | 前端构建与开发服务器                               |
 
 一条命令检查所有必需工具：
 
@@ -123,9 +124,13 @@ cp .env.example .env
 # 启动基础设施
 docker compose up -d postgresql redis rabbitmq nacos minio
 
-# 初始化数据库（等 PostgreSQL 就绪后）
-docker exec -i his-postgres psql -U his_admin < ../backend/sql/init_all.sql
-docker exec -i his-postgres psql -U his_admin < ../backend/sql/seed_data.sql
+# 初始化数据库（等 PostgreSQL 就绪后，推荐方式）
+cd backend
+bash scripts/db_init.sh
+
+# 备选：手动执行 SQL
+docker exec -i his-postgres psql -U his_admin < backend/sql/init_all.sql
+docker exec -i his-postgres psql -U his_admin < backend/sql/seed_data.sql
 
 # 构建 Go 服务并启动全部服务
 docker compose up -d --build
@@ -177,11 +182,11 @@ npm install && npm run dev
 
 ## 默认验收账号
 
-| 角色 | 用户名 | 密码 |
-| --- | --- | --- |
-| 医生 | `demo-doctor` | `demo123` |
-| 护士 | `demo-nurse` | `demo123` |
-| 管理员 | `demo-admin` | `demo123` |
+| 角色  | 用户名           | 密码        |
+| --- | ------------- | --------- |
+| 医生  | `demo-doctor` | `demo123` |
+| 护士  | `demo-nurse`  | `demo123` |
+| 管理员 | `demo-admin`  | `demo123` |
 
 > 更多角色和权限数据见 `backend/sql/seed_data.sql`
 
@@ -237,7 +242,8 @@ HIS-Go/
 │   │   └── seed_data.sql           # 基础数据/字典数据
 │   ├── scripts/                    # 辅助脚本
 │   │   ├── proto_gen.sh            # Proto 代码生成
-│   │   └── db_init.sh              # 数据库初始化
+│   │   ├── db_init.sh              # 数据库初始化（迁移+种子）
+│   │   └── migrate.sh              # 数据库迁移执行器
 │   ├── migrations/                 # 版本化数据库迁移
 │   │   ├── 001_init_all_db.sql     # 创建所有数据库
 │   │   └── ...                     # 15 个迁移脚本
@@ -252,7 +258,16 @@ HIS-Go/
 ├── frontend/                       # 前端子项目
 │   ├── his-web-admin/              # 管理端 (Vue 3 + Ant Design Vue)
 │   └── his-web-patient/            # 患者端 (Vue 3 + Element Plus)
-├── testing/                        # 测试文档与测试用例
+├── scripts/                        # 顶层脚本
+│   ├── check.sh                    # Linux/macOS 质量检查
+│   └── check.ps1                   # Windows 质量检查
+├── Makefile                        # 构建/检查快捷命令
+├── testing/                        # API 集成测试
+│   ├── go.mod                      # 独立 Go module
+│   ├── api/                        # 集成测试用例
+│   │   ├── client.go               # HTTP 客户端封装
+│   │   └── auth_flow_test.go       # 认证流程 / 鉴权验收
+│   └── run.sh                      # 集成测试运行脚本
 ├── docs/                           # 项目文档
 │   └── 项目架构设计文档.md
 ├── .gitignore
@@ -281,7 +296,7 @@ HIS-Go/
 
 ## 测试命令
 
-### 后端
+### 后端单元测试
 
 ```bash
 cd backend
@@ -295,6 +310,20 @@ go test ./internal/auth/...
 
 # 编译检查所有服务
 go build ./cmd/...
+
+# 代码质量一键检查
+bash scripts/check.sh
+```
+
+### 集成测试（需 Docker 环境启动后）
+
+```bash
+# 启动全部服务后执行 API 验收测试
+cd testing
+bash run.sh
+
+# 或手动指定目标地址
+HIS_BASE_URL=http://localhost:8080 HIS_INTEGRATION_TEST=true go test -v ./...
 ```
 
 ### 编译
@@ -311,24 +340,25 @@ go build -o bin/gateway ./cmd/gateway
 
 ## 与原项目技术栈映射
 
-| 原项目（Java） | HIS-Go（Go） | 说明 |
-| --- | --- | --- |
-| Spring Boot 3.3 | Gin 1.10+ | HTTP 框架 |
-| Spring Cloud Gateway | Gin + 自定义路由 | API 网关 |
-| Nacos | Nacos Go SDK | 服务注册与配置中心 |
-| OpenFeign | gRPC | 微服务间 RPC 通信 |
-| MyBatis-Plus | GORM 2.x | ORM 框架 |
-| Seata | — (后续引入 DTM) | 分布式事务 |
-| Sentinel | 自定义限流中间件 | 熔断降级 |
-| XXL-JOB | robfig/cron | 定时任务 |
-| Maven | Go Modules | 依赖管理 |
-| Java 21 | Go 1.24+ | 运行语言 |
-| Spring Security | golang-jwt + Gin中间件 | 安全认证 |
+| 原项目（Java）            | HIS-Go（Go）          | 说明          |
+| -------------------- | ------------------- | ----------- |
+| Spring Boot 3.3      | Gin 1.10+           | HTTP 框架     |
+| Spring Cloud Gateway | Gin + 自定义路由         | API 网关      |
+| Nacos                | Nacos Go SDK        | 服务注册与配置中心   |
+| OpenFeign            | gRPC                | 微服务间 RPC 通信 |
+| MyBatis-Plus         | GORM 2.x            | ORM 框架      |
+| Seata                | — (后续引入 DTM)        | 分布式事务       |
+| Sentinel             | 自定义限流中间件            | 熔断降级        |
+| XXL-JOB              | robfig/cron         | 定时任务        |
+| Maven                | Go Modules          | 依赖管理        |
+| Java 21              | Go 1.24+            | 运行语言        |
+| Spring Security      | golang-jwt + Gin中间件 | 安全认证        |
 
 ## 生产部署注意事项
 
 - 生产环境必须修改 `docker/.env` 中所有默认密码（数据库、Redis、RabbitMQ、MinIO）
 - JWT 密钥对（RS256）需通过环境变量注入，生成方式：
+  
   ```bash
   openssl genrsa -out private.pem 2048
   openssl rsa -in private.pem -pubout -out public.pem
@@ -341,8 +371,8 @@ go build -o bin/gateway ./cmd/gateway
 
 ## 相关文档
 
-| 文档 | 说明 |
-| --- | --- |
+| 文档                           | 说明                             |
+| ---------------------------- | ------------------------------ |
 | [项目架构设计文档](docs/项目架构设计文档.md) | 系统总体架构、技术选型、微服务划分、RabbitMQ 可靠性 |
 
 ## 后续规划
