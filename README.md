@@ -21,7 +21,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 
 ## 当前完成度
 
-> 本项目处于**后端基线已建立**阶段。18个服务可编译、158+个测试保护核心链路（涵盖14个业务模块）、gRPC/HTTP双协议完整、数据库迁移就绪、集成测试框架已搭建。后续将推进 Docker 全栈验证和前端开发。
+> 本项目处于**交付就绪**阶段。18个服务可编译、158+个测试保护核心链路、gRPC/HTTP双协议完整、前端管理端+患者端已搭建（66个Vue/TS文件）、Docker Compose+K8s部署方案齐全。
 
 | 维度          | 状态     | 说明                                                      |
 | ----------- | ------ | ------------------------------------------------------- |
@@ -29,13 +29,14 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 | 构建基线        | 已通过    | `go build ./cmd/...` 通过，`gofmt -l .` 零输出，`go.sum` 已生成 |
 | gRPC        | 已完成    | 18 个 `.proto` 已编写，gRPC Server 注册和 `.pb.go` 代码已生成           |
 | 数据库         | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，表结构完整匹配 Go 模型                  |
-| Docker      | 配置就绪   | Dockerfile 和 docker-compose.yml 已修复，`.env.example` 已提供，Compose 配置解析已通过              |
+| Docker      | 配置就绪   | Dockerfile 和 docker-compose.yml/docker-compose.prod.yml 已就绪，Compose 配置解析已通过              |
 | Gateway JWT | 已接入    | JWT 鉴权中间件已接入 Gateway，白名单路由放行，用户上下文透传至下游服务               |
 | 健康检查        | 已增强    | `/health` 存活检查 + `/ready` 就绪检查（含 DB、Redis 连通性）          |
 | 数据库迁移       | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，`db_init.sh` 支持按序执行             |
 | 测试          | 已建立    | 158+ 个单元测试覆盖 JWT/Redis锁/Auth/挂号/收费/药房/用户/排班/门诊/处方/随访/慢病/EMR/检查/错误码 |
 | 质量检查       | 已固化    | `gofmt`零输出 + `go vet`通过 + `go test`全绿 + `go build`通过        |
-| 前端          | 待开发    | `frontend/` 目录为空                                        |
+| 前端          | 已完成    | `his-web-admin`(管理端19模块) + `his-web-patient`(患者端8模块)，Vue3+TS+Vite6 |
+| K8s 部署      | 已就绪    | `k8s/base/` 含 11 个 YAML 清单，覆盖全部基础设施和 18 微服务 |
 
 ## 技术栈
 
@@ -177,7 +178,19 @@ go run ./cmd/emr
 
 ### 启动前端
 
-前端尚未开始实现，当前 `frontend/` 目录为空。Phase 6 计划创建管理端 `frontend/his-web-admin` 和患者端 `frontend/his-web-patient` 后，再补充对应的 `npm install` / `npm run dev` 启动命令。
+```bash
+# 管理端
+cd frontend/his-web-admin
+npm install
+npm run dev      # 开发服务器 → http://localhost:5173
+
+# 患者端
+cd frontend/his-web-patient
+npm install
+npm run dev      # 开发服务器 → http://localhost:5174
+```
+
+> 前端通过 Vite 代理将 `/api` 请求转发至 `http://localhost:8080`（Gateway），确保后端已启动。
 
 ## 默认验收账号
 
@@ -254,7 +267,26 @@ HIS-Go/
 │   ├── nginx/                      # Nginx 配置
 │   │   └── nginx.conf
 │   └── .env.example                # 环境变量模板
-├── frontend/                       # 前端子项目（当前为空，Phase 6 创建）
+├── frontend/                       # 前端子项目
+│   ├── his-web-admin/              # 管理端 (Vue3 + Ant Design Vue4)
+│   │   ├── src/views/              # 19 个功能模块页面
+│   │   └── ...
+│   └── his-web-patient/            # 患者端 (Vue3 + Ant Design Vue4, H5)
+│       ├── src/views/              # 8 个功能模块页面
+│       └── ...
+├── k8s/                            # Kubernetes 部署清单
+│   └── base/
+│       ├── namespace.yaml
+│       ├── configmap.yaml
+│       ├── secrets.yaml
+│       ├── postgresql.yaml
+│       ├── redis.yaml
+│       ├── rabbitmq.yaml
+│       ├── nacos.yaml
+│       ├── minio.yaml
+│       ├── services.yaml           # 18 微服务 Deployment+Service
+│       ├── nginx.yaml              # Nginx + Ingress
+│       └── kustomization.yaml
 ├── scripts/                        # 顶层脚本
 │   ├── check.sh                    # Linux/macOS 质量检查
 │   └── check.ps1                   # Windows 质量检查
