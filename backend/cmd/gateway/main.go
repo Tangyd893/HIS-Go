@@ -17,9 +17,12 @@ import (
 	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
+	"his-go/pkg/nacos"
 	"his-go/pkg/security/auth"
 	"his-go/pkg/security/jwt"
 )
+
+var routeManager *nacos.RouteManager
 
 var serviceRoutes = map[string]string{
 	"/api/auth":          "http://localhost:8081",
@@ -86,7 +89,8 @@ func main() {
 		switchToDockerRoutes()
 	}
 
-	if os.Getenv("USE_NACOS") == "true" {
+	routeManager = nacos.NewRouteManager(cfg.Nacos.ServerAddr())
+	if routeManager.IsEnabled() {
 		loadRoutesFromNacos(cfg)
 	}
 
@@ -254,4 +258,22 @@ func resolveTarget(path string) string {
 
 func loadRoutesFromNacos(cfg *config.Config) {
 	logger.Info("已启用 Nacos 动态服务发现（网关将优先使用 Nacos 注册中心获取微服务地址）")
+
+	for prefix, serviceName := range nacos.ServiceMap {
+		host := strings.Replace(serviceName, "his-", "", 1)
+		defaultTarget := fmt.Sprintf("http://localhost:%s", extractPort(serviceRoutes[prefix]))
+		routeManager.RegisterRoute(prefix, host, []string{defaultTarget})
+	}
+
+	if err := routeManager.InitFromNacos(); err != nil {
+		logger.Error("Nacos 服务发现初始化失败: " + err.Error())
+		return
+	}
+
+	// 用 Nacos 路由覆盖静态路由表
+	nacosRoutes := routeManager.GetAllRoutes()
+	for prefix, target := range nacosRoutes {
+		serviceRoutes[prefix] = target
+	}
+	logger.Info("Nacos 动态路由加载完成，共 " + fmt.Sprint(len(nacosRoutes)) + " 条路由")
 }

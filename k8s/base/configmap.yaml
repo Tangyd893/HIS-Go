@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: his-config
+  namespace: his
+data:
+  config.yaml: |
+    server:
+      mode: release
+    database:
+      driver: postgres
+      host: postgresql.his.svc.cluster.local
+      port: 5432
+      user: his_admin
+      sslmode: disable
+      maxOpenConns: 100
+      maxIdleConns: 20
+      connMaxLifetime: 600
+    redis:
+      host: redis.his.svc.cluster.local
+      port: 6379
+      db: 0
+      poolSize: 50
+    rabbitmq:
+      host: rabbitmq.his.svc.cluster.local
+      port: 5672
+      user: admin
+      vhost: /
+    nacos:
+      host: nacos.his.svc.cluster.local
+      port: 8848
+      namespace: production
+      group: DEFAULT_GROUP
+    minio:
+      endpoint: minio.his.svc.cluster.local:9000
+      access_key: minioadmin
+      bucket: his-medical
+      use_ssl: false
+    log:
+      level: info
+      format: json
+      output: stdout

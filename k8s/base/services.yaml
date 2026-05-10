@@ -1,0 +1,592 @@
+# HIS-Go 微服务 K8s 部署清单
+# 每个微服务包含 Deployment + Service (HTTP + gRPC)
+
+# ========== Gateway ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: his
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: his-go/gateway:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: USE_NACOS
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: redis-password } }
+            - name: JWT_PRIVATE_KEY
+              valueFrom: { secretKeyRef: { name: his-secrets, key: jwt-private-key, optional: true } }
+          ports:
+            - containerPort: 8080
+          resources:
+            requests: { memory: "64Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "500m" }
+          livenessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet: { path: /ready, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: his
+spec:
+  selector:
+    app: gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# ========== Auth (认证) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: his
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: his-go/auth:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: redis-password } }
+            - name: JWT_PRIVATE_KEY
+              valueFrom: { secretKeyRef: { name: his-secrets, key: jwt-private-key, optional: true } }
+          ports:
+            - { containerPort: 8081 }
+            - { containerPort: 9081 }
+          resources:
+            requests: { memory: "64Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "500m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: his
+spec:
+  selector: { app: auth }
+  ports:
+    - { name: http, port: 8081, targetPort: 8081 }
+    - { name: grpc, port: 9081, targetPort: 9081 }
+---
+# ========== User (用户) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user
+  namespace: his
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+        - name: user
+          image: his-go/user:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: redis-password } }
+          ports:
+            - { containerPort: 8082 }
+            - { containerPort: 9082 }
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user
+  namespace: his
+spec:
+  selector: { app: user }
+  ports:
+    - { name: http, port: 8082, targetPort: 8082 }
+    - { name: grpc, port: 9082, targetPort: 9082 }
+---
+# ========== Registration (挂号) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registration
+  namespace: his
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: registration } }
+  template:
+    metadata: { labels: { app: registration } }
+    spec:
+      containers:
+        - name: registration
+          image: his-go/registration:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: redis-password } }
+          ports: [{ containerPort: 8083 }, { containerPort: 9083 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: registration, namespace: his }
+spec:
+  selector: { app: registration }
+  ports: [{ name: http, port: 8083, targetPort: 8083 }, { name: grpc, port: 9083, targetPort: 9083 }]
+---
+# ========== Clinic (门诊) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: clinic, namespace: his }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: clinic } }
+  template:
+    metadata: { labels: { app: clinic } }
+    spec:
+      containers:
+        - name: clinic
+          image: his-go/clinic:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8084 }, { containerPort: 9084 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: clinic, namespace: his }
+spec:
+  selector: { app: clinic }
+  ports: [{ name: http, port: 8084, targetPort: 8084 }, { name: grpc, port: 9084, targetPort: 9084 }]
+---
+# ========== EMR (电子病历) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: emr, namespace: his }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: emr } }
+  template:
+    metadata: { labels: { app: emr } }
+    spec:
+      containers:
+        - name: emr
+          image: his-go/emr:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8097 }, { containerPort: 9097 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: emr, namespace: his }
+spec:
+  selector: { app: emr }
+  ports: [{ name: http, port: 8097, targetPort: 8097 }, { name: grpc, port: 9097, targetPort: 9097 }]
+---
+# ========== Prescription (处方) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: prescription, namespace: his }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: prescription } }
+  template:
+    metadata: { labels: { app: prescription } }
+    spec:
+      containers:
+        - name: prescription
+          image: his-go/prescription:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8085 }, { containerPort: 9085 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: prescription, namespace: his }
+spec:
+  selector: { app: prescription }
+  ports: [{ name: http, port: 8085, targetPort: 8085 }, { name: grpc, port: 9085, targetPort: 9085 }]
+---
+# ========== Billing (收费) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: billing, namespace: his }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: billing } }
+  template:
+    metadata: { labels: { app: billing } }
+    spec:
+      containers:
+        - name: billing
+          image: his-go/billing:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+            - name: MQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: mq-password } }
+          ports: [{ containerPort: 8086 }, { containerPort: 9086 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: billing, namespace: his }
+spec:
+  selector: { app: billing }
+  ports: [{ name: http, port: 8086, targetPort: 8086 }, { name: grpc, port: 9086, targetPort: 9086 }]
+---
+# ========== Pharmacy (药房) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: pharmacy, namespace: his }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: pharmacy } }
+  template:
+    metadata: { labels: { app: pharmacy } }
+    spec:
+      containers:
+        - name: pharmacy
+          image: his-go/pharmacy:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8087 }, { containerPort: 9087 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: pharmacy, namespace: his }
+spec:
+  selector: { app: pharmacy }
+  ports: [{ name: http, port: 8087, targetPort: 8087 }, { name: grpc, port: 9087, targetPort: 9087 }]
+---
+# ========== Examination (检查) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: examination, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: examination } }
+  template:
+    metadata: { labels: { app: examination } }
+    spec:
+      containers:
+        - name: examination
+          image: his-go/examination:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8088 }, { containerPort: 9088 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: examination, namespace: his }
+spec:
+  selector: { app: examination }
+  ports: [{ name: http, port: 8088, targetPort: 8088 }, { name: grpc, port: 9088, targetPort: 9088 }]
+---
+# ========== Inpatient (住院) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: inpatient, namespace: his }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: inpatient } }
+  template:
+    metadata: { labels: { app: inpatient } }
+    spec:
+      containers:
+        - name: inpatient
+          image: his-go/inpatient:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8089 }, { containerPort: 9089 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: inpatient, namespace: his }
+spec:
+  selector: { app: inpatient }
+  ports: [{ name: http, port: 8089, targetPort: 8089 }, { name: grpc, port: 9089, targetPort: 9089 }]
+---
+# ========== Schedule (排班) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: schedule, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: schedule } }
+  template:
+    metadata: { labels: { app: schedule } }
+    spec:
+      containers:
+        - name: schedule
+          image: his-go/schedule:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8090 }, { containerPort: 9090 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: schedule, namespace: his }
+spec:
+  selector: { app: schedule }
+  ports: [{ name: http, port: 8090, targetPort: 8090 }, { name: grpc, port: 9090, targetPort: 9090 }]
+---
+# ========== Outpatient (院外) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: outpatient, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: outpatient } }
+  template:
+    metadata: { labels: { app: outpatient } }
+    spec:
+      containers:
+        - name: outpatient
+          image: his-go/outpatient:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8091 }, { containerPort: 9091 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: outpatient, namespace: his }
+spec:
+  selector: { app: outpatient }
+  ports: [{ name: http, port: 8091, targetPort: 8091 }, { name: grpc, port: 9091, targetPort: 9091 }]
+---
+# ========== Followup (随访) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: followup, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: followup } }
+  template:
+    metadata: { labels: { app: followup } }
+    spec:
+      containers:
+        - name: followup
+          image: his-go/followup:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8092 }, { containerPort: 9092 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: followup, namespace: his }
+spec:
+  selector: { app: followup }
+  ports: [{ name: http, port: 8092, targetPort: 8092 }, { name: grpc, port: 9092, targetPort: 9092 }]
+---
+# ========== HealthRecord (健康档案) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: health-record, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: health-record } }
+  template:
+    metadata: { labels: { app: health-record } }
+    spec:
+      containers:
+        - name: health-record
+          image: his-go/health-record:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8093 }, { containerPort: 9093 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: health-record, namespace: his }
+spec:
+  selector: { app: health-record }
+  ports: [{ name: http, port: 8093, targetPort: 8093 }, { name: grpc, port: 9093, targetPort: 9093 }]
+---
+# ========== Notification (通知) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: notification, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: notification } }
+  template:
+    metadata: { labels: { app: notification } }
+    spec:
+      containers:
+        - name: notification
+          image: his-go/notification:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+            - name: MQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: mq-password } }
+          ports: [{ containerPort: 8094 }, { containerPort: 9094 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: notification, namespace: his }
+spec:
+  selector: { app: notification }
+  ports: [{ name: http, port: 8094, targetPort: 8094 }, { name: grpc, port: 9094, targetPort: 9094 }]
+---
+# ========== Statistics (统计) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: statistics, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: statistics } }
+  template:
+    metadata: { labels: { app: statistics } }
+    spec:
+      containers:
+        - name: statistics
+          image: his-go/statistics:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8095 }, { containerPort: 9095 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: statistics, namespace: his }
+spec:
+  selector: { app: statistics }
+  ports: [{ name: http, port: 8095, targetPort: 8095 }, { name: grpc, port: 9095, targetPort: 9095 }]
+---
+# ========== System (系统) ==========
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: system, namespace: his }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: system } }
+  template:
+    metadata: { labels: { app: system } }
+    spec:
+      containers:
+        - name: system
+          image: his-go/system:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RUNNING_IN_DOCKER
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: his-secrets, key: db-password } }
+          ports: [{ containerPort: 8096 }, { containerPort: 9096 }]
+          resources: { requests: { memory: "64Mi", cpu: "100m" }, limits: { memory: "256Mi", cpu: "500m" } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: system, namespace: his }
+spec:
+  selector: { app: system }
+  ports: [{ name: http, port: 8096, targetPort: 8096 }, { name: grpc, port: 9096, targetPort: 9096 }]
