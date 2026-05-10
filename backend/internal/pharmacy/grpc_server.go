@@ -81,17 +81,15 @@ func (s *PharmacyGrpcServer) ReduceStock(ctx context.Context, req *pharmacy.Stoc
 }
 
 // DispenseDrug 发药
-// 注意: proto DispenseRequest 仅含 prescription_id，drug_id/quantity/dispenser_id 仍需 proto 补齐字段
-// 当前实现暂用固定值，待 proto DispenseRequest 增加 drug_id/quantity/dispenser_id 字段后替换
 func (s *PharmacyGrpcServer) DispenseDrug(ctx context.Context, req *pharmacy.DispenseRequest) (*pharmacy.DispenseRecord, error) {
-	if err := s.svc.DispenseDrug(req.PrescriptionId, "", 1, "system"); err != nil {
+	if err := s.svc.DispenseDrug(req.PrescriptionId, req.DrugId, int(req.Quantity), req.DispenserId); err != nil {
 		return nil, err
 	}
 	return &pharmacy.DispenseRecord{
 		PrescriptionId: req.PrescriptionId,
-		DrugId:         "",
-		Quantity:       1,
-		DispenserId:    "system",
+		DrugId:         req.DrugId,
+		Quantity:       req.Quantity,
+		DispenserId:    req.DispenserId,
 		Status:         1,
 	}, nil
 }

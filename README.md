@@ -11,7 +11,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 - 18 个微服务模块，覆盖挂号→就诊→处方→收费→发药→住院全流程
 - 6 个院外服务（在线问诊、慢病管理、健康档案、随访管理）
 - Gateway 统一入口，路由转发，JWT 鉴权中间件已接入
-- PostgreSQL 17 分库设计（Database per Service），18 个独立数据库
+- PostgreSQL 17 分库设计（Database per Service），17 个独立数据库（Gateway 无状态）
 - GORM 持久化 + 乐观锁 + 逻辑删除 + 自动填充
 - RabbitMQ 消息可靠性设计（Publisher Confirm、手动 ACK、死信队列、本地消息表）
 - Redis 缓存策略（号源缓存、分布式锁、排队 Sorted Set、滑动窗口限流）
@@ -26,10 +26,10 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 | 维度          | 状态     | 说明                                                      |
 | ----------- | ------ | ------------------------------------------------------- |
 | 后端骨架        | 已完成    | 18 个服务入口、17 个领域模块，handler/service/repository/model 分层完整 |
-| 构建基线        | 已通过    | `go build ./cmd/...` 通过，`go fmt ./...` 零输出，`go.sum` 已生成 |
+| 构建基线        | 已通过    | `go build ./cmd/...` 通过，`gofmt -l .` 零输出，`go.sum` 已生成 |
 | gRPC        | 已完成    | 18 个 `.proto` 已编写，gRPC Server 注册和 `.pb.go` 代码已生成           |
 | 数据库         | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，表结构完整匹配 Go 模型                  |
-| Docker      | 配置就绪   | Dockerfile 和 docker-compose.yml 已修复，`.env.example` 已提供              |
+| Docker      | 配置就绪   | Dockerfile 和 docker-compose.yml 已修复，`.env.example` 已提供，Compose 配置解析已通过              |
 | Gateway JWT | 已接入    | JWT 鉴权中间件已接入 Gateway，白名单路由放行，用户上下文透传至下游服务               |
 | 健康检查        | 已增强    | `/health` 存活检查 + `/ready` 就绪检查（含 DB、Redis 连通性）          |
 | 数据库迁移       | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，`db_init.sh` 支持按序执行             |
@@ -39,7 +39,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 
 ## 技术栈
 
-- **后端：** Go 1.24+、Gin 1.10+、gRPC 1.70+、GORM 2.x、PostgreSQL 17、Redis 7、RabbitMQ 4、Nacos Go SDK、MinIO
+- **后端：** Go 1.25+、Gin 1.10+、gRPC 1.70+、GORM 2.x、PostgreSQL 17、Redis 7、RabbitMQ 4、Nacos Go SDK、MinIO
 - **前端：** Vue 3.5、TypeScript、Ant Design Vue 4、Element Plus 2、ECharts 5、Vite 6、Pinia 2
 - **依赖注入：** Wire 0.6+
 - **定时任务：** robfig/cron 3.x
@@ -105,7 +105,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 | 工具      | 最低版本     | 用途                                       |
 | ------- | -------- | ---------------------------------------- |
 | Docker  | 20.10+   | PostgreSQL、Redis、RabbitMQ、Nacos、MinIO 容器 |
-| Go      | 1.24+    | Go 编译与运行                                 |
+| Go      | 1.25+    | Go 编译与运行                                 |
 | Node.js | 24 (LTS) | 前端构建与开发服务器                               |
 
 一条命令检查所有必需工具：
@@ -114,7 +114,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 go version && node --version && docker --version
 ```
 
-### 启动完整技术栈
+### 启动完整后端技术栈
 
 ```bash
 cd docker
@@ -125,16 +125,23 @@ cp .env.example .env
 docker compose up -d postgresql redis rabbitmq nacos minio
 
 # 初始化数据库（等 PostgreSQL 就绪后，推荐方式）
-cd backend
+cd ../backend
+# 如修改了 .env 中的 DB_PASSWORD，请在此同步导出：export DB_PASSWORD=你的密码
 bash scripts/db_init.sh
-
-# 备选：手动执行 SQL
-docker exec -i his-postgres psql -U his_admin < backend/sql/init_all.sql
-docker exec -i his-postgres psql -U his_admin < backend/sql/seed_data.sql
+cd ../docker
 
 # 构建 Go 服务并启动全部服务
 docker compose up -d --build
 ```
+
+备选：也可以在项目根目录手动执行 SQL：
+
+```bash
+docker exec -i his-postgres psql -U his_admin < backend/sql/init_all.sql
+docker exec -i his-postgres psql -U his_admin < backend/sql/seed_data.sql
+```
+
+> 当前已验证 Compose 配置可解析；完整容器启动和集成测试仍需在有 Docker 运行环境时执行。
 
 ### 逐个启动后端服务（开发调试）
 
@@ -170,15 +177,7 @@ go run ./cmd/emr
 
 ### 启动前端
 
-```bash
-cd frontend/his-web-admin
-npm install && npm run dev
-
-cd ../his-web-patient
-npm install && npm run dev
-```
-
-浏览器访问管理端 `http://localhost:5173`，患者端 `http://localhost:5174`。
+前端尚未开始实现，当前 `frontend/` 目录为空。Phase 6 计划创建管理端 `frontend/his-web-admin` 和患者端 `frontend/his-web-patient` 后，再补充对应的 `npm install` / `npm run dev` 启动命令。
 
 ## 默认验收账号
 
@@ -255,9 +254,7 @@ HIS-Go/
 │   ├── nginx/                      # Nginx 配置
 │   │   └── nginx.conf
 │   └── .env.example                # 环境变量模板
-├── frontend/                       # 前端子项目
-│   ├── his-web-admin/              # 管理端 (Vue 3 + Ant Design Vue)
-│   └── his-web-patient/            # 患者端 (Vue 3 + Element Plus)
+├── frontend/                       # 前端子项目（当前为空，Phase 6 创建）
 ├── scripts/                        # 顶层脚本
 │   ├── check.sh                    # Linux/macOS 质量检查
 │   └── check.ps1                   # Windows 质量检查
@@ -351,7 +348,7 @@ go build -o bin/gateway ./cmd/gateway
 | Sentinel             | 自定义限流中间件            | 熔断降级        |
 | XXL-JOB              | robfig/cron         | 定时任务        |
 | Maven                | Go Modules          | 依赖管理        |
-| Java 21              | Go 1.24+            | 运行语言        |
+| Java 21              | Go 1.25+            | 运行语言        |
 | Spring Security      | golang-jwt + Gin中间件 | 安全认证        |
 
 ## 生产部署注意事项

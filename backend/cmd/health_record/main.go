@@ -14,6 +14,7 @@ import (
 	"his-go/internal/health_record/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	hrSvc := service.NewHealthRecordService(hrRepo)
 	hrHandler := handler.NewHealthRecordHandler(hrSvc)
 
-	router := setupHealthRecordRouter(cfg, hrHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupHealthRecordRouter(cfg, hrHandler, deps)
 
 	go startGrpcServer(hrSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupHealthRecordRouter(cfg *config.Config, hrHandler *handler.HealthRecordHandler) *gin.Engine {
+func setupHealthRecordRouter(cfg *config.Config, hrHandler *handler.HealthRecordHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-health-record"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-health-record"})
-	})
+	router.GET("/health", health.HealthHandler("his-health-record"))
+	router.GET("/ready", health.ReadinessHandler("his-health-record", deps))
 
 	api := router.Group("/api/health-record")
 	{

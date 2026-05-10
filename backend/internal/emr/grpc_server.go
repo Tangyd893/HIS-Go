@@ -66,13 +66,11 @@ func (s *EMRGrpcServer) ListRecords(ctx context.Context, req *emr.RecordListRequ
 }
 
 // QualityControl 病历质控
-// 注意: proto QualityControl RPC 当前使用 common.IdRequest（仅含 id），
-// 缺少 reviewer_id / level / comment 字段，待 proto 增加 QualityControlRequest 消息后补全
-func (s *EMRGrpcServer) QualityControl(ctx context.Context, req *common.IdRequest) (*emr.MedicalRecord, error) {
-	if err := s.svc.QualityControl(req.Id, "system", 1, ""); err != nil {
+func (s *EMRGrpcServer) QualityControl(ctx context.Context, req *emr.QualityControlRequest) (*emr.MedicalRecord, error) {
+	if err := s.svc.QualityControl(req.RecordId, req.ReviewerId, int(req.Level), req.Comment); err != nil {
 		return nil, err
 	}
-	record, err := s.svc.GetRecord(req.Id)
+	record, err := s.svc.GetRecord(req.RecordId)
 	if err != nil {
 		return nil, err
 	}

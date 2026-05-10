@@ -14,6 +14,7 @@ import (
 	"his-go/internal/prescription/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	prescSvc := service.NewPrescriptionService(prescRepo)
 	prescHandler := handler.NewPrescriptionHandler(prescSvc)
 
-	router := setupPrescriptionRouter(cfg, prescHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupPrescriptionRouter(cfg, prescHandler, deps)
 
 	go startGrpcServer(prescSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.PrescriptionHandler) *gin.Engine {
+func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.PrescriptionHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-prescription"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-prescription"})
-	})
+	router.GET("/health", health.HealthHandler("his-prescription"))
+	router.GET("/ready", health.ReadinessHandler("his-prescription", deps))
 
 	api := router.Group("/api/prescription")
 	{

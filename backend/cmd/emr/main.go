@@ -14,6 +14,7 @@ import (
 	"his-go/internal/emr/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	emrSvc := service.NewEMRService(emrRepo)
 	emrHandler := handler.NewEMRHandler(emrSvc)
 
-	router := setupEMRRouter(cfg, emrHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupEMRRouter(cfg, emrHandler, deps)
 
 	go startGrpcServer(emrSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupEMRRouter(cfg *config.Config, emrHandler *handler.EMRHandler) *gin.Engine {
+func setupEMRRouter(cfg *config.Config, emrHandler *handler.EMRHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-emr"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-emr"})
-	})
+	router.GET("/health", health.HealthHandler("his-emr"))
+	router.GET("/ready", health.ReadinessHandler("his-emr", deps))
 
 	api := router.Group("/api/emr")
 	{

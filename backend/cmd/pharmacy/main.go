@@ -15,6 +15,7 @@ import (
 	"his-go/internal/pharmacy/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
@@ -74,7 +75,13 @@ func main() {
 	pharmacySvc := service.NewPharmacyService(pharmacyRepo, rabbitMQ, cronScheduler)
 	pharmacyHandler := handler.NewPharmacyHandler(pharmacySvc)
 
-	router := setupPharmacyRouter(cfg, pharmacyHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupPharmacyRouter(cfg, pharmacyHandler, deps)
 
 	go startGrpcServer(pharmacySvc, cfg)
 
@@ -87,16 +94,16 @@ func main() {
 	}
 }
 
-func setupPharmacyRouter(cfg *config.Config, pharmacyHandler *handler.PharmacyHandler) *gin.Engine {
+func setupPharmacyRouter(cfg *config.Config, pharmacyHandler *handler.PharmacyHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-pharmacy"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-pharmacy"})
-	})
+	router.GET("/health", health.HealthHandler("his-pharmacy"))
+	router.GET("/ready", health.ReadinessHandler("his-pharmacy", deps))
 
 	api := router.Group("/api/pharmacy")
 	{

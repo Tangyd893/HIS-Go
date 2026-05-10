@@ -21,7 +21,7 @@ jobs:
       - name: 设置 Go 环境
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           cache-dependency-path: backend/go.sum
 
       - name: 检查代码格式

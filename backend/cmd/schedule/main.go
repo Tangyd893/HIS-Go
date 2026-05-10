@@ -14,6 +14,7 @@ import (
 	"his-go/internal/schedule/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	scheduleSvc := service.NewScheduleService(scheduleRepo)
 	scheduleHandler := handler.NewScheduleHandler(scheduleSvc)
 
-	router := setupScheduleRouter(cfg, scheduleHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupScheduleRouter(cfg, scheduleHandler, deps)
 
 	go startGrpcServer(scheduleSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupScheduleRouter(cfg *config.Config, scheduleHandler *handler.ScheduleHandler) *gin.Engine {
+func setupScheduleRouter(cfg *config.Config, scheduleHandler *handler.ScheduleHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-schedule"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-schedule"})
-	})
+	router.GET("/health", health.HealthHandler("his-schedule"))
+	router.GET("/ready", health.ReadinessHandler("his-schedule", deps))
 
 	api := router.Group("/api/schedule")
 	{

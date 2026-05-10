@@ -42,6 +42,8 @@ message ScheduleQueryRequest {
 message RegistrationRequest {
   string patient_id = 1;
   string schedule_id = 2;
+  string patient_name = 3;
+  string registration_date = 4;
 }
 
 // 排队状态

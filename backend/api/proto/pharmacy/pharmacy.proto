@@ -65,6 +65,9 @@ message StockRequest {
 
 message DispenseRequest {
   string prescription_id = 1;
+  string drug_id = 2;
+  int32 quantity = 3;
+  string dispenser_id = 4;
 }
 
 message ExpiredDrugResponse {

@@ -14,6 +14,7 @@ import (
 	"his-go/internal/outpatient/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	outpatientSvc := service.NewOutpatientService(outpatientRepo)
 	outpatientHandler := handler.NewOutpatientHandler(outpatientSvc)
 
-	router := setupOutpatientRouter(cfg, outpatientHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupOutpatientRouter(cfg, outpatientHandler, deps)
 
 	go startGrpcServer(outpatientSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.OutpatientHandler) *gin.Engine {
+func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.OutpatientHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-outpatient"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-outpatient"})
-	})
+	router.GET("/health", health.HealthHandler("his-outpatient"))
+	router.GET("/ready", health.ReadinessHandler("his-outpatient", deps))
 
 	api := router.Group("/api/outpatient")
 	{

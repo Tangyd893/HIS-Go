@@ -14,6 +14,7 @@ import (
 	"his-go/internal/billing/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
@@ -69,7 +70,13 @@ func main() {
 	billingSvc := service.NewBillingService(billingRepo, rabbitMQ)
 	billingHandler := handler.NewBillingHandler(billingSvc)
 
-	router := setupBillingRouter(cfg, billingHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupBillingRouter(cfg, billingHandler, deps)
 
 	go startGrpcServer(billingSvc, cfg)
 
@@ -82,16 +89,16 @@ func main() {
 	}
 }
 
-func setupBillingRouter(cfg *config.Config, billingHandler *handler.BillingHandler) *gin.Engine {
+func setupBillingRouter(cfg *config.Config, billingHandler *handler.BillingHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-billing"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-billing"})
-	})
+	router.GET("/health", health.HealthHandler("his-billing"))
+	router.GET("/ready", health.ReadinessHandler("his-billing", deps))
 
 	api := router.Group("/api/billing")
 	{

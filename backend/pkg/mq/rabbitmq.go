@@ -2,10 +2,24 @@
 package mq
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+const defaultConfirmTimeout = 5 * time.Second
+
+// MessageRecord 消息发送记录
+type MessageRecord struct {
+	ID         string
+	Exchange   string
+	RoutingKey string
+	Body       []byte
+	Status     int8 // 0-待确认 1-确认成功 2-确认失败
+	CreatedAt  time.Time
+}
 
 // RabbitMQ 连接管理器
 type RabbitMQ struct {
@@ -76,7 +90,7 @@ func (r *RabbitMQ) BindQueue(queueName, routingKey, exchangeName string) error {
 	return r.ch.QueueBind(queueName, routingKey, exchangeName, false, nil)
 }
 
-// Publish 发布持久化消息
+// Publish 发布持久化消息（不等待确认，快速返回）
 func (r *RabbitMQ) Publish(exchange, routingKey string, body []byte) error {
 	return r.ch.Publish(
 		exchange,
@@ -89,6 +103,34 @@ func (r *RabbitMQ) Publish(exchange, routingKey string, body []byte) error {
 			Body:         body,
 		},
 	)
+}
+
+// PublishWithConfirm 发布消息并等待 Broker 确认（ack/nack 或超时）
+func (r *RabbitMQ) PublishWithConfirm(ctx context.Context, exchange, routingKey string, body []byte) error {
+	confirms := r.ch.NotifyPublish(make(chan amqp.Confirmation, 1))
+
+	if err := r.Publish(exchange, routingKey, body); err != nil {
+		return fmt.Errorf("发布消息失败: %w", err)
+	}
+
+	// 移除监听以避免 channel 泄漏
+	defer func() {
+		// 清空 channel 中尚未处理的通知
+		for range confirms {
+		}
+	}()
+
+	select {
+	case confirm := <-confirms:
+		if !confirm.Ack {
+			return fmt.Errorf("消息被 RabbitMQ 拒绝 (Nack)")
+		}
+		return nil
+	case <-ctx.Done():
+		return fmt.Errorf("等待 RabbitMQ 确认超时: %w", ctx.Err())
+	case <-time.After(defaultConfirmTimeout):
+		return fmt.Errorf("等待 RabbitMQ 确认超时 (%v)", defaultConfirmTimeout)
+	}
 }
 
 // Consume 消费消息（手动 ACK）

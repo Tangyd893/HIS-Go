@@ -101,6 +101,7 @@ func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps 
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-auth"))
 
 	router.GET("/health", health.HealthHandler("his-auth"))
 	router.GET("/ready", health.ReadinessHandler("his-auth", deps))

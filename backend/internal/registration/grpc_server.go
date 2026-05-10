@@ -3,7 +3,6 @@ package registration
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"his-go/api/proto/common"
 	"his-go/api/proto/registration"
@@ -39,11 +38,8 @@ func (s *RegistrationGrpcServer) ListSchedules(ctx context.Context, req *registr
 }
 
 // Register 挂号
-// 注意: proto RegistrationRequest 当前缺少 patient_name 和 registration_date 字段，
-// 待 proto 补齐后从请求中获取
 func (s *RegistrationGrpcServer) Register(ctx context.Context, req *registration.RegistrationRequest) (*registration.RegistrationInfo, error) {
-	today := time.Now().Format("2006-01-02")
-	reg, err := s.svc.Register(req.PatientId, "", req.ScheduleId, today)
+	reg, err := s.svc.Register(req.PatientId, req.PatientName, req.ScheduleId, req.RegistrationDate)
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"his-go/pkg/config"
 	"his-go/pkg/health"
@@ -63,6 +64,7 @@ var dockerServiceMapping = map[string]string{
 var jwtWhitelist = []string{
 	"/health",
 	"/ready",
+	"/metrics",
 	"/api/auth/login",
 	"/api/auth/refresh",
 }
@@ -145,9 +147,11 @@ func setupRouter(cfg *config.Config) *gin.Engine {
 	router.Use(middleware.Cors())
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Tracing())
+	router.Use(middleware.Metrics("his-gateway"))
 
 	router.GET("/health", health.HealthHandler("his-gateway"))
 	router.GET("/ready", health.ReadinessHandler("his-gateway", nil))
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	router.Any("/api/*path", gatewayJwtAuth(), proxyHandler)
 

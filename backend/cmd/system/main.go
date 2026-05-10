@@ -14,6 +14,7 @@ import (
 	"his-go/internal/system/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	sysSvc := service.NewSystemService(sysRepo)
 	sysHandler := handler.NewSystemHandler(sysSvc)
 
-	router := setupSystemRouter(cfg, sysHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupSystemRouter(cfg, sysHandler, deps)
 
 	go startGrpcServer(sysSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupSystemRouter(cfg *config.Config, sysHandler *handler.SystemHandler) *gin.Engine {
+func setupSystemRouter(cfg *config.Config, sysHandler *handler.SystemHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-system"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-system"})
-	})
+	router.GET("/health", health.HealthHandler("his-system"))
+	router.GET("/ready", health.ReadinessHandler("his-system", deps))
 
 	api := router.Group("/api/system")
 	{

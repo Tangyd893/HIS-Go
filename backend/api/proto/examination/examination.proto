@@ -36,6 +36,7 @@ message ReviewReportRequest {
   string report_id = 1;
   bool approved = 2;
   string comment = 3;
+  string reviewer_id = 4;
 }
 
 message ReportListRequest {

@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"time"
 
 	"his-go/internal/billing/model"
 	"his-go/internal/billing/repository"
@@ -53,7 +55,12 @@ func (s *BillingService) Pay(billID string, payMethod int8) error {
 		"pay_method": bill.PayMethod,
 		"event":      "pay_success",
 	})
-	_ = s.mq.Publish("his.billing.pay", "billing.pay.success", msg)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := s.mq.PublishWithConfirm(ctx, "his.billing.pay", "billing.pay.success", msg); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -76,7 +83,12 @@ func (s *BillingService) Refund(billID string) error {
 		"amount":     bill.TotalAmount,
 		"event":      "refund_success",
 	})
-	_ = s.mq.Publish("his.billing.refund", "billing.refund.success", msg)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := s.mq.PublishWithConfirm(ctx, "his.billing.refund", "billing.refund.success", msg); err != nil {
+		return err
+	}
 
 	return nil
 }

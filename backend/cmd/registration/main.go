@@ -15,6 +15,7 @@ import (
 	"his-go/pkg/common/snowflake"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -64,7 +65,13 @@ func main() {
 	regSvc := service.NewRegistrationService(regRepo, rdb, sf)
 	regHandler := handler.NewRegistrationHandler(regSvc)
 
-	router := setupRegistrationRouter(cfg, regHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupRegistrationRouter(cfg, regHandler, deps)
 
 	go startGrpcServer(regSvc, cfg)
 
@@ -77,16 +84,16 @@ func main() {
 	}
 }
 
-func setupRegistrationRouter(cfg *config.Config, regHandler *handler.RegistrationHandler) *gin.Engine {
+func setupRegistrationRouter(cfg *config.Config, regHandler *handler.RegistrationHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-registration"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-registration"})
-	})
+	router.GET("/health", health.HealthHandler("his-registration"))
+	router.GET("/ready", health.ReadinessHandler("his-registration", deps))
 
 	api := router.Group("/api/registration")
 	{

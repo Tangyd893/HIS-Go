@@ -24,6 +24,9 @@ const (
 	CodeStockInsufficient   = 20006
 	CodePayFailed           = 20007
 	CodeRefundFailed        = 20008
+	CodeAuthExpired         = 20009 // 授权已过期
+	CodeAuthDuplicate       = 20010 // 重复授权
+	CodeAuthNotFound        = 20011 // 授权不存在
 )
 
 var codeMessages = map[int]string{
@@ -47,6 +50,9 @@ var codeMessages = map[int]string{
 	CodeStockInsufficient:   "库存不足",
 	CodePayFailed:           "支付失败",
 	CodeRefundFailed:        "退款失败",
+	CodeAuthExpired:         "授权已过期",
+	CodeAuthDuplicate:       "重复授权",
+	CodeAuthNotFound:        "授权不存在",
 }
 
 // GetMessage 获取错误码对应消息

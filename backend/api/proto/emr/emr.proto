@@ -52,9 +52,16 @@ service EMRService {
   rpc CreateRecord(MedicalRecord) returns (MedicalRecord);
   rpc GetRecord(common.IdRequest) returns (MedicalRecord);
   rpc ListRecords(RecordListRequest) returns (RecordListResponse);
-  rpc QualityControl(common.IdRequest) returns (MedicalRecord);
+  rpc QualityControl(QualityControlRequest) returns (MedicalRecord);
   rpc ListTemplates(common.Empty) returns (TemplateListResponse);
   rpc CDSSCheck(CDSSCheckRequest) returns (CDSSCheckResult);
+}
+
+message QualityControlRequest {
+  string record_id = 1;
+  string reviewer_id = 2;
+  int32 level = 3;
+  string comment = 4;
 }
 
 message RecordListRequest {

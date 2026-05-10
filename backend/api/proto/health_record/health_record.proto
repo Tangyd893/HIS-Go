@@ -39,7 +39,12 @@ service HealthRecordService {
   rpc GetSummary(common.IdRequest) returns (HealthRecordSummary);
   rpc GetTimeline(common.IdRequest) returns (TimelineResponse);
   rpc GrantAuthorization(RecordAuthorization) returns (RecordAuthorization);
-  rpc RevokeAuthorization(common.IdRequest) returns (common.BaseResponse);
+  rpc RevokeAuthorization(RevokeAuthorizationRequest) returns (common.BaseResponse);
+}
+
+message RevokeAuthorizationRequest {
+  string patient_id = 1;
+  string doctor_id = 2;
 }
 
 message TimelineResponse {

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -73,11 +74,13 @@ func (r *HealthRecordRepository) RevokeAuthorization(patientID, doctorID string)
 	return nil
 }
 
-// CheckAuthorization 检查授权状态
+// CheckAuthorization 检查授权状态（含过期校验）
 func (r *HealthRecordRepository) CheckAuthorization(patientID, doctorID string) bool {
 	var count int64
+	now := time.Now().Format("2006-01-02 15:04:05")
 	r.db.Model(&model.RecordAuthorization{}).
 		Where("patient_id = ? AND doctor_id = ? AND status = 1", patientID, doctorID).
+		Where("expire_time = '' OR expire_time > ?", now).
 		Count(&count)
 	return count > 0
 }

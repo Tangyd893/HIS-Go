@@ -14,6 +14,7 @@ import (
 	"his-go/internal/followup/service"
 	"his-go/pkg/config"
 	"his-go/pkg/database"
+	"his-go/pkg/health"
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
@@ -59,7 +60,13 @@ func main() {
 	followupSvc := service.NewFollowupService(followupRepo)
 	followupHandler := handler.NewFollowupHandler(followupSvc)
 
-	router := setupFollowupRouter(cfg, followupHandler)
+	sqlDB, _ := db.DB()
+	deps := &health.Dependencies{
+		DB:    sqlDB,
+		Redis: rdb,
+	}
+
+	router := setupFollowupRouter(cfg, followupHandler, deps)
 
 	go startGrpcServer(followupSvc, cfg)
 
@@ -72,16 +79,16 @@ func main() {
 	}
 }
 
-func setupFollowupRouter(cfg *config.Config, followupHandler *handler.FollowupHandler) *gin.Engine {
+func setupFollowupRouter(cfg *config.Config, followupHandler *handler.FollowupHandler, deps *health.Dependencies) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := gin.New()
 	router.Use(middleware.Recovery(), middleware.Logger(), middleware.Cors(), middleware.RequestID())
+	router.Use(middleware.Metrics("his-followup"))
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "UP", "service": "his-followup"})
-	})
+	router.GET("/health", health.HealthHandler("his-followup"))
+	router.GET("/ready", health.ReadinessHandler("his-followup", deps))
 
 	api := router.Group("/api/followup")
 	{
