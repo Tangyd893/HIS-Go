@@ -1,0 +1,62 @@
+# 开发环境配置
+server:
+  name: his-gateway
+  host: 0.0.0.0
+  port: 8080
+  mode: debug
+
+database:
+  driver: postgres
+  host: 127.0.0.1
+  port: 5432
+  user: his_admin
+  password: ""
+  dbname: his_auth
+  sslmode: disable
+  maxOpenConns: 25
+  maxIdleConns: 10
+  connMaxLifetime: 300
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+  db: 0
+  poolSize: 10
+
+rabbitmq:
+  host: 127.0.0.1
+  port: 5672
+  user: admin
+  password: ""
+  vhost: /
+
+jwt:
+  private_key: ""
+  public_key: ""
+  access_token_ttl: 7200
+  refresh_token_ttl: 604800
+
+nacos:
+  host: ""
+  port: 8848
+  namespace: public
+  group: DEFAULT_GROUP
+  username: nacos
+  password: nacos
+
+minio:
+  endpoint: 127.0.0.1:9000
+  access_key: minioadmin
+  secret_key: ""
+  bucket: his-medical
+  use_ssl: false
+
+log:
+  level: debug
+  format: console
+  output: stdout
+
+grpc:
+  host: 0.0.0.0
+  port: 9080

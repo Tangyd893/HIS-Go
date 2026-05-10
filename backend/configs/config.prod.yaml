@@ -1,0 +1,62 @@
+# 生产环境配置
+server:
+  name: his-gateway
+  host: 0.0.0.0
+  port: 8080
+  mode: release
+
+database:
+  driver: postgres
+  host: ${DB_HOST}
+  port: 5432
+  user: his_admin
+  password: ${DB_PASSWORD}
+  dbname: his_auth
+  sslmode: require
+  maxOpenConns: 100
+  maxIdleConns: 20
+  connMaxLifetime: 600
+
+redis:
+  host: ${REDIS_HOST}
+  port: 6379
+  password: ${REDIS_PASSWORD}
+  db: 0
+  poolSize: 50
+
+rabbitmq:
+  host: ${MQ_HOST}
+  port: 5672
+  user: admin
+  password: ${MQ_PASSWORD}
+  vhost: /
+
+jwt:
+  private_key: ${JWT_PRIVATE_KEY}
+  public_key: ${JWT_PUBLIC_KEY}
+  access_token_ttl: 3600
+  refresh_token_ttl: 86400
+
+nacos:
+  host: ${NACOS_HOST}
+  port: 8848
+  namespace: production
+  group: DEFAULT_GROUP
+  username: ${NACOS_USERNAME}
+  password: ${NACOS_PASSWORD}
+
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  access_key: ${MINIO_ACCESS_KEY}
+  secret_key: ${MINIO_SECRET_KEY}
+  bucket: his-medical-prod
+  use_ssl: true
+
+log:
+  level: info
+  format: json
+  output: stdout
+
+grpc:
+  host: 0.0.0.0
+  port: 9080
