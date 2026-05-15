@@ -32,7 +32,19 @@ check: fmt vet test build ## 执行全部质量检查（fmt + vet + test + build
 docker-config: ## 验证 Docker Compose 配置
 	docker compose -f docker/docker-compose.yml config
 
+build-frontend: ## 构建 React 前端（管理端 + 患者端）
+	cd frontend/his-web-admin-react && npm ci --legacy-peer-deps && npm run build
+	cd frontend/his-web-patient-react && npm ci --legacy-peer-deps && npm run build
+
+build-admin-react: ## 构建 React 管理端
+	cd frontend/his-web-admin-react && npm ci --legacy-peer-deps && npm run build
+
+build-patient-react: ## 构建 React 患者端
+	cd frontend/his-web-patient-react && npm ci --legacy-peer-deps && npm run build
+
 clean: ## 清理构建产物
 	rm -rf backend/bin/
+	rm -rf frontend/his-web-admin-react/dist
+	rm -rf frontend/his-web-patient-react/dist
 
 all: check ## 默认：执行全部质量检查

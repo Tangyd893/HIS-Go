@@ -2,9 +2,9 @@
 
 [中文说明] | [English](README-en.md)
 
-HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospital Information System，HIS）。采用前后端分离微服务架构，覆盖院内诊疗流程与院外患者服务，所有服务统一通过 Docker 容器化部署。
+HIS-Go 是一个基于 Go 语言和 React 的全链路医院信息系统（Hospital Information System，HIS）。采用前后端分离微服务架构，覆盖院内诊疗流程与院外患者服务，所有服务统一通过 Docker 容器化部署。
 
-> 本项目是对原 [Hospital-Information-System](https://github.com/Tangyd893/Hospital-Information-System)（Spring Cloud Alibaba + Vue.js）的 **Go 语言重构版本**，将 Java 生态全面迁移至 Go 生态（Gin + gRPC + GORM）。
+> 本项目是对原 [Hospital-Information-System](https://github.com/Tangyd893/Hospital-Information-System)（Spring Cloud Alibaba + Vue.js）的 **Go + React 重构版本**，将 Java 生态全面迁移至 Go 生态（Gin + gRPC + GORM），前端从 Vue 迁移至 React（Semantic UI）。
 
 ## 项目能力
 
@@ -21,7 +21,7 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 
 ## 当前完成度
 
-> 本项目处于**交付就绪**阶段。18个服务可编译、158+个测试保护核心链路、gRPC/HTTP双协议完整、前端管理端+患者端已搭建（66个Vue/TS文件）、Docker Compose+K8s部署方案齐全。
+> 本项目处于**交付就绪**阶段。18个服务可编译、158+个测试保护核心链路、gRPC/HTTP双协议完整、前端管理端+患者端已搭建（React 19 + TypeScript 5.7 + Semantic UI）、Docker Compose+K8s部署方案齐全。
 
 | 维度          | 状态     | 说明                                                      |
 | ----------- | ------ | ------------------------------------------------------- |
@@ -35,13 +35,13 @@ HIS-Go 是一个基于 Go 语言和 Vue 3 的全链路医院信息系统（Hospi
 | 数据库迁移       | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，`db_init.sh` 支持按序执行             |
 | 测试          | 已建立    | 158+ 个单元测试覆盖 JWT/Redis锁/Auth/挂号/收费/药房/用户/排班/门诊/处方/随访/慢病/EMR/检查/错误码 |
 | 质量检查       | 已固化    | `gofmt`零输出 + `go vet`通过 + `go test`全绿 + `go build`通过        |
-| 前端          | 已完成    | `his-web-admin`(管理端19模块) + `his-web-patient`(患者端8模块)，Vue3+TS+Vite6 |
+| 前端          | 已完成    | `his-web-admin-react`(管理端19模块) + `his-web-patient-react`(患者端9模块)，React19+TS+Vite6+SemanticUI |
 | K8s 部署      | 已就绪    | `k8s/base/` 含 11 个 YAML 清单，覆盖全部基础设施和 18 微服务 |
 
 ## 技术栈
 
 - **后端：** Go 1.25+、Gin 1.10+、gRPC 1.70+、GORM 2.x、PostgreSQL 17、Redis 7、RabbitMQ 4、Nacos Go SDK、MinIO
-- **前端：** Vue 3.5、TypeScript、Ant Design Vue 4、Element Plus 2、ECharts 5、Vite 6、Pinia 2
+- **前端：** React 19、TypeScript 5.7、Semantic UI React、ECharts 5、Vite 6、Zustand
 - **依赖注入：** Wire 0.6+
 - **定时任务：** robfig/cron 3.x
 - **日志：** Zap
@@ -142,7 +142,7 @@ docker exec -i his-postgres psql -U his_admin < backend/sql/init_all.sql
 docker exec -i his-postgres psql -U his_admin < backend/sql/seed_data.sql
 ```
 
-> 当前已验证 Compose 配置可解析；完整容器启动和集成测试仍需在有 Docker 运行环境时执行。
+> 当前已验证：`go build ./cmd/...` ✅ | `gofmt -l .` ✅ | `go vet ./...` ✅ | `go test ./...` ✅ (14包) | React 前端构建 ✅ | Docker Compose 配置解析 ✅
 
 ### 逐个启动后端服务（开发调试）
 
@@ -180,13 +180,13 @@ go run ./cmd/emr
 
 ```bash
 # 管理端
-cd frontend/his-web-admin
-npm install
+cd frontend/his-web-admin-react
+npm install --legacy-peer-deps
 npm run dev      # 开发服务器 → http://localhost:5173
 
 # 患者端
-cd frontend/his-web-patient
-npm install
+cd frontend/his-web-patient-react
+npm install --legacy-peer-deps
 npm run dev      # 开发服务器 → http://localhost:5174
 ```
 
@@ -268,12 +268,20 @@ HIS-Go/
 │   │   └── nginx.conf
 │   └── .env.example                # 环境变量模板
 ├── frontend/                       # 前端子项目
-│   ├── his-web-admin/              # 管理端 (Vue3 + Ant Design Vue4)
-│   │   ├── src/views/              # 19 个功能模块页面
+│   ├── his-web-admin-react/         # ★ 管理端 (React19 + Semantic UI)
+│   │   ├── src/api/                # 10 个业务 API 模块 + client + types
+│   │   ├── src/components/         # DataTable / FormModal / StatusTag
+│   │   ├── src/layouts/            # AdminLayout (Sidebar + Menu)
+│   │   ├── src/pages/              # 19 个功能模块页面
+│   │   ├── src/store/              # Zustand (auth + app)
+│   │   ├── src/router/             # React Router + 路由守卫
+│   │   ├── Dockerfile              # 前端构建容器
+│   │   └── vite.config.ts
+│   ├── his-web-patient-react/       # ★ 患者端 (React19 + Semantic UI)
+│   │   ├── src/pages/              # 9 个功能模块页面
 │   │   └── ...
-│   └── his-web-patient/            # 患者端 (Vue3 + Ant Design Vue4, H5)
-│       ├── src/views/              # 8 个功能模块页面
-│       └── ...
+│   ├── his-web-admin/              # [备] 管理端 (Vue3 + Ant Design Vue4)
+│   └── his-web-patient/            # [备] 患者端 (Vue3 + Ant Design Vue4)
 ├── k8s/                            # Kubernetes 部署清单
 │   └── base/
 │       ├── namespace.yaml
@@ -355,6 +363,19 @@ bash run.sh
 HIS_BASE_URL=http://localhost:8080 HIS_INTEGRATION_TEST=true go test -v ./...
 ```
 
+### 前端构建
+
+```bash
+# 一键构建两个 React 前端
+make build-frontend
+
+# 或单独构建
+make build-admin-react     # 管理端 → his-web-admin-react/dist/
+make build-patient-react   # 患者端 → his-web-patient-react/dist/
+```
+
+> 构建产物通过 Docker Compose 的 Nginx 挂载到 `/admin` 和 `/patient` 路径。
+
 ### 编译
 
 ```bash
@@ -382,6 +403,21 @@ go build -o bin/gateway ./cmd/gateway
 | Maven                | Go Modules          | 依赖管理        |
 | Java 21              | Go 1.25+            | 运行语言        |
 | Spring Security      | golang-jwt + Gin中间件 | 安全认证        |
+
+## 前端双版本说明
+
+本项目同时保留 React 和 Vue 两套前端实现，React 版本为当前默认前端。
+
+| 维度 | React 版（默认） | Vue 版（备用） |
+|------|----------------|---------------|
+| 目录 | `his-web-admin-react` / `his-web-patient-react` | `his-web-admin` / `his-web-patient` |
+| 框架 | React 19 | Vue 3.5 |
+| UI 库 | Semantic UI React | Ant Design Vue 4 |
+| 状态管理 | Zustand | Pinia |
+| 路由 | React Router 7 | Vue Router 4 |
+| 样式风格 | 暗色侧边栏 + 圆角卡片 | 蓝白紧凑型 |
+
+> 两套前端共享同一套后端 API（`/api/*`），可互相替换。Docker Compose 和 Nginx 配置已绑定 React 版本。
 
 ## 生产部署注意事项
 
