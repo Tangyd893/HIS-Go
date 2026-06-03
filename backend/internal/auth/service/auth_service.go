@@ -187,6 +187,37 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.Claims, error) {
 	return claims, nil
 }
 
+// GetCurrentUserInfo 获取当前用户信息
+func (s *AuthService) GetCurrentUserInfo(userID string) (*UserInfo, error) {
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("用户不存在")
+		}
+		return nil, err
+	}
+
+	perms, err := s.getUserPerms(user.ID, user.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	permsStr := make([]string, len(perms))
+	for i, p := range perms {
+		permsStr[i] = p.PermCode
+	}
+
+	return &UserInfo{
+		UserID:   user.ID,
+		Username: user.Username,
+		RealName: user.RealName,
+		Avatar:   user.Avatar,
+		Role:     user.Role,
+		DeptID:   user.DeptID,
+		Perms:    permsStr,
+	}, nil
+}
+
 func (s *AuthService) getUserPerms(userID, role string) ([]model.Permission, error) {
 	roles, err := s.repo.FindRolesByUserID(userID)
 	if err != nil {

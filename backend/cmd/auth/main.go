@@ -111,6 +111,7 @@ func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps 
 		api.POST("/login", authHandler.Login)
 		api.POST("/logout", authHandler.Logout)
 		api.POST("/refresh", authHandler.RefreshToken)
+		api.GET("/current", authHandler.Current)
 	}
 
 	return router

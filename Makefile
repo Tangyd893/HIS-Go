@@ -1,4 +1,4 @@
-.PHONY: help fmt vet test build proto clean check all deps
+.PHONY: help fmt vet test build proto clean check all deps demo-admin demo-patient demo-admin-logs demo-patient-logs verify-admin verify-patient demo-verify
 
 help: ## 显示帮助信息
 	@echo "HIS-Go 项目 Makefile"
@@ -46,5 +46,39 @@ clean: ## 清理构建产物
 	rm -rf backend/bin/
 	rm -rf frontend/his-web-admin-react/dist
 	rm -rf frontend/his-web-patient-react/dist
+
+demo-admin: ## 启动管理端演示服务
+	./scripts/demo-admin.sh start
+
+demo-admin-stop: ## 停止管理端演示服务
+	./scripts/demo-admin.sh stop
+
+demo-admin-logs: ## 查看管理端演示服务日志
+	./scripts/demo-admin.sh logs
+
+demo-patient: ## 启动患者端演示服务
+	./scripts/demo-patient.sh start
+
+demo-patient-stop: ## 停止患者端演示服务
+	./scripts/demo-patient.sh stop
+
+demo-patient-logs: ## 查看患者端演示服务日志
+	./scripts/demo-patient.sh logs
+
+demo-status: ## 查看演示服务状态
+	@echo "管理端演示服务状态:"
+	@-./scripts/demo-admin.sh status 2>/dev/null || echo "未运行"
+	@echo ""
+	@echo "患者端演示服务状态:"
+	@-./scripts/demo-patient.sh status 2>/dev/null || echo "未运行"
+
+verify-admin: ## 验证管理端演示环境
+	./scripts/verify-demo.sh admin
+
+verify-patient: ## 验证患者端演示环境
+	./scripts/verify-demo.sh patient
+
+demo-verify: ## 演示验证工具
+	./scripts/demo-verify.sh all
 
 all: check ## 默认：执行全部质量检查

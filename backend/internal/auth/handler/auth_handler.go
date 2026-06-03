@@ -79,3 +79,20 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	response.Success(c, result)
 }
+
+// Current 获取当前用户信息接口
+func (h *AuthHandler) Current(c *gin.Context) {
+	userCtx := auth.GetUserContext(c)
+	if userCtx == nil {
+		response.Fail(c, apperrors.CodeUnauthorized)
+		return
+	}
+
+	userInfo, err := h.svc.GetCurrentUserInfo(userCtx.UserID)
+	if err != nil {
+		response.FailWithMsg(c, apperrors.CodeInternalError, err.Error())
+		return
+	}
+
+	response.Success(c, userInfo)
+}
