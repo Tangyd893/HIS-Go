@@ -1,0 +1,23 @@
+<view class="container">
+  <!-- 加载中提示 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-icon">⏳</view>
+    <view class="loading-text">正在连接患者服务...</view>
+  </view>
+
+  <!-- 加载失败提示 -->
+  <view class="error-container" wx:elif="{{loadError}}">
+    <view class="error-icon">❌</view>
+    <view class="error-title">无法加载患者端页面</view>
+    <view class="error-desc">请检查以下事项：</view>
+    <view class="error-list">
+      <view>1. 患者 H5 是否已启动（npm run dev）</view>
+      <view>2. 后端 Gateway 是否运行（:8080）</view>
+      <view>3. 微信开发者工具是否勾选「不校验合法域名」</view>
+    </view>
+    <button class="retry-btn" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <!-- web-view -->
+  <web-view wx:else src="{{patientUrl}}" binderror="onWebviewError"></web-view>
+</view>
