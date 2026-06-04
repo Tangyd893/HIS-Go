@@ -62,6 +62,10 @@ func (s *PharmacyService) CheckAndAlertExpired() {
 	}
 
 	for _, drug := range drugs {
+		// MQ 不可用时静默跳过告警通知（演示环境兼容）
+		if s.mq == nil {
+			continue
+		}
 		msg, _ := json.Marshal(map[string]interface{}{
 			"drug_id":   drug.ID,
 			"drug_name": drug.Name,

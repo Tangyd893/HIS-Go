@@ -15,9 +15,10 @@ INSERT INTO roles (id, role_name, role_code, description) VALUES
 
 -- 演示用户（密码: demo123，bcrypt加密）
 INSERT INTO users (id, username, password, real_name, phone, role, dept_id) VALUES
-('demo-doctor', 'demo-doctor', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '张医生', '13800000001', 'doctor', 'dept_001'),
-('demo-nurse', 'demo-nurse', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '李护士', '13800000002', 'nurse', 'dept_001'),
-('demo-admin', 'demo-admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '管理员', '13800000003', 'admin', NULL);
+('demo-doctor', 'demo-doctor', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '张医生', '13800000001', 'doctor', 'dept_001'),
+('demo-nurse', 'demo-nurse', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '李护士', '13800000002', 'nurse', 'dept_001'),
+('demo-admin', 'demo-admin', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '管理员', '13800000003', 'admin', NULL),
+('demo-patient', 'demo-patient', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '王小明', '13900000001', 'patient', NULL);
 
 \c his_user;
 
@@ -78,3 +79,70 @@ INSERT INTO dict_items (dict_type, label, value, sort_order) VALUES
 ('followup_type', '电话随访', '1', 1),
 ('followup_type', '问卷随访', '2', 2),
 ('followup_type', '上门随访', '3', 3);
+
+-- ============================================================
+-- 演示业务数据：排班、药品
+-- 用于支撑「挂号→接诊→处方→收费→发药」主路径演示
+-- ============================================================
+
+\c his_registration;
+
+-- 排班号源（未来 7 天，每天上午/下午各一个号源）
+INSERT INTO schedules (id, dept_id, dept_name, doctor_id, doctor_name, date, time_slot, total_count, remain_count, fee, status) VALUES
+('sched_001', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 30, 30, 15.00, 1),
+('sched_002', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 30, 30, 15.00, 1),
+('sched_003', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 1, 30, 30, 15.00, 1),
+('sched_004', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 2, 30, 30, 15.00, 1),
+('sched_005', 'dept_002', '外科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 20, 20.00, 1);
+
+\c his_schedule;
+
+-- 排班管理（与 registration 侧对应）
+INSERT INTO schedules (id, doctor_id, doctor_name, dept_id, dept_name, work_date, time_slot, max_patients, current_patients, room_no, status) VALUES
+('sched_001', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 30, 0, '201', 1),
+('sched_002', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 30, 0, '201', 1),
+('sched_003', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 1, 30, 0, '201', 1),
+('sched_004', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 2, 30, 0, '201', 1),
+('sched_005', 'demo-doctor', '张医生', 'dept_002', '外科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 0, '302', 1);
+
+\c his_pharmacy;
+
+-- 常用药品
+INSERT INTO drugs (id, name, generic_name, specification, manufacturer, batch_no, purchase_price, retail_price, stock, min_stock, expiry_date, status) VALUES
+('drug_001', '阿莫西林胶囊', '阿莫西林', '0.5g×24粒', '华北制药', 'B20260601', 8.50, 12.00, 500, 50, '2028-06-01', 1),
+('drug_002', '布洛芬缓释胶囊', '布洛芬', '0.3g×20粒', '中美史克', 'B20260515', 12.00, 18.50, 300, 30, '2028-05-15', 1),
+('drug_003', '阿司匹林肠溶片', '阿司匹林', '100mg×30片', '拜耳医药', 'B20260420', 10.00, 15.00, 400, 40, '2028-04-20', 1),
+('drug_004', '奥美拉唑肠溶胶囊', '奥美拉唑', '20mg×14粒', '阿斯利康', 'B20260310', 25.00, 38.00, 200, 20, '2028-03-10', 1),
+('drug_005', '盐酸氨溴索片', '氨溴索', '30mg×20片', '上海医药', 'B20260501', 6.00, 9.50, 600, 60, '2028-05-01', 1);
+
+-- ============================================================
+-- 患者端演示数据：处方、检查报告、随访计划
+-- ============================================================
+
+\c his_prescription;
+
+INSERT INTO prescriptions (id, patient_id, patient_name, doctor_id, prescription_type, status, note, created_at, updated_at) VALUES
+('pres_demo_001', 'patient_001', '王小明', 'demo-doctor', 1, 2, '感冒用药', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+('pres_demo_002', 'patient_001', '王小明', 'demo-doctor', 1, 1, '胃药', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day');
+
+INSERT INTO prescription_details (id, prescription_id, drug_id, drug_name, specification, dosage, usage, frequency, days, quantity, unit_price, note) VALUES
+('presd_001', 'pres_demo_001', 'drug_001', '阿莫西林胶囊', '0.5g×24粒', 0.5, '口服', '每日三次', 3, 2, 12.00, '饭后服用'),
+('presd_002', 'pres_demo_001', 'drug_005', '盐酸氨溴索片', '30mg×20片', 30, '口服', '每日两次', 5, 1, 9.50, ''),
+('presd_003', 'pres_demo_002', 'drug_004', '奥美拉唑肠溶胶囊', '20mg×14粒', 20, '口服', '每日一次', 14, 1, 38.00, '晨起空腹');
+
+\c his_examination;
+
+INSERT INTO examination_reports (id, patient_id, patient_name, exam_type, exam_item, body_part, findings, impression, conclusion, technician_id, reviewer_id, status, created_at, updated_at) VALUES
+('exam_demo_001', 'patient_001', '王小明', 'CT', '胸部CT平扫', '胸部', '双肺纹理清晰，未见明显异常密度影', '胸部CT未见异常', '胸部CT未见异常', 'technician_001', 'demo-doctor', 3, CURRENT_TIMESTAMP - INTERVAL '7 days', CURRENT_TIMESTAMP - INTERVAL '7 days'),
+('exam_demo_002', 'patient_001', '王小明', '检验', '血常规', '血液', '白细胞 6.5×10⁹/L，中性粒细胞 62%', '血常规正常', '血常规各项指标在正常范围内', 'technician_001', 'demo-doctor', 2, CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days');
+
+\c his_followup;
+
+INSERT INTO followup_plans (id, patient_id, plan_name, start_date, end_date, frequency, status, created_at, updated_at) VALUES
+('fup_demo_001', 'patient_001', '高血压随访计划', to_char(CURRENT_DATE - INTERVAL '30 days', 'YYYY-MM-DD'), to_char(CURRENT_DATE + INTERVAL '60 days', 'YYYY-MM-DD'), 2, 1, CURRENT_TIMESTAMP - INTERVAL '30 days', CURRENT_TIMESTAMP - INTERVAL '30 days'),
+('fup_demo_002', 'patient_001', '术后康复随访', to_char(CURRENT_DATE, 'YYYY-MM-DD'), to_char(CURRENT_DATE + INTERVAL '90 days', 'YYYY-MM-DD'), 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO followup_tasks (id, plan_id, task_name, description, execute_date, status, created_at) VALUES
+('fut_001', 'fup_demo_001', '血压测量', '自测血压并记录数值', to_char(CURRENT_DATE - INTERVAL '21 days', 'YYYY-MM-DD'), 1, CURRENT_TIMESTAMP - INTERVAL '30 days'),
+('fut_002', 'fup_demo_001', '电话随访', '电话询问用药情况', to_char(CURRENT_DATE - INTERVAL '7 days', 'YYYY-MM-DD'), 1, CURRENT_TIMESTAMP - INTERVAL '30 days'),
+('fut_003', 'fup_demo_001', '门诊复查', '来院复查血压控制情况', to_char(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD'), 0, CURRENT_TIMESTAMP - INTERVAL '30 days');

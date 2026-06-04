@@ -42,6 +42,11 @@ func (s *BillingService) Pay(billID string, payMethod int8) error {
 		return err
 	}
 
+	// MQ 不可用时静默跳过事件通知（演示环境兼容）
+	if s.mq == nil {
+		return nil
+	}
+
 	bill, err := s.repo.FindByID(billID)
 	if err != nil {
 		return err
@@ -69,6 +74,11 @@ func (s *BillingService) Pay(billID string, payMethod int8) error {
 func (s *BillingService) Refund(billID string) error {
 	if err := s.repo.Refund(billID); err != nil {
 		return err
+	}
+
+	// MQ 不可用时静默跳过事件通知（演示环境兼容）
+	if s.mq == nil {
+		return nil
 	}
 
 	bill, err := s.repo.FindByID(billID)

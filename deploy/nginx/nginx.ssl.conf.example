@@ -1,0 +1,67 @@
+# HIS-Go Nginx HTTPS 配置模板
+# 用法: 将此文件复制为 nginx.conf，替换 YOUR_DOMAIN 为实际域名
+# Certbot 获取证书后自动修改 ssl_certificate 路径
+
+upstream gateway {
+    server his-gateway:8080;
+}
+
+# HTTP → HTTPS 重定向
+server {
+    listen 80;
+    server_name YOUR_DOMAIN;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name YOUR_DOMAIN;
+    charset utf-8;
+    client_max_body_size 100m;
+
+    # HTTPS 证书（Certbot 自动生成）
+    ssl_certificate     /etc/letsencrypt/live/YOUR_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/YOUR_DOMAIN/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # ========== 管理端 ==========
+    location /admin {
+        alias /usr/share/nginx/html/admin;
+        try_files $uri $uri/ /admin/index.html;
+        index index.html;
+    }
+
+    # ========== 患者端 ==========
+    location /patient {
+        alias /usr/share/nginx/html/patient;
+        try_files $uri $uri/ /patient/index.html;
+        index index.html;
+    }
+
+    # ========== 根路径 ==========
+    location = / {
+        return 302 /admin;
+    }
+
+    # ========== API 反向代理 ==========
+    location /api/ {
+        proxy_pass http://gateway;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 10s;
+    }
+
+    # ========== 健康检查 ==========
+    location /health { proxy_pass http://gateway/health; }
+    location /ready  { proxy_pass http://gateway/ready; }
+
+    # ========== 静态资源缓存 ==========
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}

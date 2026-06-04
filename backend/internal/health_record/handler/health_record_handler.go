@@ -21,7 +21,7 @@ func NewHealthRecordHandler(svc *service.HealthRecordService) *HealthRecordHandl
 
 // GetSummary 获取档案摘要
 func (h *HealthRecordHandler) GetSummary(c *gin.Context) {
-	patientID := c.Query("patientId")
+	patientID := c.Param("patientId")
 	if patientID == "" {
 		response.Fail(c, errors.CodeParamInvalid)
 		return
@@ -37,7 +37,7 @@ func (h *HealthRecordHandler) GetSummary(c *gin.Context) {
 
 // GetTimeline 获取时间轴
 func (h *HealthRecordHandler) GetTimeline(c *gin.Context) {
-	patientID := c.Query("patientId")
+	patientID := c.Param("patientId")
 	if patientID == "" {
 		response.Fail(c, errors.CodeParamInvalid)
 		return

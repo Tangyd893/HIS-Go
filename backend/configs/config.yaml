@@ -8,7 +8,7 @@ server:
 database:
   driver: postgres
   host: 127.0.0.1
-  port: 5432
+  port: 5433
   user: his_admin
   password: "" # 通过 DB_PASSWORD 环境变量注入
   dbname: his_db

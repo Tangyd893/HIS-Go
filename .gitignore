@@ -23,8 +23,12 @@ logs/
 
 # 环境变量（含密码）
 .env
-docker/.env
+deploy/config/demo.env
+deploy/config/stack.env
 *.env.local
+
+# 误建目录（Windows 环境变量冲突）
+%USERPROFILE%/
 
 # 临时文件
 tmp/
@@ -38,6 +42,11 @@ frontend/**/node_modules/
 # 构建输出
 /dist/
 frontend/**/dist/
+frontend/**/*.vue.js
+
+# 个人/缓存
+.deepseek/
+build-cache/
 
 # 操作系统
 .DS_Store

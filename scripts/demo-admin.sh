@@ -6,8 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILE="$PROJECT_ROOT/docker/docker-compose.demo-admin.yml"
-ENV_FILE="$PROJECT_ROOT/docker/.env.demo"
+COMPOSE_FILE="$PROJECT_ROOT/deploy/compose/demo-admin.yml"
+ENV_FILE="$PROJECT_ROOT/deploy/config/demo.env"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -47,6 +47,28 @@ check_compose_file() {
         print_error "找不到 docker-compose 文件: $COMPOSE_FILE"
         exit 1
     fi
+}
+
+# 检查前端构建产物
+ADMIN_DIST="$PROJECT_ROOT/frontend/admin/dist"
+
+check_frontend_build() {
+    if [ ! -f "$ADMIN_DIST/index.html" ]; then
+        print_warning "前端构建产物不存在: $ADMIN_DIST/index.html"
+        print_info "请先运行: $0 build  或  make build-admin"
+        return 1
+    fi
+    return 0
+}
+
+# 构建前端
+build_frontend() {
+    print_info "构建 Vue 管理端..."
+    cd "$PROJECT_ROOT/frontend/admin"
+    npm ci
+    npm run build
+    cd "$PROJECT_ROOT"
+    print_success "管理端前端构建完成: $ADMIN_DIST"
 }
 
 # 检查环境变量文件
@@ -144,7 +166,8 @@ show_help() {
     echo "用法: $0 [命令]"
     echo ""
     echo "命令:"
-    echo "  start    启动所有管理端演示服务"
+    echo "  build    构建 Vue 管理端前端"
+    echo "  start    启动所有管理端演示服务 (自动检查前端是否已构建)"
     echo "  stop     停止所有管理端演示服务"
     echo "  restart  重启所有管理端演示服务"
     echo "  status   查看服务状态"
@@ -164,14 +187,31 @@ main() {
     check_env_file
     
     case "${1:-help}" in
+        build)
+            build_frontend
+            ;;
         start)
-            start_services
+            if check_frontend_build; then
+                start_services
+            else
+                print_info "是否立即构建？(y/N)"
+                read -r answer
+                if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+                    build_frontend
+                    start_services
+                fi
+            fi
             ;;
         stop)
             stop_services
             ;;
         restart)
-            restart_services
+            if check_frontend_build; then
+                restart_services
+            else
+                build_frontend
+                restart_services
+            fi
             ;;
         status)
             show_status

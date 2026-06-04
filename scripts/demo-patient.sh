@@ -6,8 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILE="$PROJECT_ROOT/docker/docker-compose.demo-patient.yml"
-ENV_FILE="$PROJECT_ROOT/docker/.env.demo"
+COMPOSE_FILE="$PROJECT_ROOT/deploy/compose/demo-patient.yml"
+ENV_FILE="$PROJECT_ROOT/deploy/config/demo.env"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -49,6 +49,28 @@ check_compose_file() {
     fi
 }
 
+# 检查前端构建产物
+PATIENT_DIST="$PROJECT_ROOT/frontend/patient/dist"
+
+check_frontend_build() {
+    if [ ! -f "$PATIENT_DIST/index.html" ]; then
+        print_warning "前端构建产物不存在: $PATIENT_DIST/index.html"
+        print_info "请先运行: $0 build  或  make build-patient"
+        return 1
+    fi
+    return 0
+}
+
+# 构建前端
+build_frontend() {
+    print_info "构建 Vue 患者端..."
+    cd "$PROJECT_ROOT/frontend/patient"
+    npm ci
+    npm run build
+    cd "$PROJECT_ROOT"
+    print_success "患者端前端构建完成: $PATIENT_DIST"
+}
+
 # 检查环境变量文件
 check_env_file() {
     if [ ! -f "$ENV_FILE" ]; then
@@ -84,7 +106,7 @@ start_services() {
     echo "  - Nginx: http://localhost:80"
     echo ""
     print_info "患者端访问地址: http://localhost/patient"
-    print_info "演示账号: (待确认，请查看 seed_data.sql)"
+    print_info "演示账号: demo-patient / demo123"
 }
 
 # 停止服务
@@ -142,7 +164,8 @@ show_help() {
     echo "用法: $0 [命令]"
     echo ""
     echo "命令:"
-    echo "  start    启动所有患者端演示服务"
+    echo "  build    构建 Vue 患者端前端"
+    echo "  start    启动所有患者端演示服务 (自动检查前端是否已构建)"
     echo "  stop     停止所有患者端演示服务"
     echo "  restart  重启所有患者端演示服务"
     echo "  status   查看服务状态"
@@ -162,14 +185,31 @@ main() {
     check_env_file
     
     case "${1:-help}" in
+        build)
+            build_frontend
+            ;;
         start)
-            start_services
+            if check_frontend_build; then
+                start_services
+            else
+                print_info "是否立即构建？(y/N)"
+                read -r answer
+                if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+                    build_frontend
+                    start_services
+                fi
+            fi
             ;;
         stop)
             stop_services
             ;;
         restart)
-            restart_services
+            if check_frontend_build; then
+                restart_services
+            else
+                build_frontend
+                restart_services
+            fi
             ;;
         status)
             show_status

@@ -1,0 +1,54 @@
+# HIS-Go Backend Docker Build — 排除不必要上下文，缩小构建体积
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 文档
+docs/
+README.md
+CHANGELOG.md
+
+# 前端（不在 Go 构建范围）
+frontend/
+
+# 部署配置（仅后端 Dockerfile 需要 deploy/Dockerfile）
+deploy/compose/
+deploy/config/
+deploy/nginx/
+deploy/README.md
+
+# 脚本
+scripts/
+
+# 测试（集成测试独立目录，单元测试在源码中）
+testing/
+
+# 临时文件
+tmp/
+temp/
+*.log
+logs/
+
+# 构建产物
+bin/
+*.exe
+*.test
+*.out
+
+# 环境变量
+.env
+*.env.local
+
+# 个人文件
+.deepseek/
+build-cache/
+todo/

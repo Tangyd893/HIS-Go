@@ -2,9 +2,9 @@
 
 [中文说明] | [English](README-en.md)
 
-HIS-Go 是一个基于 Go 语言和 React 的全链路医院信息系统（Hospital Information System，HIS）。采用前后端分离微服务架构，覆盖院内诊疗流程与院外患者服务，所有服务统一通过 Docker 容器化部署。
+HIS-Go 是一个基于 Go 语言的全链路医院信息系统（Hospital Information System，HIS）。采用前后端分离微服务架构，覆盖院内诊疗流程与院外患者服务，所有服务统一通过 Docker 容器化部署。
 
-> 本项目是对原 [Hospital-Information-System](https://github.com/Tangyd893/Hospital-Information-System)（Spring Cloud Alibaba + Vue.js）的 **Go + React 重构版本**，将 Java 生态全面迁移至 Go 生态（Gin + gRPC + GORM），前端从 Vue 迁移至 React（Semantic UI）。
+> 本项目是对原 [Hospital-Information-System](https://github.com/Tangyd893/Hospital-Information-System)（Spring Cloud Alibaba + Vue.js）的 **Go + Vue 3 重构版本**，将 Java 生态全面迁移至 Go 生态（Gin + gRPC + GORM）。演示前端为 Vue 3（Ant Design Vue）；React 版本归档于 `frontend/archive/`。
 
 ## 项目能力
 
@@ -35,13 +35,13 @@ HIS-Go 是一个基于 Go 语言和 React 的全链路医院信息系统（Hospi
 | 数据库迁移       | 已补齐    | 15 个迁移脚本覆盖全部 17 个数据库，`db_init.sh` 支持按序执行             |
 | 测试          | 已建立    | 158+ 个单元测试覆盖 JWT/Redis锁/Auth/挂号/收费/药房/用户/排班/门诊/处方/随访/慢病/EMR/检查/错误码 |
 | 质量检查       | 已固化    | `gofmt`零输出 + `go vet`通过 + `go test`全绿 + `go build`通过        |
-| 前端          | 已完成    | `his-web-admin-react`(管理端19模块) + `his-web-patient-react`(患者端9模块)，React19+TS+Vite6+SemanticUI |
+| 前端          | 已完成    | `frontend/admin`(Vue 3 管理端) + `frontend/patient`(Vue 3 患者端) + `frontend/mp-webview`(小程序壳)；React 版归档于 `frontend/archive/` |
 | K8s 部署      | 已就绪    | `k8s/base/` 含 11 个 YAML 清单，覆盖全部基础设施和 18 微服务 |
 
 ## 技术栈
 
 - **后端：** Go 1.25+、Gin 1.10+、gRPC 1.70+、GORM 2.x、PostgreSQL 17、Redis 7、RabbitMQ 4、Nacos Go SDK、MinIO
-- **前端：** React 19、TypeScript 5.7、Semantic UI React、ECharts 5、Vite 6、Zustand
+- **前端（演示）：** Vue 3、TypeScript、Ant Design Vue 4、Vite 6；React 版归档于 `frontend/archive/`
 - **依赖注入：** Wire 0.6+
 - **定时任务：** robfig/cron 3.x
 - **日志：** Zap
@@ -118,12 +118,12 @@ go version && node --version && docker --version
 ### 启动完整后端技术栈
 
 ```bash
-cd docker
-cp .env.example .env
-# 编辑 .env 设置数据库密码和 JWT 密钥
+cd deploy
+cp config/stack.env.example config/stack.env
+# 编辑 config/stack.env 设置密码
 
 # 启动基础设施
-docker compose up -d postgresql redis rabbitmq nacos minio
+docker compose -f compose/stack.yml up -d postgresql redis rabbitmq
 
 # 初始化数据库（等 PostgreSQL 就绪后，推荐方式）
 cd ../backend
@@ -176,21 +176,17 @@ go run ./cmd/system
 go run ./cmd/emr
 ```
 
-### 启动前端
+### 启动前端（演示用 Vue 版）
 
 ```bash
 # 管理端
-cd frontend/his-web-admin-react
-npm install --legacy-peer-deps
-npm run dev      # 开发服务器 → http://localhost:5173
+cd frontend/admin && npm install && npm run dev      # → http://localhost:5173
 
 # 患者端
-cd frontend/his-web-patient-react
-npm install --legacy-peer-deps
-npm run dev      # 开发服务器 → http://localhost:5174
+cd frontend/patient && npm install && npm run dev -- --host   # → http://localhost:5174
 ```
 
-> 前端通过 Vite 代理将 `/api` 请求转发至 `http://localhost:8080`（Gateway），确保后端已启动。
+> 云服务器演示部署见 **`docs/云端部署指南.md`**。前端通过 Vite 代理 `/api` → Gateway `:8080`。
 
 ## 默认验收账号
 
@@ -261,27 +257,21 @@ HIS-Go/
 │   │   └── ...                     # 15 个迁移脚本
 │   ├── go.mod                      # Go Module 定义
 │   └── go.sum                      # 依赖校验
-├── docker/                         # Docker 部署配置
-│   ├── docker-compose.yml          # 开发环境编排
-│   ├── Dockerfile                  # Go 多阶段构建
-│   ├── nginx/                      # Nginx 配置
-│   │   └── nginx.conf
-│   └── .env.example                # 环境变量模板
-├── frontend/                       # 前端子项目
-│   ├── his-web-admin-react/         # ★ 管理端 (React19 + Semantic UI)
-│   │   ├── src/api/                # 10 个业务 API 模块 + client + types
-│   │   ├── src/components/         # DataTable / FormModal / StatusTag
-│   │   ├── src/layouts/            # AdminLayout (Sidebar + Menu)
-│   │   ├── src/pages/              # 19 个功能模块页面
-│   │   ├── src/store/              # Zustand (auth + app)
-│   │   ├── src/router/             # React Router + 路由守卫
-│   │   ├── Dockerfile              # 前端构建容器
-│   │   └── vite.config.ts
-│   ├── his-web-patient-react/       # ★ 患者端 (React19 + Semantic UI)
-│   │   ├── src/pages/              # 9 个功能模块页面
-│   │   └── ...
-│   ├── his-web-admin/              # [备] 管理端 (Vue3 + Ant Design Vue4)
-│   └── his-web-patient/            # [备] 患者端 (Vue3 + Ant Design Vue4)
+├── deploy/                         # Docker 部署（演示 + 全量栈）
+│   ├── compose/
+│   │   ├── demo-admin.yml          # 管理端演示 Profile
+│   │   ├── demo-patient.yml        # 患者端演示 Profile
+│   │   └── stack.yml               # 全量 18 服务
+│   ├── config/demo.env.example     # 演示环境变量模板
+│   ├── nginx/nginx.conf
+│   └── Dockerfile
+├── frontend/                       # 前端
+│   ├── admin/                      # ★ Vue3 管理端（演示）
+│   ├── patient/                    # ★ Vue3 患者 H5（演示）
+│   ├── mp-webview/                 # 微信小程序壳
+│   └── archive/                    # React 版（搁置）
+├── docs/                           # 文档（见 docs/README.md）
+│   └── 云端部署指南.md              # 云服务器演示部署主文档
 ├── k8s/                            # Kubernetes 部署清单
 │   └── base/
 │       ├── namespace.yaml

@@ -63,9 +63,12 @@ func main() {
 		cfg.RabbitMQ.User, cfg.RabbitMQ.Password, cfg.RabbitMQ.VHost,
 	)
 	if err != nil {
-		logger.Fatal("RabbitMQ 连接失败: " + err.Error())
+		logger.Warn("RabbitMQ 不可用，过期药品告警通知功能已禁用（演示环境可忽略）: " + err.Error())
+		rabbitMQ = nil
 	}
-	defer rabbitMQ.Close()
+	if rabbitMQ != nil {
+		defer rabbitMQ.Close()
+	}
 
 	cronScheduler := cron.New(cron.WithSeconds())
 	cronScheduler.Start()

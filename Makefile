@@ -30,22 +30,29 @@ mod: ## 整理 Go 依赖
 check: fmt vet test build ## 执行全部质量检查（fmt + vet + test + build）
 
 docker-config: ## 验证 Docker Compose 配置
-	docker compose -f docker/docker-compose.yml config
+	docker compose -f deploy/compose/stack.yml config
 
-build-frontend: ## 构建 React 前端（管理端 + 患者端）
-	cd frontend/his-web-admin-react && npm ci --legacy-peer-deps && npm run build
-	cd frontend/his-web-patient-react && npm ci --legacy-peer-deps && npm run build
+build-frontend: build-admin build-patient ## 构建 Vue 前端（管理端 + 患者端）
 
-build-admin-react: ## 构建 React 管理端
-	cd frontend/his-web-admin-react && npm ci --legacy-peer-deps && npm run build
+build-admin: ## 构建 Vue 管理端
+	cd frontend/admin && npm ci && npm run build
 
-build-patient-react: ## 构建 React 患者端
-	cd frontend/his-web-patient-react && npm ci --legacy-peer-deps && npm run build
+build-patient: ## 构建 Vue 患者端
+	cd frontend/patient && npm ci && npm run build
+
+# [deprecated] React 版本已归档至 frontend/archive/
+build-admin-react: ## [deprecated] 构建 React 管理端
+	cd frontend/archive/admin-react && npm ci --legacy-peer-deps && npm run build
+
+build-patient-react: ## [deprecated] 构建 React 患者端
+	cd frontend/archive/patient-react && npm ci --legacy-peer-deps && npm run build
 
 clean: ## 清理构建产物
 	rm -rf backend/bin/
-	rm -rf frontend/his-web-admin-react/dist
-	rm -rf frontend/his-web-patient-react/dist
+	rm -rf frontend/admin/dist
+	rm -rf frontend/patient/dist
+	rm -rf frontend/archive/admin-react/dist
+	rm -rf frontend/archive/patient-react/dist
 
 demo-admin: ## 启动管理端演示服务
 	./scripts/demo-admin.sh start

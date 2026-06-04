@@ -62,9 +62,12 @@ func main() {
 		cfg.RabbitMQ.User, cfg.RabbitMQ.Password, cfg.RabbitMQ.VHost,
 	)
 	if err != nil {
-		logger.Fatal("RabbitMQ 连接失败: " + err.Error())
+		logger.Warn("RabbitMQ 不可用，缴费成功/退款事件通知功能已禁用（演示环境可忽略）: " + err.Error())
+		rabbitMQ = nil
 	}
-	defer rabbitMQ.Close()
+	if rabbitMQ != nil {
+		defer rabbitMQ.Close()
+	}
 
 	billingRepo := repository.NewBillingRepository(db)
 	billingSvc := service.NewBillingService(billingRepo, rabbitMQ)

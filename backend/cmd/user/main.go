@@ -93,9 +93,17 @@ func setupUserRouter(cfg *config.Config, userHandler *handler.UserHandler, deps 
 
 	api := router.Group("/api/user")
 	{
+		// 患者
 		api.GET("/patients", userHandler.ListPatients)
+		api.GET("/patients/:id", userHandler.GetPatient)
+		api.POST("/patients", userHandler.CreatePatient)
+		api.PUT("/patients/:id", userHandler.UpdatePatient)
+		api.DELETE("/patients/:id", userHandler.DeletePatient)
+		// 科室
 		api.GET("/departments", userHandler.ListDepartments)
+		// 员工
 		api.GET("/employees", userHandler.ListEmployees)
+		api.GET("/employees/:id", userHandler.GetEmployee)
 	}
 
 	return router
