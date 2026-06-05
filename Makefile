@@ -1,4 +1,4 @@
-.PHONY: help fmt vet test build proto clean check all deps demo-admin demo-patient demo-admin-logs demo-patient-logs verify-admin verify-patient demo-verify
+.PHONY: help fmt vet test build proto clean check all deps start-admin start-patient demo-admin demo-patient demo-admin-logs demo-patient-logs verify-admin verify-patient demo-verify
 
 help: ## 显示帮助信息
 	@echo "HIS-Go 项目 Makefile"
@@ -46,6 +46,12 @@ build-admin-react: ## [deprecated] 构建 React 管理端
 
 build-patient-react: ## [deprecated] 构建 React 患者端
 	cd frontend/archive/patient-react && npm ci --legacy-peer-deps && npm run build
+
+start-admin: ## 管理端一键启动 (Docker 基础设施 + go run 后端 + Vite 前端)
+	./scripts/start-admin.bat 2>/dev/null || bash scripts/demo-admin.sh start
+
+start-patient: ## 患者端一键启动 (Docker 基础设施 + go run 后端 + Vite 前端)
+	./scripts/start-patient.bat 2>/dev/null || bash scripts/demo-patient.sh start
 
 clean: ## 清理构建产物
 	rm -rf backend/bin/
