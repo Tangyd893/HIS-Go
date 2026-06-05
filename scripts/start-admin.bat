@@ -13,6 +13,10 @@ echo   HIS-Go Admin Demo Launcher
 echo ============================================
 echo.
 
+REM ===== Pre-check: Docker =====
+call :check_docker
+if %errorlevel% neq 0 exit /b 1
+
 REM ===== Step 1: Docker Infrastructure =====
 echo [1/4] Starting Docker infrastructure...
 docker compose -f "%COMPOSE%" --env-file "%ENV%" up -d postgresql redis rabbitmq >nul 2>&1
@@ -79,3 +83,58 @@ echo   Press any key to open browser...
 echo ============================================
 pause >nul
 start http://localhost:5173
+exit /b 0
+
+REM ============================================================
+REM  Subroutine: Check Docker status
+REM ============================================================
+:check_docker
+echo [Pre-check] Docker status...
+
+REM 1. Check docker command exists
+where docker >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   [FAIL] docker command not found. Install Docker Desktop.
+    pause
+    exit /b 1
+)
+
+REM 2. Check Docker daemon is running
+docker info >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   [FAIL] Docker daemon not running.
+    echo   Start Docker Desktop and wait for the whale icon to stop animating.
+    pause
+    exit /b 1
+)
+
+REM 3. Check docker compose plugin
+docker compose version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   [FAIL] docker compose plugin not found.
+    echo   Docker Desktop 4.x+ includes this. Upgrade or install separately.
+    pause
+    exit /b 1
+)
+
+REM 4. Show versions
+for /f "tokens=*" %%i in ('docker --version 2^>^&1') do echo   Docker   : %%i
+for /f "tokens=*" %%i in ('docker compose version --short 2^>^&1') do echo   Compose  : %%i
+
+REM 5. Check port conflicts (5433, 6379, 5672, 8080)
+set "PORTS_OK=1"
+for %%p in (5433 6379 5672 8080) do (
+    netstat -an | findstr ":%%p " | findstr "LISTENING" >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo   [WARN] Port %%p is already in use
+        set "PORTS_OK=0"
+    )
+)
+if "%PORTS_OK%" equ "0" (
+    echo   [WARN] Some ports are occupied. Docker may fail to bind.
+    echo   Stop conflicting services or change ports in compose file.
+)
+
+echo   [OK] Docker is ready.
+echo.
+exit /b 0
