@@ -19,9 +19,24 @@ if %errorlevel% neq 0 exit /b 1
 
 REM ===== Step 1: Docker Infrastructure =====
 echo [1/4] Starting Docker infrastructure...
-docker compose -f "%COMPOSE%" --env-file "%ENV%" up -d postgresql redis rabbitmq >nul 2>&1
+
+REM Verify compose file and env file exist
+if not exist "%COMPOSE%" (
+    echo   [FAIL] Compose file not found: %COMPOSE%
+    pause & exit /b 1
+)
+if not exist "%ENV%" (
+    echo   [WARN] Env file not found: %ENV% (using defaults)
+)
+
+echo   Compose : %COMPOSE%
+echo   Env     : %ENV%
+echo   Starting: postgresql, redis, rabbitmq ...
+echo.
+docker compose -f "%COMPOSE%" --env-file "%ENV%" up -d postgresql redis rabbitmq
 if %errorlevel% neq 0 (
-    echo [ERROR] Docker not running. Start Docker Desktop first.
+    echo.
+    echo   [FAIL] docker compose failed. Check the error above.
     pause
     exit /b 1
 )
