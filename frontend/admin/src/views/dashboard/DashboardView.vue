@@ -52,9 +52,9 @@
       </a-col>
     </a-row>
 
-    <a-row :gutter="16" style="margin-top: 24px">
+    <a-row :gutter="16" style="margin-top: 24px" v-if="authStore.role === 'admin'">
       <a-col :span="24">
-        <a-card title="服务模块状态">
+        <a-card title="服务模块状态（仅管理员可见）">
           <a-row :gutter="[12, 12]">
             <a-col :span="3" v-for="svc in services" :key="svc.name">
               <a-tag :color="svc.status === 'running' ? 'green' : 'orange'" class="service-tag">
