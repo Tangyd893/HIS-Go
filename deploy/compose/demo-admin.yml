@@ -1,9 +1,9 @@
-# HIS-Go 管理端演示 Profile
-# 用法: docker compose -f demo-admin.yml up -d
-# 包含: PostgreSQL + Redis + RabbitMQ + Gateway + 管理端微服务 + Nginx
+# HIS-Go Admin Demo Profile
+# Usage: docker compose -f demo-admin.yml up -d
+# Includes: PostgreSQL + Redis + RabbitMQ + Gateway + admin services + Nginx
 
 services:
-  # ========== 基础设施 ==========
+  # ========== Infrastructure ==========
   postgresql:
     image: postgres:17-alpine
     container_name: his-postgres-demo
@@ -59,7 +59,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # ========== Go 微服务 (管理端 Profile) ==========
+  # ========== Go Microservices (Admin Profile) ==========
   his-gateway:
     build:
       context: ../../backend
@@ -345,7 +345,7 @@ services:
       - his-net
     restart: unless-stopped
 
-  # ========== Nginx 反向代理 + Vue 前端 ==========
+  # ========== Nginx Reverse Proxy + Vue Frontend ==========
   nginx:
     image: nginx:alpine
     container_name: his-nginx-demo

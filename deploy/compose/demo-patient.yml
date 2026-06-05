@@ -1,9 +1,9 @@
-# HIS-Go 患者端演示 Profile
-# 用法: docker compose -f demo-patient.yml up -d
-# 包含: PostgreSQL + Redis + Gateway + 患者端微服务 + Nginx (无 RabbitMQ)
+# HIS-Go Patient Demo Profile
+# Usage: docker compose -f demo-patient.yml up -d
+# Includes: PostgreSQL + Redis + Gateway + patient services + Nginx (no RabbitMQ)
 
 services:
-  # ========== 基础设施 ==========
+  # ========== Infrastructure ==========
   postgresql:
     image: postgres:17-alpine
     container_name: his-postgres-demo
@@ -40,7 +40,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ========== Go 微服务 (患者端 Profile) ==========
+  # ========== Go Microservices (Patient Profile) ==========
   his-gateway:
     build:
       context: ../../backend
@@ -265,7 +265,7 @@ services:
       - his-net
     restart: unless-stopped
 
-  # ========== Nginx 反向代理 + Vue 前端 ==========
+  # ========== Nginx Reverse Proxy + Vue Frontend ==========
   nginx:
     image: nginx:alpine
     container_name: his-nginx-demo

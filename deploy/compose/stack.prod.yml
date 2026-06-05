@@ -1,5 +1,5 @@
 services:
-  # ========== 基础设施 ==========
+  # ========== Infrastructure ==========
   nacos:
     image: nacos/nacos-server:v2.4.3
     container_name: his-nacos
@@ -101,7 +101,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # ========== 数据库初始化 ==========
+  # ========== DB Init ==========
   db-init:
     image: postgres:17-alpine
     container_name: his-db-init
@@ -118,7 +118,7 @@ services:
     networks:
       - his-net
 
-  # ========== React 前端构建 ==========
+  # ========== React Frontend构建 ==========
   build-admin:
     build:
       context: ../../frontend/admin
@@ -141,7 +141,7 @@ services:
     networks:
       - his-net
 
-  # ========== Nginx 反向代理 ==========
+  # ========== Nginx Reverse Proxy ==========
   nginx:
     image: nginx:alpine
     container_name: his-nginx
@@ -159,7 +159,7 @@ services:
       - his-net
     restart: unless-stopped
 
-  # ========== Go 微服�?==========
+  # ===
   gateway:
     build:
       context: ../../backend

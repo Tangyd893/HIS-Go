@@ -1,5 +1,5 @@
 ﻿services:
-  # ========== 基础设施 ==========
+  # ========== Infrastructure ==========
   nacos:
     image: nacos/nacos-server:v2.4.3
     container_name: his-nacos
@@ -92,7 +92,7 @@
       timeout: 5s
       retries: 5
 
-  # ========== Go 微服务 ==========
+  # ========== Go Microservices ==========
   his-gateway:
     build:
       context: ../../backend
@@ -548,7 +548,7 @@
       - his-net
     restart: unless-stopped
 
-  # ========== Nginx 反向代理 + Vue 前端 ==========
+  # ========== Nginx Reverse Proxy + Vue Frontend ==========
   nginx:
     image: nginx:alpine
     container_name: his-nginx
