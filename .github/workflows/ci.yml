@@ -113,3 +113,4 @@ jobs:
           args: >
             -Dsonar.projectKey=Tangyd893_HIS-Go
             -Dsonar.organization=tangyd893
+            -Dsonar.qualitygate.wait=false
