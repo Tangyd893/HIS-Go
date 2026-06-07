@@ -15,8 +15,8 @@ type Prescription struct {
 	DoctorID         string `gorm:"column:doctor_id;not null;type:varchar(64);index" json:"doctorId,omitempty"`
 	DiagnosisID      string `gorm:"column:diagnosis_id;type:varchar(64)" json:"diagnosisId,omitempty"` // 关联诊断ID
 	PrescriptionType int8   `gorm:"column:prescription_type;not null" json:"prescriptionType"`         // 1西药 2中成药 3中草药
-	Status           int8   `gorm:"column:status;default:0" json:"status"`                            // 0草稿 1待审核 2已审核 3已收费 4已发药
-	Note             string `gorm:"column:note;type:text" json:"note,omitempty"`                      // 备注
+	Status           int8   `gorm:"column:status;default:0" json:"status"`                             // 0草稿 1待审核 2已审核 3已收费 4已发药
+	Note             string `gorm:"column:note;type:text" json:"note,omitempty"`                       // 备注
 
 	Details []PrescriptionDetail `gorm:"foreignKey:PrescriptionID" json:"details,omitempty"` // 处方明细
 

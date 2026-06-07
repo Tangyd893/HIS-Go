@@ -12,8 +12,8 @@ type ExaminationReport struct {
 	PatientID     string         `gorm:"column:patient_id;not null;type:varchar(64);index" json:"patientId"`
 	PatientName   string         `gorm:"column:patient_name;size:50" json:"patientName,omitempty"`
 	ExamRequestID string         `gorm:"column:exam_request_id;type:varchar(64)" json:"examRequestId,omitempty"`
-	ExamType      string         `gorm:"column:exam_type;size:50" json:"examType"`   // 检查类型：CT/DR/MR/超声/检验
-	ExamItem      string         `gorm:"column:exam_item;size:100" json:"examItem"`  // 检查项目
+	ExamType      string         `gorm:"column:exam_type;size:50" json:"examType"`  // 检查类型：CT/DR/MR/超声/检验
+	ExamItem      string         `gorm:"column:exam_item;size:100" json:"examItem"` // 检查项目
 	BodyPart      string         `gorm:"column:body_part;size:50" json:"bodyPart,omitempty"`
 	Findings      string         `gorm:"column:findings;type:text" json:"findings,omitempty"`
 	Impression    string         `gorm:"column:impression;type:text" json:"impression,omitempty"`
