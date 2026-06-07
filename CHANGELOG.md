@@ -11,9 +11,9 @@
 
 #### DevOps
 
-- 创建 `docker/docker-compose.demo-admin.yml` - 管理端演示 Profile
-- 创建 `docker/docker-compose.demo-patient.yml` - 患者端演示 Profile
-- 创建 `docker/.env.demo.example` - 演示环境变量模板
+- 创建 `deploy/compose/demo-admin.yml` - 管理端演示 Profile
+- 创建 `deploy/compose/demo-patient.yml` - 患者端演示 Profile
+- 创建 `deploy/config/demo.env.example` - 演示环境变量模板
 - 创建 `scripts/demo-admin.sh` - 管理端演示一键启停脚本
 - 创建 `scripts/demo-patient.sh` - 患者端演示一键启停脚本
 - 创建 `scripts/verify-demo.sh` - 演示环境验证脚本

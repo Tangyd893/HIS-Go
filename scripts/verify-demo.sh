@@ -130,11 +130,51 @@ verify_patient() {
     if [ $failed -eq 0 ]; then
         print_success "患者端演示环境验证通过！"
         print_info "访问地址: http://localhost/patient"
-        print_info "小程序配置: frontend/his-mp-webview/pages/index/index.js"
+        print_info "小程序配置: frontend/mp-webview/pages/index/index.js"
     else
         print_error "患者端演示环境验证失败，共 $failed 个服务异常"
         return 1
     fi
+}
+
+# 测试 API 接口
+test_api() {
+    print_info "测试 API 接口..."
+
+    # 测试登录接口
+    print_info "测试登录接口..."
+    local login_response=$(curl -s -X POST http://localhost:8080/api/auth/login \
+        -H "Content-Type: application/json" \
+        -d '{"username":"demo-admin","password":"demo123"}')
+
+    if echo "$login_response" | grep -q '"code"'; then
+        local code=$(echo "$login_response" | grep -o '"code":"[^"]*"' | head -1 | cut -d'"' -f4)
+        if [ "$code" = "200" ] || [ "$code" = "0" ]; then
+            print_success "登录接口测试通过"
+            local token=$(echo "$login_response" | grep -o '"token":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+            if [ -n "$token" ]; then
+                # 测试获取用户信息接口
+                print_info "测试获取用户信息接口..."
+                local user_response=$(curl -s -H "Authorization: Bearer $token" http://localhost:8080/api/auth/current)
+                if echo "$user_response" | grep -q '"code"'; then
+                    print_success "获取用户信息接口测试通过"
+                else
+                    print_error "获取用户信息接口响应格式错误"
+                    return 1
+                fi
+            fi
+        else
+            print_error "登录接口测试失败 (code: $code)"
+            return 1
+        fi
+    else
+        print_error "登录接口响应格式错误"
+        return 1
+    fi
+
+    print_success "API 接口测试通过！"
+    return 0
 }
 
 # 显示帮助
@@ -144,13 +184,17 @@ show_help() {
     echo "用法: $0 [命令]"
     echo ""
     echo "命令:"
-    echo "  admin    验证管理端演示环境"
-    echo "  patient  验证患者端演示环境"
-    echo "  help     显示此帮助信息"
+    echo "  admin     验证管理端演示环境"
+    echo "  patient   验证患者端演示环境"
+    echo "  api       测试 API 接口"
+    echo "  all       验证所有演示环境 + API 测试"
+    echo "  help      显示此帮助信息"
     echo ""
     echo "示例:"
     echo "  $0 admin    # 验证管理端演示"
     echo "  $0 patient  # 验证患者端演示"
+    echo "  $0 api      # 测试 API 接口"
+    echo "  $0 all      # 全量验证"
 }
 
 # 主函数
@@ -161,6 +205,18 @@ main() {
             ;;
         patient)
             verify_patient
+            ;;
+        api)
+            test_api
+            ;;
+        all)
+            print_info "验证所有演示环境..."
+            echo ""
+            verify_admin
+            echo ""
+            verify_patient
+            echo ""
+            test_api
             ;;
         help|*)
             show_help

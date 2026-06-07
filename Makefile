@@ -91,7 +91,7 @@ verify-admin: ## 验证管理端演示环境
 verify-patient: ## 验证患者端演示环境
 	./scripts/verify-demo.sh patient
 
-demo-verify: ## 演示验证工具
-	./scripts/demo-verify.sh all
+demo-verify: ## 演示验证工具（全量）
+	./scripts/verify-demo.sh all
 
 all: check ## 默认：执行全部质量检查
