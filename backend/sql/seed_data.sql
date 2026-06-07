@@ -13,12 +13,13 @@ INSERT INTO roles (id, role_name, role_code, description) VALUES
 ('role_patient', '患者', 'patient', '患者角色'),
 ('role_pharmacist', '药师', 'pharmacist', '药师角色');
 
--- 演示用户（密码: demo123，bcrypt加密）
+-- 演示用户（密码: demo123，bcrypt 加密；仅用于本地/演示环境，生产环境请替换）
+-- NOSONAR: 以下 bcrypt hash 为公开演示密码（demo123），非生产密钥
 INSERT INTO users (id, username, password, real_name, phone, role, dept_id) VALUES
-('demo-doctor', 'demo-doctor', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '张医生', '13800000001', 'doctor', 'dept_001'),
-('demo-nurse', 'demo-nurse', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '李护士', '13800000002', 'nurse', 'dept_001'),
-('demo-admin', 'demo-admin', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '管理员', '13800000003', 'admin', NULL),
-('demo-patient', 'demo-patient', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '王小明', '13900000001', 'patient', NULL);
+('demo-doctor', 'demo-doctor', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '张医生', '13800000001', 'doctor', 'dept_001'),        -- NOSONAR
+('demo-nurse', 'demo-nurse', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '李护士', '13800000002', 'nurse', 'dept_001'),      -- NOSONAR
+('demo-admin', 'demo-admin', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '管理员', '13800000003', 'admin', NULL),          -- NOSONAR
+('demo-patient', 'demo-patient', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '王小明', '13900000001', 'patient', NULL);    -- NOSONAR
 
 \c his_user;
 

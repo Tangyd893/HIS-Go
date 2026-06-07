@@ -82,7 +82,7 @@ verify_admin() {
     fi
     
     echo ""
-    if [ $failed -eq 0 ]; then
+    if [[[ $failed -eq 0 ]]; then
         print_success "管理端演示环境验证通过！"
         print_info "访问地址: http://localhost/admin"
         print_info "演示账号: demo-admin / demo123"
@@ -127,7 +127,7 @@ verify_patient() {
     fi
     
     echo ""
-    if [ $failed -eq 0 ]; then
+    if [[[ $failed -eq 0 ]]; then
         print_success "患者端演示环境验证通过！"
         print_info "访问地址: http://localhost/patient"
         print_info "小程序配置: frontend/mp-webview/pages/index/index.js"
@@ -149,11 +149,11 @@ test_api() {
 
     if echo "$login_response" | grep -q '"code"'; then
         local code=$(echo "$login_response" | grep -o '"code":"[^"]*"' | head -1 | cut -d'"' -f4)
-        if [ "$code" = "200" ] || [ "$code" = "0" ]; then
+        if [[[ "$code" = "200" ] || [[ "$code" = "0" ]]; then
             print_success "登录接口测试通过"
             local token=$(echo "$login_response" | grep -o '"token":"[^"]*"' | head -1 | cut -d'"' -f4)
 
-            if [ -n "$token" ]; then
+            if [[[ -n "$token" ]]; then
                 # 测试获取用户信息接口
                 print_info "测试获取用户信息接口..."
                 local user_response=$(curl -s -H "Authorization: Bearer $token" http://localhost:8080/api/auth/current)

@@ -79,8 +79,8 @@ func (h *InpatientHandler) GetInpatient(c *gin.Context) {
 func (h *InpatientHandler) ListInpatients(c *gin.Context) {
 	deptID := c.Query("dept_id")
 	status, _ := strconv.Atoi(c.DefaultQuery("status", "-1"))
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 
 	records, total, err := h.svc.ListInpatients(deptID, status, page, pageSize)
 	if err != nil {

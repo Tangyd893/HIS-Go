@@ -95,8 +95,8 @@ func (h *SystemHandler) UpdateParam(c *gin.Context) {
 func (h *SystemHandler) ListOperationLogs(c *gin.Context) {
 	userID := c.Query("userId")
 	module := c.Query("module")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 	if page <= 0 {
 		page = 1
 	}

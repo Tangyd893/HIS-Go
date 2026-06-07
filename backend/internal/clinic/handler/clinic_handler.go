@@ -63,8 +63,8 @@ func (h *ClinicHandler) GetClinicRecord(c *gin.Context) {
 // ListClinicRecords 查询诊疗记录列表
 func (h *ClinicHandler) ListClinicRecords(c *gin.Context) {
 	patientID := c.Query("patientId")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 	if page <= 0 {
 		page = 1
 	}

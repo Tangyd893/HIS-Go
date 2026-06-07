@@ -14,7 +14,7 @@ cd "${BACKEND_DIR}"
 
 echo "[1/4] 代码格式检查 (gofmt)..."
 fmt_result=$(gofmt -l .)
-if [ -n "${fmt_result}" ]; then
+if [[[ -n "${fmt_result}" ]]; then
     echo "以下文件格式不符合规范:"
     echo "${fmt_result}"
     echo "ERROR: gofmt 检查未通过"

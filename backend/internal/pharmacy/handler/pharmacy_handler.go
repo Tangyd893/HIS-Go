@@ -23,8 +23,8 @@ func NewPharmacyHandler(svc *service.PharmacyService) *PharmacyHandler {
 // ListDrugs 分页查询药品列表
 func (h *PharmacyHandler) ListDrugs(c *gin.Context) {
 	name := c.Query("name")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 
 	drugs, total, err := h.svc.ListDrugs(name, page, pageSize)
 	if err != nil {

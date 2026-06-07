@@ -1,5 +1,5 @@
 import http from './client'
-import type { Schedule, PageQuery } from './types'
+import type { Schedule } from './types'
 
 export const scheduleApi = {
   /** 生成排班 */

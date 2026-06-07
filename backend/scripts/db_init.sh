@@ -22,10 +22,10 @@ command -v psql >/dev/null 2>&1 || { echo "错误: psql 未安装"; exit 1; }
 export PGPASSWORD="${DB_PASSWORD}"
 
 # 第一步：按编号顺序执行迁移脚本（建库 + 建表）
-if [ -d "${MIGRATIONS_DIR}" ]; then
+if [[[ -d "${MIGRATIONS_DIR}" ]]; then
     echo "执行版本化迁移脚本 (${MIGRATIONS_DIR}) ..."
     for migration in "${MIGRATIONS_DIR}"/*.sql; do
-        if [ -f "${migration}" ]; then
+        if [[[ -f "${migration}" ]]; then
             migration_name=$(basename "${migration}")
             echo "  → 执行 ${migration_name} ..."
             psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "${migration}"
@@ -37,7 +37,7 @@ else
 fi
 
 # 第二步：同时执行 init_all.sql（兼容旧流程，含幂等检查）
-if [ -f "${SQL_DIR}/init_all.sql" ]; then
+if [[[ -f "${SQL_DIR}/init_all.sql" ]]; then
     echo "执行 init_all.sql（兼容旧流程） ..."
     psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "${SQL_DIR}/init_all.sql"
     echo "建表完成"
@@ -46,7 +46,7 @@ else
 fi
 
 # 第三步：导入种子数据
-if [ -f "${SQL_DIR}/seed_data.sql" ]; then
+if [[[ -f "${SQL_DIR}/seed_data.sql" ]]; then
     echo "执行 seed_data.sql ..."
     psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "${SQL_DIR}/seed_data.sql"
     echo "种子数据导入完成"

@@ -1,5 +1,5 @@
 import http from './client'
-import type { Registration, Schedule, PageData, PageQuery } from './types'
+import type { Registration, Schedule } from './types'
 
 export const registrationApi = {
   /** 查询号源 */

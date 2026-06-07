@@ -129,8 +129,8 @@ func (h *BillingHandler) ListBills(c *gin.Context) {
 	}
 
 	status, _ := strconv.Atoi(c.DefaultQuery("status", "-1"))
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 
 	bills, total, err := h.svc.ListBills(patientID, status, page, pageSize)
 	if err != nil {

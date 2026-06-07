@@ -72,12 +72,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
+import { h } from 'vue'
 import {
   FormOutlined, MedicineBoxOutlined, FileTextOutlined,
   DollarOutlined, ExperimentOutlined, HomeOutlined,
-  TeamOutlined, ScheduleOutlined, BarChartOutlined, SettingOutlined,
 } from '@ant-design/icons-vue'
-import { h } from 'vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

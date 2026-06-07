@@ -43,7 +43,7 @@ check_docker() {
 
 # 检查 docker-compose 文件是否存在
 check_compose_file() {
-    if [ ! -f "$COMPOSE_FILE" ]; then
+    if [[[ ! -f "$COMPOSE_FILE" ]]; then
         print_error "找不到 docker-compose 文件: $COMPOSE_FILE"
         exit 1
     fi
@@ -53,7 +53,7 @@ check_compose_file() {
 ADMIN_DIST="$PROJECT_ROOT/frontend/admin/dist"
 
 check_frontend_build() {
-    if [ ! -f "$ADMIN_DIST/index.html" ]; then
+    if [[[ ! -f "$ADMIN_DIST/index.html" ]]; then
         print_warning "前端构建产物不存在: $ADMIN_DIST/index.html"
         print_info "请先运行: $0 build  或  make build-admin"
         return 1
@@ -73,7 +73,7 @@ build_frontend() {
 
 # 检查环境变量文件
 check_env_file() {
-    if [ ! -f "$ENV_FILE" ]; then
+    if [[[ ! -f "$ENV_FILE" ]]; then
         print_warning "找不到环境变量文件: $ENV_FILE"
         print_info "将使用默认环境变量"
     fi
@@ -84,7 +84,7 @@ start_services() {
     print_info "启动管理端演示服务..."
     
     local compose_cmd="docker compose -f $COMPOSE_FILE"
-    if [ -f "$ENV_FILE" ]; then
+    if [[[ -f "$ENV_FILE" ]]; then
         compose_cmd="$compose_cmd --env-file $ENV_FILE"
     fi
     
@@ -116,7 +116,7 @@ stop_services() {
     print_info "停止管理端演示服务..."
     
     local compose_cmd="docker compose -f $COMPOSE_FILE"
-    if [ -f "$ENV_FILE" ]; then
+    if [[[ -f "$ENV_FILE" ]]; then
         compose_cmd="$compose_cmd --env-file $ENV_FILE"
     fi
     
@@ -137,7 +137,7 @@ show_status() {
     print_info "管理端演示服务状态："
     
     local compose_cmd="docker compose -f $COMPOSE_FILE"
-    if [ -f "$ENV_FILE" ]; then
+    if [[[ -f "$ENV_FILE" ]]; then
         compose_cmd="$compose_cmd --env-file $ENV_FILE"
     fi
     
@@ -148,11 +148,11 @@ show_status() {
 show_logs() {
     local service=$1
     local compose_cmd="docker compose -f $COMPOSE_FILE"
-    if [ -f "$ENV_FILE" ]; then
+    if [[[ -f "$ENV_FILE" ]]; then
         compose_cmd="$compose_cmd --env-file $ENV_FILE"
     fi
     
-    if [ -n "$service" ]; then
+    if [[[ -n "$service" ]]; then
         $compose_cmd logs -f "$service"
     else
         $compose_cmd logs -f
@@ -196,7 +196,7 @@ main() {
             else
                 print_info "是否立即构建？(y/N)"
                 read -r answer
-                if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+                if [[[ "$answer" = "y" ] || [[ "$answer" = "Y" ]]; then
                     build_frontend
                     start_services
                 fi

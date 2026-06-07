@@ -128,9 +128,8 @@ import {
   DashboardOutlined, TeamOutlined, FormOutlined, ScheduleOutlined,
   MedicineBoxOutlined, FileTextOutlined, ExperimentOutlined, DollarOutlined,
   HomeOutlined, FundProjectionScreenOutlined, GlobalOutlined, BellOutlined,
-  BarChartOutlined, SettingOutlined, FileProtectOutlined,
+  BarChartOutlined, SettingOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined, DownOutlined, LogoutOutlined,
-  HeartOutlined, PhoneOutlined, IdcardOutlined, ClusterOutlined,
 } from '@ant-design/icons-vue'
 
 const router = useRouter()

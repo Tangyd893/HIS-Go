@@ -70,8 +70,8 @@ func (h *FollowupHandler) GetPlan(c *gin.Context) {
 func (h *FollowupHandler) ListPlans(c *gin.Context) {
 	patientID := c.Query("patientId")
 	status, _ := strconv.Atoi(c.DefaultQuery("status", "-1"))
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 	if page <= 0 {
 		page = 1
 	}

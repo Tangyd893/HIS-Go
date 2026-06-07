@@ -47,7 +47,7 @@ for module in "${MODULES[@]}"; do
 done
 
 echo ""
-if [ $FAILED -eq 0 ]; then
+if [[[ $FAILED -eq 0 ]]; then
     echo "=== 全部 17 个模块 Wire 代码生成成功 ==="
 else
     echo "=== $FAILED 个模块生成失败，请检查 wire.go 配置 ==="

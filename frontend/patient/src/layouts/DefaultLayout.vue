@@ -40,9 +40,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import {
   HomeOutlined, ScheduleOutlined, MessageOutlined,
-  FileTextOutlined, HeartOutlined, PhoneOutlined,
+  FileTextOutlined, HeartOutlined,
 } from '@ant-design/icons-vue'
-import { h } from 'vue'
 
 const router = useRouter()
 const route = useRoute()

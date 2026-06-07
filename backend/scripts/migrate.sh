@@ -22,13 +22,13 @@ ACTION="${1:-up}"
 case "$ACTION" in
     up)
         echo "=== 执行全部迁移 (up) ==="
-        if [ ! -d "$MIGRATIONS_DIR" ]; then
+        if [[[ ! -d "$MIGRATIONS_DIR" ]]; then
             echo "错误: 迁移目录不存在: $MIGRATIONS_DIR"
             exit 1
         fi
 
         for migration in "${MIGRATIONS_DIR}"/*.sql; do
-            if [ -f "$migration" ]; then
+            if [[[ -f "$migration" ]]; then
                 name=$(basename "$migration")
                 echo "  → 执行 ${name} ..."
                 psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "$migration" -v ON_ERROR_STOP=1
@@ -39,7 +39,7 @@ case "$ACTION" in
 
     status)
         echo "=== 迁移文件列表 ==="
-        if [ -d "$MIGRATIONS_DIR" ]; then
+        if [[[ -d "$MIGRATIONS_DIR" ]]; then
             ls -1 "${MIGRATIONS_DIR}"/*.sql 2>/dev/null | while read f; do
                 echo "  $(basename "$f")"
             done

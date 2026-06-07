@@ -30,7 +30,7 @@ protoc \
 # 生成各服务 proto
 for dir in $(ls -d ${PROTO_DIR}/*/); do
     service=$(basename "$dir")
-    if [ "$service" = "common" ]; then
+    if [[[ "$service" = "common" ]]; then
         continue
     fi
     echo "生成服务: ${service}"
