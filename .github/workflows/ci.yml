@@ -105,7 +105,7 @@ jobs:
         run: go test -v -count=1 -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: SonarCloud 扫描
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
