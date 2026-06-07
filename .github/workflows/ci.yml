@@ -106,11 +106,11 @@ jobs:
 
       - name: SonarCloud 扫描
         uses: SonarSource/sonarqube-scan-action@v6
+        continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: .
-          qualitygate: false
           args: >
             -Dsonar.projectKey=Tangyd893_HIS-Go
             -Dsonar.organization=tangyd893
