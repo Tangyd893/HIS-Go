@@ -55,18 +55,18 @@ async function fetchData() {
     const res: any = await billingApi.getList({ page: pagination.current, pageSize: pagination.pageSize })
     dataSource.value = res?.list || []
     pagination.total = res?.total || 0
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch { message.error('加载账单失败'); dataSource.value = [] } finally { loading.value = false }
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
 function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 
 async function handlePay(record: any) {
-  try { await billingApi.pay(record.id, 0); message.success('支付成功'); fetchData() } catch { }
+  try { await billingApi.pay(record.id, 0); message.success('支付成功'); fetchData() } catch { message.error('支付失败') }
 }
 
 async function handleRefund(id: string) {
-  try { await billingApi.refund(id); message.success('退费成功'); fetchData() } catch { }
+  try { await billingApi.refund(id); message.success('退费成功'); fetchData() } catch { message.error('退费失败') }
 }
 
 onMounted(fetchData)

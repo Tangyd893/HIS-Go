@@ -9,6 +9,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { userApi } from '@/api/user'
 
@@ -25,7 +26,7 @@ async function fetchData() {
   loading.value = true
   try {
     dataSource.value = await userApi.getDepartments()
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch { message.error('加载科室失败'); dataSource.value = [] } finally { loading.value = false }
 }
 
 onMounted(fetchData)

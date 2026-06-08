@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import { statisticsApi } from '@/api/others'
 import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 import dayjs from 'dayjs'
@@ -87,7 +88,7 @@ async function loadRevenue() {
       chartData.value = data
       chartColumns.value = data.length ? Object.keys(data[0]).map(k => ({ title: k, dataIndex: k })) : []
     }
-  } catch { }
+  } catch { message.error('加载收入数据失败') }
 }
 
 async function loadWorkload() {
@@ -100,7 +101,7 @@ async function loadWorkload() {
       chartData.value = data
       chartColumns.value = data.length ? Object.keys(data[0]).map(k => ({ title: k, dataIndex: k })) : []
     }
-  } catch { }
+  } catch { message.error('加载工作量数据失败') }
 }
 
 onMounted(loadOperation)

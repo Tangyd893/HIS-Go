@@ -80,11 +80,11 @@ function viewDetail(id: string) { message.info(`查看病历: ${id}`) }
 function showCreateModal() { modalOpen.value = true }
 
 async function handleCreate() {
-  try { await emrApi.create(form); message.success('创建成功'); modalOpen.value = false; fetchData() } catch { }
+  try { await emrApi.create(form); message.success('创建成功'); modalOpen.value = false; fetchData() } catch { message.error('创建失败') }
 }
 
 async function doQualityControl(record: any) {
-  try { await emrApi.qualityControl(record.id, { reviewer_id: 'current', level: 1 }); message.success('质控完成'); fetchData() } catch { }
+  try { await emrApi.qualityControl(record.id, { reviewer_id: 'current', level: 1 }); message.success('质控完成'); fetchData() } catch { message.error('质控失败') }
 }
 
 onMounted(fetchData)

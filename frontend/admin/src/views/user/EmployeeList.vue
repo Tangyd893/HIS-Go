@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { userApi } from '@/api/user'
 
@@ -40,7 +41,7 @@ async function fetchData() {
     })
     dataSource.value = res?.list || res || []
     pagination.total = res?.total || 0
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch { message.error('加载员工失败'); dataSource.value = [] } finally { loading.value = false }
 }
 
 function onTableChange(pag: any) {

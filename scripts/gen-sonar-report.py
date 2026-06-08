@@ -186,7 +186,7 @@ def main() -> int:
         pct = f"{n / total * 100:.1f}" if total else "0.0"
         lines.append(f"| `{rule}` | {sev_label(sev)} | {typ} | {n} | {pct}% |")
 
-    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")  # NOSONAR: 输出路径为硬编码常量，非用户输入
     print(
         f"Report: {total} issues, gate={gate_status}, dup={dup}%, "
         f"vulns={vulns}, blockers={len(blockers)}"

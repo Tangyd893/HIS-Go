@@ -88,7 +88,7 @@ async function fetchData() {
     const res: any = await pharmacyApi.getDrugs({ page: pagination.current, pageSize: pagination.pageSize, name: searchName.value || undefined })
     dataSource.value = res?.list || []
     pagination.total = res?.total || 0
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch { message.error('加载药品失败'); dataSource.value = [] } finally { loading.value = false }
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
@@ -117,14 +117,14 @@ async function searchPrescriptions(keyword: string) {
 }
 
 async function handleAddStock() {
-  try { await pharmacyApi.addStock(selectedDrug.value.id, stockQuantity.value); message.success('入库成功'); stockModalOpen.value = false; fetchData() } catch { }
+  try { await pharmacyApi.addStock(selectedDrug.value.id, stockQuantity.value); message.success('入库成功'); stockModalOpen.value = false; fetchData() } catch { message.error('入库失败') }
 }
 
 async function handleDispense() {
   try {
     await pharmacyApi.dispense({ prescription_id: dispenseForm.prescriptionId, drug_id: selectedDrug.value.id, quantity: dispenseForm.quantity, dispenser_id: 'current' })
     message.success('发药成功'); dispenseModalOpen.value = false; fetchData()
-  } catch { }
+  } catch { message.error('发药失败') }
 }
 
 async function scanExpired() {

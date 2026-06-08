@@ -24,6 +24,22 @@ services:
       timeout: 5s
       retries: 5
 
+  # 自动初始化 seed 数据（首次启动或数据库为空时执行）
+  db-init:
+    image: postgres:17-alpine
+    container_name: his-db-init
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-change_me_123}
+    volumes:
+      - ../../backend/sql:/sql-init:ro
+    entrypoint: ["bash", "-c", "echo '=== Running seed data ===' && for f in /sql-init/seed_data.sql /sql-init/seed_data_extended.sql; do echo \"Running $$f...\"; psql -h postgresql -U ${POSTGRES_USER:-his_admin} -f \"$$f\" -v ON_ERROR_STOP=0 || echo \"(some inserts already exist, continuing)\"; done && echo '=== Seed complete ==='"]
+    networks:
+      - his-net
+    restart: "no"
+
   redis:
     image: redis:7-alpine
     container_name: his-redis-demo
