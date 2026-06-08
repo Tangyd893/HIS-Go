@@ -1,6 +1,11 @@
 <template>
   <div>
-    <a-card title="电子病历">
+    <ServicePlaceholder
+      v-if="serviceUnavailable"
+      title="电子病历"
+      description="电子病历模块在演示环境中暂未启用，如需演示请联系管理员。"
+    />
+    <a-card v-else title="电子病历">
       <template #extra>
         <a-button type="primary" @click="showCreateModal"><PlusOutlined /> 新建病历</a-button>
       </template>
@@ -36,8 +41,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { emrApi } from '@/api/emr'
+import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 
 const loading = ref(false)
+const serviceUnavailable = ref(false)
 const dataSource = ref<any[]>([])
 const modalOpen = ref(false)
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
@@ -57,11 +64,15 @@ const columns = [
 
 async function fetchData() {
   loading.value = true
+  serviceUnavailable.value = false
   try {
     const res: any = await emrApi.getList({ page: pagination.current, pageSize: pagination.pageSize })
     dataSource.value = res?.list || []
     pagination.total = res?.total || 0
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch {
+    serviceUnavailable.value = true
+    dataSource.value = []
+  } finally { loading.value = false }
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
