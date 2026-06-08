@@ -11,6 +11,11 @@ import (
 	"his-go/pkg/logger"
 )
 
+const (
+	labelMethod  = "method"
+	labelLatency = "latency"
+)
+
 // UnaryServerInterceptor 一元拦截器链
 func UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -20,14 +25,14 @@ func UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 
 		if err != nil {
 			logger.Error("gRPC 调用失败",
-				zap.String("method", info.FullMethod),
-				zap.Duration("latency", latency),
+				zap.String(labelMethod, info.FullMethod),
+				zap.Duration(labelLatency, latency),
 				zap.Error(err),
 			)
 		} else {
 			logger.Debug("gRPC 调用成功",
-				zap.String("method", info.FullMethod),
-				zap.Duration("latency", latency),
+				zap.String(labelMethod, info.FullMethod),
+				zap.Duration(labelLatency, latency),
 			)
 		}
 		return resp, err
@@ -43,14 +48,14 @@ func UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 
 		if err != nil {
 			logger.Error("gRPC 客户端调用失败",
-				zap.String("method", method),
-				zap.Duration("latency", latency),
+				zap.String(labelMethod, method),
+				zap.Duration(labelLatency, latency),
 				zap.Error(err),
 			)
 		} else {
 			logger.Debug("gRPC 客户端调用成功",
-				zap.String("method", method),
-				zap.Duration("latency", latency),
+				zap.String(labelMethod, method),
+				zap.Duration(labelLatency, latency),
 			)
 		}
 		return err

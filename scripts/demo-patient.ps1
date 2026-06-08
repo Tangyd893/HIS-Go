@@ -14,10 +14,10 @@ $ComposeFile = "$ProjectRoot\deploy\compose\demo-patient.yml"
 $EnvFile = "$ProjectRoot\deploy\config\demo.env"
 $PatientDist = "$ProjectRoot\frontend\patient\dist"
 
-function Write-Info  { Write-Host "[INFO] $args" -ForegroundColor Blue }
-function Write-OK    { Write-Host "[OK] $args" -ForegroundColor Green }
-function Write-Warn  { Write-Host "[WARN] $args" -ForegroundColor Yellow }
-function Write-Err   { Write-Host "[ERROR] $args" -ForegroundColor Red }
+function Write-Info  { Write-Information "[INFO] $args" -InformationAction Continue }
+function Write-OK    { Write-Information "[OK] $args" -InformationAction Continue }
+function Write-Warn  { Write-Information "[WARN] $args" -InformationAction Continue }
+function Write-Err   { Write-Error "$args" }
 
 function Check-Docker {
     try { docker info | Out-Null }
@@ -45,36 +45,36 @@ function Start-Services {
         return
     }
     Write-Info "启动患者端演示服务..."
-    $cmd = "docker compose -f `"$ComposeFile`""
-    if (Test-Path $EnvFile) { $cmd += " --env-file `"$EnvFile`"" }
-    $cmd += " up -d"
-    Invoke-Expression $cmd
+    $args = @("compose", "-f", $ComposeFile)
+    if (Test-Path $EnvFile) { $args += @("--env-file", $EnvFile) }
+    $args += @("up", "-d")
+    & docker @args
     Write-OK "患者端服务已启动（无 RabbitMQ）"
     Write-Info "访问: http://localhost/patient  账号: demo-patient / demo123"
 }
 
 function Stop-Services {
     Write-Info "停止患者端服务..."
-    $cmd = "docker compose -f `"$ComposeFile`""
-    if (Test-Path $EnvFile) { $cmd += " --env-file `"$EnvFile`"" }
-    $cmd += " down"
-    Invoke-Expression $cmd
+    $args = @("compose", "-f", $ComposeFile)
+    if (Test-Path $EnvFile) { $args += @("--env-file", $EnvFile) }
+    $args += @("down")
+    & docker @args
     Write-OK "已停止"
 }
 
 function Show-Status {
-    $cmd = "docker compose -f `"$ComposeFile`""
-    if (Test-Path $EnvFile) { $cmd += " --env-file `"$EnvFile`"" }
-    $cmd += " ps"
-    Invoke-Expression $cmd
+    $args = @("compose", "-f", $ComposeFile)
+    if (Test-Path $EnvFile) { $args += @("--env-file", $EnvFile) }
+    $args += @("ps")
+    & docker @args
 }
 
 function Show-Logs {
-    $cmd = "docker compose -f `"$ComposeFile`""
-    if (Test-Path $EnvFile) { $cmd += " --env-file `"$EnvFile`"" }
-    if ($Service) { $cmd += " logs -f $Service" }
-    else { $cmd += " logs -f" }
-    Invoke-Expression $cmd
+    $args = @("compose", "-f", $ComposeFile)
+    if (Test-Path $EnvFile) { $args += @("--env-file", $EnvFile) }
+    $args += @("logs", "-f")
+    if ($Service) { $args += @($Service) }
+    & docker @args
 }
 
 # === Main ===

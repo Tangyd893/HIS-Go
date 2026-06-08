@@ -14,6 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	ctxKeyTraceID = "traceID"
+	ctxKeySpanID  = "spanID"
+	fmtMethodPath = "%s %s"
+)
+
 // TraceConfig 追踪配置
 type TraceConfig struct {
 	ServiceName string // 服务名称
@@ -126,13 +132,13 @@ func Tracing() gin.HandlerFunc {
 		spanID := GenerateSpanID()
 
 		// 设置请求上下文
-		c.Set("traceID", traceID)
-		c.Set("spanID", spanID)
+		c.Set(ctxKeyTraceID, traceID)
+		c.Set(ctxKeySpanID, spanID)
 
 		// 创建服务端 Span
-		spanName := fmt.Sprintf("%s %s", c.Request.Method, c.FullPath())
+		spanName := fmt.Sprintf(fmtMethodPath, c.Request.Method, c.FullPath())
 		if c.FullPath() == "" {
-			spanName = fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
+			spanName = fmt.Sprintf(fmtMethodPath, c.Request.Method, c.Request.URL.Path)
 		}
 
 		span := StartSpan(spanName, parentSpanID)
@@ -164,13 +170,13 @@ func TracingSpan(serviceName string) gin.HandlerFunc {
 		spanID := GenerateSpanID()
 		parentSpanID := c.GetHeader(HeaderSpanID)
 
-		c.Set("traceID", traceID)
-		c.Set("spanID", spanID)
+		c.Set(ctxKeyTraceID, traceID)
+		c.Set(ctxKeySpanID, spanID)
 		c.Set("serviceName", serviceName)
 
-		spanName := fmt.Sprintf("%s %s", c.Request.Method, c.FullPath())
+		spanName := fmt.Sprintf(fmtMethodPath, c.Request.Method, c.FullPath())
 		if c.FullPath() == "" {
-			spanName = fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
+			spanName = fmt.Sprintf(fmtMethodPath, c.Request.Method, c.Request.URL.Path)
 		}
 
 		span := StartSpan(spanName, parentSpanID)
@@ -193,20 +199,20 @@ func TracingSpan(serviceName string) gin.HandlerFunc {
 
 // InjectTraceHeaders 将 Trace 信息注入到 HTTP 请求头（用于跨服务调用）
 func InjectTraceHeaders(c *gin.Context, header http.Header) {
-	if traceID, ok := c.Get("traceID"); ok {
+	if traceID, ok := c.Get(ctxKeyTraceID); ok {
 		header.Set(HeaderTraceID, traceID.(string))
 	}
-	if spanID, ok := c.Get("spanID"); ok {
+	if spanID, ok := c.Get(ctxKeySpanID); ok {
 		header.Set(HeaderSpanID, spanID.(string))
 	}
 }
 
 // GetTraceInfo 从 Gin 上下文获取 Trace 信息（用于日志）
 func GetTraceInfo(c *gin.Context) (traceID, spanID string) {
-	if v, ok := c.Get("traceID"); ok {
+	if v, ok := c.Get(ctxKeyTraceID); ok {
 		traceID = v.(string)
 	}
-	if v, ok := c.Get("spanID"); ok {
+	if v, ok := c.Get(ctxKeySpanID); ok {
 		spanID = v.(string)
 	}
 	return

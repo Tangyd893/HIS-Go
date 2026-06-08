@@ -6,6 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	sqlCreatedAtBetween = "created_at BETWEEN ? AND ?"
+	dateStartOfDay      = " 00:00:00"
+	dateEndOfDay        = " 23:59:59"
+)
+
 // StatisticsRepository 数据统计仓库（纯聚合查询，无持久化表）
 type StatisticsRepository struct {
 	db *gorm.DB
@@ -44,7 +50,7 @@ func (r *StatisticsRepository) GetOperationStats(startDate, endDate string) (*Op
 
 	var regCount int64
 	if err := r.db.Table("registrations").
-		Where("created_at BETWEEN ? AND ?", startDate+" 00:00:00", endDate+" 23:59:59").
+		Where(sqlCreatedAtBetween, startDate+dateStartOfDay, endDate+dateEndOfDay).
 		Count(&regCount).Error; err != nil {
 		regCount = 0
 	}
@@ -52,7 +58,7 @@ func (r *StatisticsRepository) GetOperationStats(startDate, endDate string) (*Op
 
 	var visitCount int64
 	if err := r.db.Table("clinic_records").
-		Where("created_at BETWEEN ? AND ?", startDate+" 00:00:00", endDate+" 23:59:59").
+		Where(sqlCreatedAtBetween, startDate+dateStartOfDay, endDate+dateEndOfDay).
 		Count(&visitCount).Error; err != nil {
 		visitCount = 0
 	}
@@ -60,7 +66,7 @@ func (r *StatisticsRepository) GetOperationStats(startDate, endDate string) (*Op
 
 	var prescCount int64
 	if err := r.db.Table("prescriptions").
-		Where("created_at BETWEEN ? AND ?", startDate+" 00:00:00", endDate+" 23:59:59").
+		Where(sqlCreatedAtBetween, startDate+dateStartOfDay, endDate+dateEndOfDay).
 		Count(&prescCount).Error; err != nil {
 		prescCount = 0
 	}
@@ -68,7 +74,7 @@ func (r *StatisticsRepository) GetOperationStats(startDate, endDate string) (*Op
 
 	var revenue float64
 	if err := r.db.Table("bills").
-		Where("created_at BETWEEN ? AND ? AND status = 1", startDate+" 00:00:00", endDate+" 23:59:59").
+		Where(sqlCreatedAtBetween+" AND status = 1", startDate+dateStartOfDay, endDate+dateEndOfDay).
 		Select("COALESCE(SUM(total_amount), 0)").Scan(&revenue).Error; err != nil {
 		revenue = 0
 	}
@@ -93,8 +99,8 @@ func (r *StatisticsRepository) GetDeptWorkload(startDate, endDate string) ([]Dep
 		GROUP BY d.id, d.name
 		ORDER BY revenue DESC`
 
-	if err := r.db.Raw(query, startDate+" 00:00:00", endDate+" 23:59:59",
-		startDate+" 00:00:00", endDate+" 23:59:59").Scan(&results).Error; err != nil {
+	if err := r.db.Raw(query, startDate+dateStartOfDay, endDate+dateEndOfDay,
+		startDate+dateStartOfDay, endDate+dateEndOfDay).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("统计科室工作负载失败: %w", err)
 	}
 
@@ -113,7 +119,7 @@ func (r *StatisticsRepository) GetRevenueTrend(startDate, endDate string) ([]Rev
 		GROUP BY DATE(created_at)
 		ORDER BY date ASC`
 
-	if err := r.db.Raw(query, startDate+" 00:00:00", endDate+" 23:59:59").Scan(&results).Error; err != nil {
+	if err := r.db.Raw(query, startDate+dateStartOfDay, endDate+dateEndOfDay).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("统计收入趋势失败: %w", err)
 	}
 

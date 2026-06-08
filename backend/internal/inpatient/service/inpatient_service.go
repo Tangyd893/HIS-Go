@@ -6,6 +6,8 @@ import (
 	"his-go/pkg/errors"
 )
 
+const errMsgInpatientIDRequired = "住院记录ID不能为空"
+
 // InpatientService 住院管理业务服务
 type InpatientService struct {
 	repo *repository.InpatientRepository
@@ -50,7 +52,7 @@ func (s *InpatientService) AdmitPatient(record *model.InpatientRecord) error {
 // DischargePatient 出院
 func (s *InpatientService) DischargePatient(id string) error {
 	if id == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "住院记录ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errMsgInpatientIDRequired)
 	}
 
 	record, err := s.repo.FindByID(id)
@@ -86,7 +88,7 @@ func (s *InpatientService) CreateMedicalOrder(order *model.MedicalOrder) error {
 		return errors.NewAppError(errors.CodeParamInvalid, "医嘱不能为空")
 	}
 	if order.InpatientID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "住院记录ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errMsgInpatientIDRequired)
 	}
 	if order.OrderType != 1 && order.OrderType != 2 {
 		return errors.NewAppError(errors.CodeParamInvalid, "医嘱类型无效，必须为1(长期)或2(临时)")
@@ -109,7 +111,7 @@ func (s *InpatientService) CreateMedicalOrder(order *model.MedicalOrder) error {
 // ListMedicalOrders 查询医嘱列表
 func (s *InpatientService) ListMedicalOrders(inpatientID string) ([]model.MedicalOrder, error) {
 	if inpatientID == "" {
-		return nil, errors.NewAppError(errors.CodeParamInvalid, "住院记录ID不能为空")
+		return nil, errors.NewAppError(errors.CodeParamInvalid, errMsgInpatientIDRequired)
 	}
 	return s.repo.ListOrders(inpatientID)
 }
@@ -120,7 +122,7 @@ func (s *InpatientService) CreateNursingRecord(record *model.NursingRecord) erro
 		return errors.NewAppError(errors.CodeParamInvalid, "护理记录不能为空")
 	}
 	if record.InpatientID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "住院记录ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errMsgInpatientIDRequired)
 	}
 	if record.NurseID == "" {
 		return errors.NewAppError(errors.CodeParamInvalid, "护士ID不能为空")
@@ -143,7 +145,7 @@ func (s *InpatientService) CreateNursingRecord(record *model.NursingRecord) erro
 // ListNursingRecords 查询护理记录列表
 func (s *InpatientService) ListNursingRecords(inpatientID string) ([]model.NursingRecord, error) {
 	if inpatientID == "" {
-		return nil, errors.NewAppError(errors.CodeParamInvalid, "住院记录ID不能为空")
+		return nil, errors.NewAppError(errors.CodeParamInvalid, errMsgInpatientIDRequired)
 	}
 	return s.repo.ListNursingRecords(inpatientID)
 }
