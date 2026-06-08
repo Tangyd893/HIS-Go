@@ -1,5 +1,6 @@
 <template>
-  <a-card title="数据统计">
+  <ServicePlaceholder v-if="serviceUnavailable" title="数据统计" />
+  <a-card v-else title="数据统计">
     <a-row :gutter="16">
       <a-col :span="8">
         <a-card hoverable>
@@ -52,8 +53,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { statisticsApi } from '@/api/others'
+import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 import dayjs from 'dayjs'
 
+const serviceUnavailable = ref(false)
 const stats = reactive({ totalRegistrations: 0, totalClinic: 0, totalPrescriptions: 0, totalBilling: 0, totalInpatient: 0 })
 const startDate = ref(dayjs().subtract(30, 'day'))
 const endDate = ref(dayjs())
@@ -71,7 +74,7 @@ async function loadOperation() {
       chartData.value = [{ ...data, id: '1' }]
       chartColumns.value = Object.keys(data).map(k => ({ title: k, dataIndex: k }))
     }
-  } catch { }
+  } catch { serviceUnavailable.value = true }
 }
 
 async function loadRevenue() {

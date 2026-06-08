@@ -8,7 +8,7 @@
           </template>
           <template v-if="column.key === 'action'">
             <a-space>
-              <a @click="viewDetail(record.id)">详情</a>
+              <a @click="viewDetail(record)">详情</a>
               <a-button size="small" type="primary" @click="handlePay(record)" v-if="record.status === 0">收费</a-button>
               <a-button size="small" danger @click="handleRefund(record.id)" v-if="record.status === 1">退费</a-button>
             </a-space>
@@ -16,6 +16,12 @@
         </template>
       </a-table>
     </a-card>
+
+    <a-modal v-model:open="detailOpen" title="账单详情" :footer="null" width="600px">
+      <a-descriptions v-if="detailRecord" :column="2" bordered size="small">
+        <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+      </a-descriptions>
+    </a-modal>
   </div>
 </template>
 
@@ -27,6 +33,8 @@ import { billingApi } from '@/api/billing'
 const loading = ref(false)
 const dataSource = ref<any[]>([])
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
+const detailOpen = ref(false)
+const detailRecord = ref<any>(null)
 
 const statusText: Record<number, string> = { 0: '待支付', 1: '已支付', 2: '已退费' }
 const statusColor: Record<number, string> = { 0: 'orange', 1: 'green', 2: 'red' }
@@ -51,7 +59,7 @@ async function fetchData() {
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
-function viewDetail(id: string) { message.info(`查看账单: ${id}`) }
+function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 
 async function handlePay(record: any) {
   try { await billingApi.pay(record.id, 0); message.success('支付成功'); fetchData() } catch { }

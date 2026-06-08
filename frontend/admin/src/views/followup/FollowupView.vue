@@ -1,5 +1,6 @@
 <template>
-  <a-card title="随访管理">
+  <ServicePlaceholder v-if="serviceUnavailable" title="随访管理" />
+  <a-card v-else title="随访管理">
     <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="pagination" row-key="id" @change="onTableChange" />
   </a-card>
 </template>
@@ -7,7 +8,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { followupApi } from '@/api/others'
+import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 
+const serviceUnavailable = ref(false)
 const loading = ref(false)
 const dataSource = ref<any[]>([])
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
@@ -25,7 +28,7 @@ async function fetchData() {
     const res: any = await followupApi.getPlans({ page: pagination.current, pageSize: pagination.pageSize })
     dataSource.value = res?.list || []
     pagination.total = res?.total || 0
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch { serviceUnavailable.value = true; dataSource.value = [] } finally { loading.value = false }
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }

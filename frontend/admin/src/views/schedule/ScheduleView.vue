@@ -12,6 +12,9 @@
           <template v-if="column.key === 'action'">
             <a-button size="small" danger @click="cancelSchedule(record.id)">取消</a-button>
           </template>
+          <template v-if="column.key === 'timeSlot'">
+            {{ ({ 1: '上午', 2: '下午' } as Record<number, string>)[record.timeSlot] || record.timeSlot }}
+          </template>
         </template>
       </a-table>
     </a-card>
@@ -49,9 +52,9 @@ const columns = [
   { title: '医生', dataIndex: 'doctorName' },
   { title: '科室', dataIndex: 'deptName' },
   { title: '日期', dataIndex: 'date' },
-  { title: '时段', dataIndex: 'timeSlot' },
-  { title: '总号源', dataIndex: 'totalSlots' },
-  { title: '剩余', dataIndex: 'remainingSlots' },
+  { title: '时段', dataIndex: 'timeSlot', key: 'timeSlot' },
+  { title: '总号源', dataIndex: 'maxPatients' },
+  { title: '已约', dataIndex: 'currentPatients' },
   { title: '操作', key: 'action', width: 100 },
 ]
 

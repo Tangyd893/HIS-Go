@@ -1,5 +1,6 @@
 <template>
-  <a-card title="健康档案">
+  <ServicePlaceholder v-if="serviceUnavailable" title="健康档案" />
+  <a-card v-else title="健康档案">
     <a-form layout="inline" style="margin-bottom: 16px">
       <a-form-item label="患者ID">
         <a-input-search v-model:value="patientId" placeholder="输入患者ID查询" @search="loadSummary" />
@@ -24,7 +25,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { healthRecordApi } from '@/api/others'
+import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 
+const serviceUnavailable = ref(false)
 const patientId = ref('')
 const summary = ref<any>(null)
 const timeline = ref<any[]>([])
@@ -34,6 +37,6 @@ async function loadSummary() {
   try {
     summary.value = await healthRecordApi.getSummary(patientId.value)
     timeline.value = await healthRecordApi.getTimeline(patientId.value)
-  } catch { summary.value = null; timeline.value = [] }
+  } catch { serviceUnavailable.value = true; summary.value = null; timeline.value = [] }
 }
 </script>

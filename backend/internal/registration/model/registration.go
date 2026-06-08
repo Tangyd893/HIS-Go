@@ -14,6 +14,10 @@ type Registration struct {
 	QueueNumber      int    `gorm:"column:queue_number;default:0" json:"queueNumber"`
 	Status           int8   `gorm:"column:status;default:0" json:"status"`
 
+	// 来自 JOIN schedules 的冗余字段（只读，不写入 registrations 表）
+	DeptName   string `gorm:"->;column:dept_name" json:"deptName,omitempty"`
+	DoctorName string `gorm:"->;column:doctor_name" json:"doctorName,omitempty"`
+
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime" json:"createdAt,omitempty"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt,omitempty"`
 }

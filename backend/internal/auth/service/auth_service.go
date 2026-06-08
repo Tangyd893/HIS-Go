@@ -33,6 +33,12 @@ type UserInfo struct {
 	Perms    []string `json:"perms"`
 }
 
+// 常量：避免字符串重复 (Sonar go:S1192)
+const (
+	tokenKeyPrefix = "auth:token:"
+	tokenTTL       = 24 * time.Hour
+)
+
 // AuthService 认证服务
 type AuthService struct {
 	repo   *repository.AuthRepository
@@ -92,27 +98,19 @@ func (s *AuthService) Login(username, password string) (*LoginResult, error) {
 	}
 
 	ctx := context.Background()
-	tokenKey := "auth:token:" + user.ID
-	if err := s.rdb.Set(ctx, tokenKey, token, 24*time.Hour); err != nil {
+	tokenKey := tokenKeyPrefix + user.ID
+	if err := s.rdb.Set(ctx, tokenKey, token, tokenTTL); err != nil {
 		return nil, err
 	}
 
 	_ = s.repo.UpdateLastLogin(user.ID)
 
-	userInfo := UserInfo{
-		UserID:   user.ID,
-		Username: user.Username,
-		RealName: user.RealName,
-		Avatar:   user.Avatar,
-		Role:     user.Role,
-		DeptID:   user.DeptID,
-		Perms:    permsStr,
-	}
+	userInfo := toUserInfo(user, permsStr)
 
 	return &LoginResult{
 		Token:        token,
 		RefreshToken: refreshToken,
-		ExpiresIn:    int64(24 * time.Hour.Seconds()),
+		ExpiresIn:    int64(tokenTTL.Seconds()),
 		UserInfo:     userInfo,
 	}, nil
 }
@@ -120,7 +118,7 @@ func (s *AuthService) Login(username, password string) (*LoginResult, error) {
 // Logout 用户登出
 func (s *AuthService) Logout(userID string) error {
 	ctx := context.Background()
-	tokenKey := "auth:token:" + userID
+	tokenKey := tokenKeyPrefix + userID
 	return s.rdb.Del(ctx, tokenKey)
 }
 
@@ -132,7 +130,7 @@ func (s *AuthService) RefreshToken(tokenString string) (*LoginResult, error) {
 	}
 
 	ctx := context.Background()
-	tokenKey := "auth:token:" + claims.UserID
+	tokenKey := tokenKeyPrefix + claims.UserID
 	_, err = s.rdb.Get(ctx, tokenKey)
 	if err != nil {
 		return nil, fmt.Errorf("令牌已失效，请重新登录")
@@ -143,7 +141,7 @@ func (s *AuthService) RefreshToken(tokenString string) (*LoginResult, error) {
 		return nil, err
 	}
 
-	if err := s.rdb.Set(ctx, tokenKey, newToken, 24*time.Hour); err != nil {
+	if err := s.rdb.Set(ctx, tokenKey, newToken, tokenTTL); err != nil {
 		return nil, err
 	}
 
@@ -152,20 +150,12 @@ func (s *AuthService) RefreshToken(tokenString string) (*LoginResult, error) {
 		return nil, err
 	}
 
-	userInfo := UserInfo{
-		UserID:   user.ID,
-		Username: user.Username,
-		RealName: user.RealName,
-		Avatar:   user.Avatar,
-		Role:     user.Role,
-		DeptID:   user.DeptID,
-		Perms:    claims.Perms,
-	}
+	userInfo := toUserInfo(user, claims.Perms)
 
 	return &LoginResult{
 		Token:        newToken,
 		RefreshToken: newToken,
-		ExpiresIn:    int64(24 * time.Hour.Seconds()),
+		ExpiresIn:    int64(tokenTTL.Seconds()),
 		UserInfo:     userInfo,
 	}, nil
 }
@@ -178,7 +168,7 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.Claims, error) {
 	}
 
 	ctx := context.Background()
-	tokenKey := "auth:token:" + claims.UserID
+	tokenKey := tokenKeyPrefix + claims.UserID
 	storedToken, err := s.rdb.Get(ctx, tokenKey)
 	if err != nil || storedToken != tokenString {
 		return nil, fmt.Errorf("令牌已失效")
@@ -207,15 +197,21 @@ func (s *AuthService) GetCurrentUserInfo(userID string) (*UserInfo, error) {
 		permsStr[i] = p.PermCode
 	}
 
-	return &UserInfo{
+	info := toUserInfo(user, permsStr)
+	return &info, nil
+}
+
+// toUserInfo 构建 UserInfo 结构体，消除 3 处重复
+func toUserInfo(user *model.AuthUser, perms []string) UserInfo {
+	return UserInfo{
 		UserID:   user.ID,
 		Username: user.Username,
 		RealName: user.RealName,
 		Avatar:   user.Avatar,
 		Role:     user.Role,
 		DeptID:   user.DeptID,
-		Perms:    permsStr,
-	}, nil
+		Perms:    perms,
+	}
 }
 
 func (s *AuthService) getUserPerms(userID, role string) ([]model.Permission, error) {

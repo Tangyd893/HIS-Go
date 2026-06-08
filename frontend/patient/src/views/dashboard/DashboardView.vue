@@ -35,7 +35,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
-import { getPrescriptions, getReports, getFollowupPlans } from '@/api'
+import { getPrescriptions, getReports, getFollowupPlans, getRegistrations } from '@/api'
 import { resolvePatientId } from '@/utils/patient'
 import {
   ScheduleOutlined, FileTextOutlined, FileSearchOutlined,
@@ -48,17 +48,19 @@ const authStore = useAuthStore()
 const prescriptionCount = ref<number | null>(null)
 const reportCount = ref<number | null>(null)
 const followupCount = ref<number | null>(null)
+const registrationCount = ref<number | null>(null)
 
 onMounted(async () => {
   authStore.restoreUserInfo()
   const patientId = resolvePatientId(authStore.userInfo)
+  try { const r: any = await getRegistrations({ patientId, page: 1, pageSize: 1 }); registrationCount.value = r?.total ?? 0 } catch { registrationCount.value = 0 }
   try { const r: any = await getPrescriptions({ patientId, page: 1, pageSize: 1 }); prescriptionCount.value = r?.total ?? 0 } catch { prescriptionCount.value = 0 }
   try { const r: any = await getReports({ patientId, page: 1, pageSize: 1 }); reportCount.value = r?.total ?? 0 } catch { reportCount.value = 0 }
   try { const r: any = await getFollowupPlans({ patientId, page: 1, pageSize: 1 }); followupCount.value = r?.total ?? 0 } catch { followupCount.value = 0 }
 })
 
 const services = computed(() => [
-  { path: '/appointment', label: '预约挂号', icon: ScheduleOutlined, color: '#1890ff', count: null as number | null },
+  { path: '/appointment', label: '预约挂号', icon: ScheduleOutlined, color: '#1890ff', count: registrationCount.value },
   { path: '/prescription', label: '我的处方', icon: FileTextOutlined, color: '#faad14', count: prescriptionCount.value },
   { path: '/report', label: '检查报告', icon: FileSearchOutlined, color: '#722ed1', count: reportCount.value },
   { path: '/health-record', label: '健康档案', icon: HeartOutlined, color: '#eb2f96', count: null as number | null },

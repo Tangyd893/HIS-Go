@@ -24,6 +24,10 @@ export function getSchedules(params: { deptId?: string; date?: string }): Promis
   return http.get('/registration/schedules', { params })
 }
 
+export function getRegistrations(params: { patientId?: string; page?: number; pageSize?: number }): Promise<{ list?: any[]; total?: number }> {
+  return http.get('/registration/list', { params })
+}
+
 export function register(data: { patientId: string; patientName: string; scheduleId: string }): Promise<any> {
   return http.post('/registration/register', data)
 }

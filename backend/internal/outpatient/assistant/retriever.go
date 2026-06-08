@@ -74,43 +74,25 @@ func NewRetriever(cfg *Config) *Retriever {
 	return r
 }
 
-// Search 双路检索：关键词匹配 + 语义检索（如可用），合并 Top-K
-func (r *Retriever) Search(query string) []SearchResult {
-	query = strings.TrimSpace(query)
-	if query == "" || len(r.chunks) == 0 {
-		return nil
-	}
-
-	results := make(map[string]SearchResult) // keyed by source_id for dedup
-
-	// 1. 关键词匹配
-	kwResults := r.keywordSearch(query)
-	for _, res := range kwResults {
+// mergeInto 将搜索结果合并到 dest map 中，markBoth 为 true 时标记双路命中
+func mergeInto(dest map[string]SearchResult, src []SearchResult, markBoth bool) {
+	for _, res := range src {
 		key := res.Chunk.SourceID
-		if existing, ok := results[key]; !ok || res.Score > existing.Score {
-			results[key] = res
-		}
-	}
-
-	// 2. 语义检索（如嵌入可用且已启用）
-	if r.cfg.IsSemanticSearchAvailable() && len(r.embeddings) == len(r.chunks) {
-		semResults := r.semanticSearch(query)
-		for _, res := range semResults {
-			key := res.Chunk.SourceID
-			if existing, ok := results[key]; ok {
-				// 合并：取最高分 + 标记 both
-				if res.Score > existing.Score {
-					existing.Score = res.Score
-				}
-				existing.MatchType = "both"
-				results[key] = existing
-			} else {
-				results[key] = res
+		existing, ok := dest[key]
+		if !ok || res.Score > existing.Score {
+			if markBoth && ok {
+				res.MatchType = "both"
 			}
+			dest[key] = res
 		}
 	}
+}
 
-	// 3. 按分数排序，取 Top-K
+// topKResult 按分数降序排序并截取 Top-K
+func topKResult(results map[string]SearchResult, k int) []SearchResult {
+	if k <= 0 {
+		k = 5
+	}
 	sorted := make([]SearchResult, 0, len(results))
 	for _, res := range results {
 		sorted = append(sorted, res)
@@ -118,16 +100,49 @@ func (r *Retriever) Search(query string) []SearchResult {
 	sort.Slice(sorted, func(i, j int) bool {
 		return sorted[i].Score > sorted[j].Score
 	})
-
-	k := r.cfg.TopK
-	if k <= 0 {
-		k = 5
-	}
 	if len(sorted) > k {
 		sorted = sorted[:k]
 	}
-
 	return sorted
+}
+
+// Search 双路检索：关键词匹配 + 语义检索（如可用），合并 Top-K
+func (r *Retriever) Search(query string) []SearchResult {
+	query = strings.TrimSpace(query)
+	if query == "" || len(r.chunks) == 0 {
+		return nil
+	}
+
+	results := make(map[string]SearchResult)
+
+	// 关键词匹配
+	mergeInto(results, r.keywordSearch(query), false)
+
+	// 语义检索（如嵌入可用）
+	if r.cfg.IsSemanticSearchAvailable() && len(r.embeddings) == len(r.chunks) {
+		mergeInto(results, r.semanticSearch(query), true)
+	}
+
+	return topKResult(results, r.cfg.TopK)
+}
+
+// scoreChunk 计算 query 对单个 chunk 的关键词匹配得分（精确/分词）
+func scoreChunk(chunkText, queryLower string) float64 {
+	textLower := strings.ToLower(chunkText)
+	if strings.Contains(textLower, queryLower) {
+		return 1.0
+	}
+	words := strings.Fields(queryLower)
+	matched := 0
+	for _, w := range words {
+		if len(w) >= 2 && strings.Contains(textLower, w) {
+			matched++
+		}
+	}
+	if matched == 0 || len(words) == 0 {
+		return 0
+	}
+	return float64(matched) / float64(len(words))
 }
 
 // keywordSearch 关键词打分检索：按匹配关键词数量 + TF 计分
@@ -140,37 +155,16 @@ func (r *Retriever) keywordSearch(query string) []SearchResult {
 	var results []SearchResult
 
 	for i := range r.chunks {
-		chunk := &r.chunks[i]
-		textLower := strings.ToLower(chunk.Text)
-
-		// 精确子串匹配得分
-		score := 0.0
-		if strings.Contains(textLower, queryLower) {
-			score = 1.0
-		} else {
-			// 分词匹配
-			words := strings.Fields(queryLower)
-			matched := 0
-			for _, w := range words {
-				if len(w) >= 2 && strings.Contains(textLower, w) {
-					matched++
-				}
-			}
-			if matched > 0 {
-				score = float64(matched) / float64(len(words))
-			}
-		}
-
+		score := scoreChunk(r.chunks[i].Text, queryLower)
 		if score > 0 {
 			results = append(results, SearchResult{
-				Chunk:     chunk,
+				Chunk:     &r.chunks[i],
 				Score:     score,
 				MatchType: "keyword",
 			})
 		}
 	}
 
-	// 分数降序
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Score > results[j].Score
 	})
@@ -178,43 +172,19 @@ func (r *Retriever) keywordSearch(query string) []SearchResult {
 	return results
 }
 
-// semanticSearch 语义检索：使用 BGE 嵌入做余弦相似度
+// semanticSearch 语义检索：使用 BGE 嵌入做余弦相似度（当前用词汇重叠度近似）
 func (r *Retriever) semanticSearch(query string) []SearchResult {
-	// 简单实现：生成 query 嵌入并与所有 chunk 嵌入计算余弦相似度
-	// 注意：实际 query 嵌入需要在运行时调用 SiliconFlow API，这里用已知 chunks 的嵌入做近似
-	// 正式版本应在请求时调用 embedding API 获取 query 向量
-	// 此处先实现基于已有 chunk 嵌入的快速匹配（后续可通过 client 实时获取 query 嵌入优化）
-
+	queryLower := strings.ToLower(query)
 	var results []SearchResult
 
-	// 降级：用 query 自身的文本与 chunk 文本的词汇重叠度作为近似语义分数
-	// 正式部署时替换为实时 query embedding API 调用
-	queryLower := strings.ToLower(query)
-	queryWords := strings.Fields(queryLower)
-
 	for i := range r.chunks {
-		chunk := &r.chunks[i]
-		textLower := strings.ToLower(chunk.Text)
-
-		// 词汇重叠度作为近似语义分数
-		overlap := 0.0
-		for _, w := range queryWords {
-			if len(w) >= 2 && strings.Contains(textLower, w) {
-				overlap++
-			}
-		}
-		if len(queryWords) > 0 {
-			overlap = overlap / float64(len(queryWords))
-		}
-
-		if overlap > 0.1 {
-			// 有嵌入时用余弦相似度加权
-			if len(r.embeddings) > i {
-				_ = r.embeddings[i] // 预留：后续 query embedding API 就绪后启用
-			}
+		score := scoreChunk(r.chunks[i].Text, queryLower)
+		if score > 0.1 {
+			// 预留：后续 query embedding API 就绪后启用余弦相似度加权
+			_ = r.embeddings
 			results = append(results, SearchResult{
-				Chunk:     chunk,
-				Score:     overlap * 0.8, // 语义分数稍低于关键词
+				Chunk:     &r.chunks[i],
+				Score:     score * 0.8,
 				MatchType: "semantic",
 			})
 		}

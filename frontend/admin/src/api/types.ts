@@ -87,7 +87,7 @@ export interface Registration {
   queueNumber: number
 }
 
-/** 号源 */
+/** 号源 (registration 服务) */
 export interface Schedule {
   id: string
   doctorId: string
@@ -96,8 +96,22 @@ export interface Schedule {
   deptName: string
   date: string
   timeSlot: string
-  totalSlots: number
-  remainingSlots: number
+  totalCount: number
+  remainCount: number
+  status: number
+}
+
+/** 排班记录 (schedule 服务) */
+export interface ScheduleRecord {
+  id: string
+  doctorId: string
+  doctorName: string
+  deptId: string
+  deptName: string
+  date: string
+  timeSlot: string
+  maxPatients: number
+  currentPatients: number
   status: number
 }
 

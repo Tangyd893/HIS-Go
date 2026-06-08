@@ -2,8 +2,8 @@ import http from './client'
 import type { Prescription, PageData, PageQuery } from './types'
 
 export const prescriptionApi = {
-  /** 创建处方 */
-  create(data: Partial<Prescription>): Promise<Prescription> {
+  /** 创建处方（嵌套格式：{prescription: {...}, details: [...]}） */
+  create(data: { prescription: Partial<Prescription>; details: any[] }): Promise<Prescription> {
     return http.post('/prescription/create', data)
   },
 

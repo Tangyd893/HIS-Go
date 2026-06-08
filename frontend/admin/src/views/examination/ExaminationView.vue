@@ -1,5 +1,6 @@
 <template>
-  <a-card title="检查检验">
+  <ServicePlaceholder v-if="serviceUnavailable" title="检查检验" />
+  <a-card v-else title="检查检验">
     <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="pagination" row-key="id" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'">
@@ -20,7 +21,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { examinationApi } from '@/api/examination'
+import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 
+const serviceUnavailable = ref(false)
 const loading = ref(false)
 const dataSource = ref<any[]>([])
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
@@ -43,7 +46,7 @@ async function fetchData() {
     const res: any = await examinationApi.getList({ page: pagination.current, pageSize: pagination.pageSize })
     dataSource.value = res?.list || []
     pagination.total = res?.total || 0
-  } catch { dataSource.value = [] } finally { loading.value = false }
+  } catch { serviceUnavailable.value = true; dataSource.value = [] } finally { loading.value = false }
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }

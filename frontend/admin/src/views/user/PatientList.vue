@@ -61,6 +61,12 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <a-modal v-model:open="detailOpen" title="患者详情" :footer="null" width="600px">
+      <a-descriptions v-if="detailRecord" :column="2" bordered size="small">
+        <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+      </a-descriptions>
+    </a-modal>
   </div>
 </template>
 
@@ -75,6 +81,8 @@ const loading = ref(false)
 const searchName = ref('')
 const dataSource = ref<any[]>([])
 const modalOpen = ref(false)
+const detailOpen = ref(false)
+const detailRecord = ref<any>(null)
 const modalTitle = ref('新增患者')
 const submitting = ref(false)
 const isEdit = ref(false)
@@ -141,7 +149,7 @@ function editRecord(record: any) {
 }
 
 function viewDetail(record: any) {
-  message.info(`查看患者 ${record.name} 的详细信息`)
+  detailRecord.value = record; detailOpen.value = true
 }
 
 async function deleteRecord(id: string) {

@@ -57,7 +57,7 @@
         <a-card title="服务模块状态（仅管理员可见）">
           <a-row :gutter="[12, 12]">
             <a-col :span="3" v-for="svc in services" :key="svc.name">
-              <a-tag :color="svc.status === 'running' ? 'green' : 'orange'" class="service-tag">
+              <a-tag :color="svc.status === 'running' ? 'green' : svc.status === 'demo-only' ? 'default' : 'orange'" class="service-tag">
                 {{ svc.name }}
               </a-tag>
             </a-col>
@@ -82,10 +82,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const statCards = ref([
-  { title: '今日挂号', value: 128, icon: h(FormOutlined), color: '#1890ff' },
-  { title: '今日门诊', value: 96, icon: h(MedicineBoxOutlined), color: '#52c41a' },
-  { title: '住院患者', value: 45, icon: h(HomeOutlined), color: '#faad14' },
-  { title: '今日收入', value: '¥12,580', icon: h(DollarOutlined), color: '#f5222d' },
+  { title: '今日挂号（演示）', value: 128, icon: h(FormOutlined), color: '#1890ff' },
+  { title: '今日门诊（演示）', value: 96, icon: h(MedicineBoxOutlined), color: '#52c41a' },
+  { title: '住院患者（演示）', value: 45, icon: h(HomeOutlined), color: '#faad14' },
+  { title: '今日收入（演示）', value: '¥12,580', icon: h(DollarOutlined), color: '#f5222d' },
 ])
 
 const services = ref([
@@ -97,16 +97,16 @@ const services = ref([
   { name: 'Prescription', status: 'running' },
   { name: 'Billing', status: 'running' },
   { name: 'Pharmacy', status: 'running' },
-  { name: 'Examination', status: 'running' },
-  { name: 'Inpatient', status: 'running' },
   { name: 'Schedule', status: 'running' },
+  { name: 'System', status: 'running' },
+  { name: 'Examination', status: 'demo-only' },
+  { name: 'Inpatient', status: 'demo-only' },
   { name: 'Outpatient', status: 'running' },
   { name: 'Followup', status: 'running' },
   { name: 'HealthRecord', status: 'running' },
-  { name: 'Notification', status: 'running' },
-  { name: 'Statistics', status: 'running' },
-  { name: 'System', status: 'running' },
-  { name: 'EMR', status: 'running' },
+  { name: 'EMR', status: 'demo-only' },
+  { name: 'Notification', status: 'demo-only' },
+  { name: 'Statistics', status: 'demo-only' },
 ])
 </script>
 

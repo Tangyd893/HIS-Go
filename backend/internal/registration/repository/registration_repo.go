@@ -13,6 +13,17 @@ import (
 	"his-go/pkg/redis"
 )
 
+// 常量：避免字符串重复 (Sonar go:S1192)
+const (
+	errRegNotFound      = "挂号记录不存在"
+	queueKeyPrefix      = "queue:"
+	sqlRegSelectSched   = "registrations.*, schedules.dept_name, schedules.doctor_name"
+	sqlJoinSchedules    = "LEFT JOIN schedules ON schedules.id = registrations.schedule_id"
+	sqlOrderCreatedDesc = "registrations.created_at DESC"
+	errFmtCountRegFail  = "统计挂号记录失败: %w"
+	errFmtListRegFail   = "查询挂号记录列表失败: %w"
+)
+
 // RegistrationRepository 挂号数据仓库
 type RegistrationRepository struct {
 	db  *gorm.DB
@@ -29,50 +40,57 @@ func (r *RegistrationRepository) FindByID(id string) (*model.Registration, error
 	var reg model.Registration
 	if err := r.db.Where("id = ?", id).First(&reg).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.NewAppError(errors.CodeNotFound, "挂号记录不存在")
+			return nil, errors.NewAppError(errors.CodeNotFound, errRegNotFound)
 		}
 		return nil, fmt.Errorf("查询挂号记录失败: %w", err)
 	}
 	return &reg, nil
 }
 
-// ListByPatient 分页查询患者挂号记录
+// ListByPatient 分页查询患者挂号记录，JOIN schedules 填充科室/医生名称
 func (r *RegistrationRepository) ListByPatient(patientID string, page, pageSize int) ([]model.Registration, int64, error) {
 	var list []model.Registration
 	var total int64
 
-	query := r.db.Model(&model.Registration{}).Where("patient_id = ?", patientID)
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计挂号记录失败: %w", err)
+	base := r.db.Model(&model.Registration{}).
+		Select(sqlRegSelectSched).
+		Joins(sqlJoinSchedules).
+		Where("registrations.patient_id = ?", patientID)
+
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf(errFmtCountRegFail, err)
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询挂号记录列表失败: %w", err)
+	if err := base.Order(sqlOrderCreatedDesc).Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
+		return nil, 0, fmt.Errorf(errFmtListRegFail, err)
 	}
 
 	return list, total, nil
 }
 
-// ListAll 分页查询全部挂号记录（管理端用）
+// ListAll 分页查询全部挂号记录（管理端用），JOIN schedules 填充科室/医生名称
 func (r *RegistrationRepository) ListAll(page, pageSize int, status *int, date string) ([]model.Registration, int64, error) {
 	var list []model.Registration
 	var total int64
 
-	query := r.db.Model(&model.Registration{})
+	base := r.db.Model(&model.Registration{}).
+		Select(sqlRegSelectSched).
+		Joins(sqlJoinSchedules)
+
 	if status != nil {
-		query = query.Where("status = ?", *status)
+		base = base.Where("registrations.status = ?", *status)
 	}
 	if date != "" {
-		query = query.Where("registration_date = ?", date)
+		base = base.Where("registrations.registration_date = ?", date)
 	}
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计挂号记录失败: %w", err)
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf(errFmtCountRegFail, err)
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询挂号记录列表失败: %w", err)
+	if err := base.Order(sqlOrderCreatedDesc).Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
+		return nil, 0, fmt.Errorf(errFmtListRegFail, err)
 	}
 
 	return list, total, nil
@@ -122,7 +140,7 @@ func (r *RegistrationRepository) Cancel(id string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var reg model.Registration
 		if err := tx.Where("id = ?", id).First(&reg).Error; err != nil {
-			return errors.NewAppError(errors.CodeNotFound, "挂号记录不存在")
+			return errors.NewAppError(errors.CodeNotFound, errRegNotFound)
 		}
 
 		if reg.Status == 3 {
@@ -189,13 +207,13 @@ func (r *RegistrationRepository) ListSchedules(deptID, date string) ([]model.Sch
 
 // PushToQueue 将挂号记录加入 Redis 排队队列（Sorted Set）
 func (r *RegistrationRepository) PushToQueue(ctx context.Context, scheduleID, registrationID string, queueNumber int) error {
-	key := "queue:" + scheduleID
+	key := queueKeyPrefix + scheduleID
 	return r.rdb.ZAdd(ctx, key, goredis.Z{Score: float64(queueNumber), Member: registrationID})
 }
 
 // PopFromQueue 从排队队列中弹出下一个排队号
 func (r *RegistrationRepository) PopFromQueue(ctx context.Context, scheduleID string) ([]string, error) {
-	key := "queue:" + scheduleID
+	key := queueKeyPrefix + scheduleID
 	zList, err := r.rdb.ZPopMin(ctx, key, 1).Result()
 	if err != nil {
 		return nil, err
@@ -209,6 +227,6 @@ func (r *RegistrationRepository) PopFromQueue(ctx context.Context, scheduleID st
 
 // GetQueueRank 查询某挂号记录在排队队列中的位置
 func (r *RegistrationRepository) GetQueueRank(ctx context.Context, scheduleID, registrationID string) (int64, error) {
-	key := "queue:" + scheduleID
+	key := queueKeyPrefix + scheduleID
 	return r.rdb.ZRank(ctx, key, registrationID).Result()
 }
