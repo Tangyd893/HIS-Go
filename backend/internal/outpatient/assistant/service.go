@@ -45,6 +45,14 @@ func NewService(cfg *Config) *Service {
 	}
 }
 
+// triageContext 检索阶段收集的上下文
+type triageContext struct {
+	deptTypes    []string
+	category     string
+	urgency      string
+	contextParts []string
+}
+
 // Triage 执行分诊：检索 → 科室匹配 → LLM 生成建议
 func (s *Service) Triage(req *TriageRequest) (*TriageResponse, error) {
 	symptom := strings.TrimSpace(req.Symptom)
@@ -52,79 +60,20 @@ func (s *Service) Triage(req *TriageRequest) (*TriageResponse, error) {
 		return nil, fmt.Errorf("症状描述不能为空")
 	}
 
-	// 1. RAG 检索知识库
+	// 1. RAG 检索 + 收集上下文
 	results := s.retriever.Search(symptom)
-
-	var (
-		advice       string
-		deptTypes    []string
-		category     string
-		urgency      string
-		mode         string
-		contextParts []string
-	)
-
-	if len(results) > 0 {
-		// 从检索结果收集科室类型和分类
-		seenTypes := make(map[string]bool)
-		seenCategories := make(map[string]bool)
-		for _, res := range results {
-			if res.Chunk.Category != "" && !seenCategories[res.Chunk.Category] {
-				contextParts = append(contextParts, fmt.Sprintf("- %s (紧急度: %s)", res.Chunk.Category, res.Chunk.Urgency))
-				seenCategories[res.Chunk.Category] = true
-			}
-			for _, dt := range res.Chunk.DeptTypes {
-				if !seenTypes[dt] {
-					deptTypes = append(deptTypes, dt)
-					seenTypes[dt] = true
-				}
-			}
-			if urgency == "" || (res.Chunk.Urgency == "high" && urgency != "high") {
-				urgency = res.Chunk.Urgency
-			}
-			if category == "" {
-				category = res.Chunk.Category
-			}
-		}
-	}
-
-	if len(deptTypes) == 0 {
-		// 无匹配时默认推荐内科
-		deptTypes = []string{"内科"}
-		category = "未知（请进一步描述症状）"
-		urgency = "medium"
-	}
-	if urgency == "" {
-		urgency = "medium"
-	}
+	ctx := s.collectTriageContext(results)
 
 	// 2. 匹配本院科室
-	matchedDepts, err := s.deptRes.MatchDeptTypes(deptTypes)
+	matchedDepts, err := s.deptRes.MatchDeptTypes(ctx.deptTypes)
 	if err != nil {
-		// 科室服务不可用时降级：返回知识库推荐的科室类型作为兜底
-		matchedDepts = fallbackDepts(deptTypes)
+		matchedDepts = fallbackDepts(ctx.deptTypes)
 	}
 
-	// 3. 尝试 LLM 生成建议
-	kContext := strings.Join(contextParts, "\n")
-	deptNames := make([]string, len(matchedDepts))
-	for i, d := range matchedDepts {
-		deptNames[i] = d.Name
-	}
-
-	if s.llm.Available() {
-		llmAdvice, err := s.llm.GenerateTriageAdvice(symptom, kContext, deptNames)
-		if err == nil && llmAdvice != "" {
-			advice = llmAdvice
-			mode = "llm"
-		} else {
-			advice = buildKeywordAdvice(symptom, category, urgency, deptNames)
-			mode = "keyword"
-		}
-	} else {
-		advice = buildKeywordAdvice(symptom, category, urgency, deptNames)
-		mode = "keyword"
-	}
+	// 3. 生成建议
+	deptNames := extractDeptNames(matchedDepts)
+	kContext := strings.Join(ctx.contextParts, "\n")
+	advice, mode := s.generateAdvice(symptom, kContext, ctx.category, ctx.urgency, deptNames)
 
 	// 4. 构建响应
 	triageDepts := make([]TriageDept, len(matchedDepts))
@@ -136,11 +85,78 @@ func (s *Service) Triage(req *TriageRequest) (*TriageResponse, error) {
 		Symptom:      symptom,
 		Advice:       advice,
 		Depts:        triageDepts,
-		KnowledgeRef: category,
-		Urgency:      urgency,
+		KnowledgeRef: ctx.category,
+		Urgency:      ctx.urgency,
 		Mode:         mode,
 		Disclaimer:   "⚠️ 本建议仅供参考，不能替代专业医疗诊断。如症状严重请及时就医。",
 	}, nil
+}
+
+// collectTriageContext 从检索结果提取科室类型、分类、紧急度
+func (s *Service) collectTriageContext(results []SearchResult) triageContext {
+	ctx := triageContext{
+		deptTypes: []string{"内科"},
+		category:  "未知（请进一步描述症状）",
+		urgency:   "medium",
+	}
+	if len(results) == 0 {
+		return ctx
+	}
+
+	ctx.deptTypes = nil
+	seenTypes := make(map[string]bool)
+	seenCategories := make(map[string]bool)
+
+	for _, res := range results {
+		if res.Chunk.Category != "" && !seenCategories[res.Chunk.Category] {
+			ctx.contextParts = append(ctx.contextParts,
+				fmt.Sprintf("- %s (紧急度: %s)", res.Chunk.Category, res.Chunk.Urgency))
+			seenCategories[res.Chunk.Category] = true
+		}
+		for _, dt := range res.Chunk.DeptTypes {
+			if !seenTypes[dt] {
+				ctx.deptTypes = append(ctx.deptTypes, dt)
+				seenTypes[dt] = true
+			}
+		}
+		if ctx.urgency == "" || (res.Chunk.Urgency == "high" && ctx.urgency != "high") {
+			ctx.urgency = res.Chunk.Urgency
+		}
+		if ctx.category == "" {
+			ctx.category = res.Chunk.Category
+		}
+	}
+
+	if len(ctx.deptTypes) == 0 {
+		ctx.deptTypes = []string{"内科"}
+		ctx.category = "未知（请进一步描述症状）"
+	}
+	if ctx.urgency == "" {
+		ctx.urgency = "medium"
+	}
+
+	return ctx
+}
+
+// generateAdvice 根据可用性选择 LLM 或关键词模式生成建议
+func (s *Service) generateAdvice(symptom, kContext, category, urgency string, deptNames []string) (string, string) {
+	if !s.llm.Available() {
+		return buildKeywordAdvice(symptom, category, urgency, deptNames), "keyword"
+	}
+	llmAdvice, err := s.llm.GenerateTriageAdvice(symptom, kContext, deptNames)
+	if err == nil && llmAdvice != "" {
+		return llmAdvice, "llm"
+	}
+	return buildKeywordAdvice(symptom, category, urgency, deptNames), "keyword"
+}
+
+// extractDeptNames 提取科室名称列表
+func extractDeptNames(depts []Department) []string {
+	names := make([]string, len(depts))
+	for i, d := range depts {
+		names[i] = d.Name
+	}
+	return names
 }
 
 // buildKeywordAdvice 关键词模式下生成文本建议（无需 LLM）

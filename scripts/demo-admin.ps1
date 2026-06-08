@@ -89,7 +89,7 @@ switch ($Command) {
     "status"  { Show-Status }
     "logs"    { Show-Logs }
     default   {
-        Write-Host "HIS-Go 管理端演示脚本 (PowerShell)"
-        Write-Host "用法: .\demo-admin.ps1 [build|start|stop|restart|status|logs]"
+        Write-Output "HIS-Go 管理端演示脚本 (PowerShell)"
+        Write-Output "用法: .\demo-admin.ps1 [build|start|stop|restart|status|logs]"
     }
 }
