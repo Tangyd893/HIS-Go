@@ -163,7 +163,7 @@ services:
   gateway:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: gateway
     image: his-go/gateway:latest
@@ -197,7 +197,7 @@ services:
   auth:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: auth
     image: his-go/auth:latest

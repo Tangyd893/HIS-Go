@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"his-go/internal/outpatient/assistant"
 	"his-go/internal/outpatient/handler"
 	"his-go/internal/outpatient/repository"
 	"his-go/internal/outpatient/service"
@@ -58,7 +59,17 @@ func main() {
 
 	outpatientRepo := repository.NewOutpatientRepository(db)
 	outpatientSvc := service.NewOutpatientService(outpatientRepo)
-	outpatientHandler := handler.NewOutpatientHandler(outpatientSvc)
+
+	// 初始化就诊助手（Key 缺失时降级为关键词模式，不阻塞启动）
+	assistantCfg := assistant.LoadConfig()
+	assistantSvc := assistant.NewService(assistantCfg)
+	if !assistantCfg.IsDeepSeekAvailable() {
+		logger.Info("就诊助手以关键词模式运行（DEEPSEEK_API_KEY 未配置或 TRIAGE_RAG_ENABLED=false）")
+	} else {
+		logger.Info("就诊助手已启用 LLM 模式（DeepSeek + BGE 语义检索）")
+	}
+
+	outpatientHandler := handler.NewOutpatientHandler(outpatientSvc, assistantSvc)
 
 	sqlDB, _ := db.DB()
 	deps := &health.Dependencies{
@@ -97,9 +108,12 @@ func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.Outpat
 		api.GET("/consultations", outpatientHandler.ListConsultations)
 		api.POST("/message", outpatientHandler.SendMessage)
 		api.GET("/messages", outpatientHandler.GetMessages)
+		api.GET("/contract", outpatientHandler.GetContract)
 		api.POST("/contract", outpatientHandler.CreateChronicContract)
 		api.POST("/health-data", outpatientHandler.ReportHealthData)
 		api.GET("/health-data", outpatientHandler.ListHealthData)
+		// 就诊助手
+		api.POST("/assistant/chat", outpatientHandler.TriageChat)
 	}
 
 	return router

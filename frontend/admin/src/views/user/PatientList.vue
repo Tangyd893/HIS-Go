@@ -144,19 +144,42 @@ function viewDetail(record: any) {
   message.info(`查看患者 ${record.name} 的详细信息`)
 }
 
-function deleteRecord(id: string) {
-  message.success('删除成功')
-  fetchData()
+async function deleteRecord(id: string) {
+  try {
+    await userApi.deletePatient(id)
+    message.success('删除成功')
+    fetchData()
+  } catch { message.error('删除失败') }
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   submitting.value = true
-  setTimeout(() => {
-    submitting.value = false
+  try {
+    if (isEdit.value) {
+      await userApi.updatePatient(formState.id, {
+        name: formState.name,
+        gender: formState.gender,
+        phone: formState.phone,
+        idCard: formState.idCard,
+        address: formState.address,
+      })
+    } else {
+      await userApi.createPatient({
+        name: formState.name,
+        gender: formState.gender,
+        phone: formState.phone,
+        idCard: formState.idCard,
+        address: formState.address,
+      })
+    }
     modalOpen.value = false
     message.success(isEdit.value ? '保存成功' : '创建成功')
     fetchData()
-  }, 500)
+  } catch {
+    message.error('操作失败')
+  } finally {
+    submitting.value = false
+  }
 }
 
 onMounted(fetchData)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"his-go/internal/outpatient/assistant"
 	"his-go/internal/outpatient/model"
 	"his-go/internal/outpatient/service"
 	"his-go/pkg/errors"
@@ -13,12 +14,13 @@ import (
 
 // OutpatientHandler 院外患者接口处理器
 type OutpatientHandler struct {
-	svc *service.OutpatientService
+	svc          *service.OutpatientService
+	assistantSvc *assistant.Service
 }
 
 // NewOutpatientHandler 创建院外患者接口处理器
-func NewOutpatientHandler(svc *service.OutpatientService) *OutpatientHandler {
-	return &OutpatientHandler{svc: svc}
+func NewOutpatientHandler(svc *service.OutpatientService, assistantSvc *assistant.Service) *OutpatientHandler {
+	return &OutpatientHandler{svc: svc, assistantSvc: assistantSvc}
 }
 
 // CreateConsultation 创建在线问诊
@@ -113,6 +115,26 @@ func (h *OutpatientHandler) GetMessages(c *gin.Context) {
 	response.Success(c, list)
 }
 
+// GetContract 查询患者慢病签约
+func (h *OutpatientHandler) GetContract(c *gin.Context) {
+	patientID := c.Query("patientId")
+	if patientID == "" {
+		response.Fail(c, errors.CodeParamInvalid)
+		return
+	}
+
+	contract, err := h.svc.GetContract(patientID)
+	if err != nil {
+		if appErr, ok := err.(*errors.AppError); ok {
+			response.FailWithMsg(c, appErr.Code, appErr.Message)
+			return
+		}
+		response.FailWithMsg(c, errors.CodeInternalError, err.Error())
+		return
+	}
+	response.Success(c, contract)
+}
+
 // CreateChronicContract 创建慢病签约
 func (h *OutpatientHandler) CreateChronicContract(c *gin.Context) {
 	var contract model.ChronicContract
@@ -161,4 +183,31 @@ func (h *OutpatientHandler) ListHealthData(c *gin.Context) {
 		return
 	}
 	response.Success(c, list)
+}
+
+// TriageChat 就诊助手对话接口
+func (h *OutpatientHandler) TriageChat(c *gin.Context) {
+	var req assistant.TriageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errors.CodeParamInvalid)
+		return
+	}
+
+	if req.Symptom == "" {
+		response.FailWithMsg(c, errors.CodeParamInvalid, "症状描述不能为空")
+		return
+	}
+
+	if h.assistantSvc == nil {
+		response.FailWithMsg(c, errors.CodeInternalError, "就诊助手服务未初始化，请在 demo.env 中配置 DEEPSEEK_API_KEY")
+		return
+	}
+
+	result, err := h.assistantSvc.Triage(&req)
+	if err != nil {
+		response.FailWithMsg(c, errors.CodeInternalError, err.Error())
+		return
+	}
+
+	response.Success(c, result)
 }

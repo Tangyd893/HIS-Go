@@ -56,7 +56,7 @@ type RouteManager struct {
 
 // NewRouteManager 创建路由管理器
 func NewRouteManager(nacosURL string) *RouteManager {
-	enabled := os.Getenv("USE_NACOS") == "true" || nacosURL != ""
+	enabled := os.Getenv("USE_NACOS") == "true"
 
 	rm := &RouteManager{
 		routes:   make(map[string]*ServiceRoute),

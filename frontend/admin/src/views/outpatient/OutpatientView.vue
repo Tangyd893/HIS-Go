@@ -1,5 +1,5 @@
 <template>
-  <a-card title="在线问诊">
+  <a-card title="院外患者管理">
     <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="pagination" row-key="id" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">

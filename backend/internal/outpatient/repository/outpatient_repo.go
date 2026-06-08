@@ -93,11 +93,14 @@ func (r *OutpatientRepository) CreateContract(contract *model.ChronicContract) e
 	return nil
 }
 
-// FindContract 查询慢病签约
+// FindContract 查询慢病签约（按患者和可选医生筛选）
 func (r *OutpatientRepository) FindContract(patientID, doctorID string) (*model.ChronicContract, error) {
 	var contract model.ChronicContract
-	if err := r.db.Where("patient_id = ? AND doctor_id = ? AND status = 1", patientID, doctorID).
-		First(&contract).Error; err != nil {
+	query := r.db.Where("patient_id = ? AND status = 1", patientID)
+	if doctorID != "" {
+		query = query.Where("doctor_id = ?", doctorID)
+	}
+	if err := query.First(&contract).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "签约不存在")
 		}

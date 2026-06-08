@@ -54,7 +54,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { statisticsApi } from '@/api/others'
 import dayjs from 'dayjs'
 
-const stats = reactive({ totalRegistrations: 1280, totalClinic: 960, totalPrescriptions: 740, totalBilling: 158000, totalInpatient: 45 })
+const stats = reactive({ totalRegistrations: 0, totalClinic: 0, totalPrescriptions: 0, totalBilling: 0, totalInpatient: 0 })
 const startDate = ref(dayjs().subtract(30, 'day'))
 const endDate = ref(dayjs())
 const chartData = ref<any[]>([])

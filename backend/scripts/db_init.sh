@@ -46,12 +46,20 @@ else
 fi
 
 # 第三步：导入种子数据
-if [[[ -f "${SQL_DIR}/seed_data.sql" ]]; then
+if [[ -f "${SQL_DIR}/seed_data_reset.sql" ]]; then
+    echo "执行 seed_data_reset.sql ..."
+    psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "${SQL_DIR}/seed_data_reset.sql"
+fi
+if [[ -f "${SQL_DIR}/seed_data.sql" ]]; then
     echo "执行 seed_data.sql ..."
     psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "${SQL_DIR}/seed_data.sql"
     echo "种子数据导入完成"
 else
     echo "信息: ${SQL_DIR}/seed_data.sql 不存在，跳过种子数据"
+fi
+if [[ -f "${SQL_DIR}/seed_data_extended.sql" ]]; then
+    echo "执行 seed_data_extended.sql ..."
+    psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d postgres -f "${SQL_DIR}/seed_data_extended.sql"
 fi
 
 unset PGPASSWORD

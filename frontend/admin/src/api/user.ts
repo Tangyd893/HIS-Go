@@ -7,6 +7,21 @@ export const userApi = {
     return http.get('/user/patients', { params })
   },
 
+  /** 创建患者 */
+  createPatient(data: Partial<Patient>): Promise<Patient> {
+    return http.post('/user/patients', data)
+  },
+
+  /** 更新患者 */
+  updatePatient(id: string, data: Partial<Patient>): Promise<Patient> {
+    return http.put(`/user/patients/${id}`, data)
+  },
+
+  /** 删除患者 */
+  deletePatient(id: string): Promise<void> {
+    return http.delete(`/user/patients/${id}`)
+  },
+
   /** 员工列表 */
   getEmployees(params: PageQuery & { deptId?: string; name?: string }): Promise<PageData<Employee>> {
     return http.get('/user/employees', { params })

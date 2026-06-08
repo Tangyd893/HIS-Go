@@ -4,12 +4,12 @@ import "time"
 
 // Department 科室模型，表名 departments
 type Department struct {
-	ID          string       `gorm:"column:id;primaryKey;type:varchar(64);default:gen_random_uuid()"`
-	Name        string       `gorm:"column:name;not null;size:100"`
-	ParentID    string       `gorm:"column:parent_id;size:64"`
-	Description string       `gorm:"column:description;size:255"`
-	SortOrder   int          `gorm:"column:sort_order;default:0"`
-	CreatedAt   time.Time    `gorm:"column:created_at;autoCreateTime"`
+	ID          string       `gorm:"column:id;primaryKey;type:varchar(64);default:gen_random_uuid()" json:"id"`
+	Name        string       `gorm:"column:name;not null;size:100" json:"name"`
+	ParentID    string       `gorm:"column:parent_id;size:64" json:"parentId,omitempty"`
+	Description string       `gorm:"column:description;size:255" json:"description,omitempty"`
+	SortOrder   int          `gorm:"column:sort_order;default:0" json:"sortOrder"`
+	CreatedAt   time.Time    `gorm:"column:created_at;autoCreateTime" json:"createdAt,omitempty"`
 	Children    []Department `gorm:"-" json:"children,omitempty"`
 }
 

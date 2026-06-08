@@ -39,8 +39,8 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import {
-  HomeOutlined, ScheduleOutlined, MessageOutlined,
-  FileTextOutlined, HeartOutlined,
+  HomeOutlined, ScheduleOutlined,
+  FileTextOutlined, HeartOutlined, RobotOutlined,
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -54,10 +54,10 @@ const currentPath = computed(() => {
 
 const tabs = [
   { path: 'dashboard', label: '首页', icon: HomeOutlined },
+  { path: 'triage', label: '助手', icon: RobotOutlined },
   { path: 'appointment', label: '挂号', icon: ScheduleOutlined },
-  { path: 'consultation', label: '问诊', icon: MessageOutlined },
   { path: 'prescription', label: '处方', icon: FileTextOutlined },
-  { path: 'health-record', label: '健康', icon: HeartOutlined },
+  { path: 'health-record', label: '档案', icon: HeartOutlined },
 ]
 
 function navigate(path: string) {

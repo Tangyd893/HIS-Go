@@ -44,7 +44,7 @@ services:
   his-gateway:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: gateway
     image: his-go/gateway:latest
@@ -66,7 +66,7 @@ services:
   his-auth:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: auth
     image: his-go/auth:latest
@@ -76,6 +76,7 @@ services:
       - "9081:9081"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -93,7 +94,7 @@ services:
   his-user:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: user
     image: his-go/user:latest
@@ -103,6 +104,7 @@ services:
       - "9082:9082"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -118,7 +120,7 @@ services:
   his-registration:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: registration
     image: his-go/registration:latest
@@ -128,6 +130,7 @@ services:
       - "9083:9083"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -143,7 +146,7 @@ services:
   his-schedule:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: schedule
     image: his-go/schedule:latest
@@ -153,6 +156,7 @@ services:
       - "9090:9090"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -168,7 +172,7 @@ services:
   his-prescription:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: prescription
     image: his-go/prescription:latest
@@ -178,6 +182,7 @@ services:
       - "9085:9085"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -193,7 +198,7 @@ services:
   his-examination:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: examination
     image: his-go/examination:latest
@@ -203,6 +208,7 @@ services:
       - "9088:9088"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -218,7 +224,7 @@ services:
   his-followup:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: followup
     image: his-go/followup:latest
@@ -228,6 +234,7 @@ services:
       - "9092:9092"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -243,7 +250,7 @@ services:
   his-health-record:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: health_record
     image: his-go/health-record:latest
@@ -253,6 +260,7 @@ services:
       - "9093:9093"
     environment:
       - DB_HOST=postgresql
+      - DB_PORT=5432
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
@@ -261,6 +269,41 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-outpatient:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: outpatient
+    image: his-go/outpatient:latest
+    container_name: his-outpatient-demo
+    ports:
+      - "8091:8091"
+      - "9091:9091"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY:-}
+      - SILICONFLOW_EMBED_MODEL=${SILICONFLOW_EMBED_MODEL:-BAAI/bge-m3}
+      - TRIAGE_RAG_ENABLED=${TRIAGE_RAG_ENABLED:-false}
+      - TRIAGE_TOP_K=${TRIAGE_TOP_K:-5}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      his-user:
+        condition: service_started
     networks:
       - his-net
     restart: unless-stopped

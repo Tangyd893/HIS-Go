@@ -27,9 +27,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'consultation',
-        name: 'Consultation',
-        component: () => import('@/views/consultation/ConsultationView.vue'),
-        meta: { title: '在线问诊', icon: 'MessageOutlined' },
+        redirect: '/triage',
       },
       {
         path: 'prescription',
@@ -60,6 +58,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Followup',
         component: () => import('@/views/followup/FollowupView.vue'),
         meta: { title: '我的随访', icon: 'PhoneOutlined' },
+      },
+      {
+        path: 'triage',
+        name: 'Triage',
+        component: () => import('@/views/triage/TriageChatView.vue'),
+        meta: { title: '就诊助手', icon: 'RobotOutlined' },
       },
     ],
   },

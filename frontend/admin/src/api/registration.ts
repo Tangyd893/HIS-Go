@@ -7,6 +7,11 @@ export const registrationApi = {
     return http.get('/registration/schedules', { params })
   },
 
+  /** 挂号记录列表 */
+  getRegistrations(params: { page?: number; pageSize?: number; date?: string }): Promise<{ list: Registration[]; total: number }> {
+    return http.get('/registration/list', { params })
+  },
+
   /** 挂号 */
   register(data: { patientId: string; patientName: string; scheduleId: string }): Promise<Registration> {
     return http.post('/registration/register', data)

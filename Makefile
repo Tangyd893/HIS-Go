@@ -40,6 +40,12 @@ build-admin: ## 构建 Vue 管理端
 build-patient: ## 构建 Vue 患者端
 	cd frontend/patient && npm ci && npm run build
 
+triage-embed: ## 构建就诊助手知识库嵌入（需 SILICONFLOW_API_KEY）
+	python scripts/build-triage-embeddings.py
+
+triage-embed-check: ## 检查就诊助手嵌入文件是否存在
+	@test -f backend/data/triage/embeddings.json && echo "[OK] embeddings.json 存在" || echo "[WARN] embeddings.json 不存在，请运行 make triage-embed"
+
 # [deprecated] React 版本已归档至 frontend/archive/
 build-admin-react: ## [deprecated] 构建 React 管理端
 	cd frontend/archive/admin-react && npm ci --legacy-peer-deps && npm run build

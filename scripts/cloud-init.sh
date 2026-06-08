@@ -26,7 +26,7 @@ print_err()   { echo -e "${RED}[ERROR]${NC} $1"; }
 # ============================================================
 # 0. 权限检查
 # ============================================================
-if [[[ "$(id -u)" -ne 0 ]]; then
+if [[ "$(id -u)" -ne 0 ]]; then
     print_err "请使用 root 或 sudo 执行此脚本"
     exit 1
 fi
@@ -85,7 +85,7 @@ print_ok "Docker 安装完成"
 # 3. Docker 加速器（中国大陆云服务器）
 # ============================================================
 read -p "是否配置 Docker 镜像加速器？(中国大陆服务器建议配置) [y/N]: " setup_mirror
-if [[[ "$setup_mirror" = "y" ] || [[ "$setup_mirror" = "Y" ]]; then
+if [[ "$setup_mirror" = "y" ] || [[ "$setup_mirror" = "Y" ]]; then
     mkdir -p /etc/docker
     cat > /etc/docker/daemon.json <<'EOF'
 {
@@ -145,7 +145,7 @@ print_ok "项目目录已创建: /opt/his-go/"
 # ============================================================
 # 6. 配置 Docker 日志轮转
 # ============================================================
-if [[[ ! -f /etc/docker/daemon.json ]]; then
+if [[ ! -f /etc/docker/daemon.json ]]; then
     cat > /etc/docker/daemon.json <<'EOF'
 {
   "log-driver": "json-file",

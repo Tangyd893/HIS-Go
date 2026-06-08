@@ -18,12 +18,17 @@
 import { ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { getFollowupPlans } from '@/api'
+import { useAuthStore } from '@/store/auth'
+import { resolvePatientId } from '@/utils/patient'
 
 const plans = ref<any[]>([])
+const authStore = useAuthStore()
 
 async function fetchData() {
+  authStore.restoreUserInfo()
+  const patientId = resolvePatientId(authStore.userInfo)
   try {
-    const res: any = await getFollowupPlans({})
+    const res: any = await getFollowupPlans({ patientId })
     plans.value = res?.list || []
   } catch { plans.value = [] }
 }

@@ -98,6 +98,7 @@ func setupRegistrationRouter(cfg *config.Config, regHandler *handler.Registratio
 	api := router.Group("/api/registration")
 	{
 		api.GET("/schedules", regHandler.ListSchedules)
+		api.GET("/list", regHandler.ListRegistrations)
 		api.POST("/register", regHandler.Register)
 		api.POST("/cancel/:id", regHandler.CancelRegistration)
 		api.POST("/signin/:id", regHandler.SignIn)

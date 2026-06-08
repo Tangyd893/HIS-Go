@@ -143,10 +143,10 @@ INSERT INTO followup_plans (id, patient_id, plan_name, start_date, end_date, fre
 ('fup_demo_001', 'patient_001', '高血压随访计划', to_char(CURRENT_DATE - INTERVAL '30 days', 'YYYY-MM-DD'), to_char(CURRENT_DATE + INTERVAL '60 days', 'YYYY-MM-DD'), 2, 1, CURRENT_TIMESTAMP - INTERVAL '30 days', CURRENT_TIMESTAMP - INTERVAL '30 days'),
 ('fup_demo_002', 'patient_001', '术后康复随访', to_char(CURRENT_DATE, 'YYYY-MM-DD'), to_char(CURRENT_DATE + INTERVAL '90 days', 'YYYY-MM-DD'), 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-INSERT INTO followup_tasks (id, plan_id, task_name, description, execute_date, status, created_at) VALUES
-('fut_001', 'fup_demo_001', '血压测量', '自测血压并记录数值', to_char(CURRENT_DATE - INTERVAL '21 days', 'YYYY-MM-DD'), 1, CURRENT_TIMESTAMP - INTERVAL '30 days'),
-('fut_002', 'fup_demo_001', '电话随访', '电话询问用药情况', to_char(CURRENT_DATE - INTERVAL '7 days', 'YYYY-MM-DD'), 1, CURRENT_TIMESTAMP - INTERVAL '30 days'),
-('fut_003', 'fup_demo_001', '门诊复查', '来院复查血压控制情况', to_char(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD'), 0, CURRENT_TIMESTAMP - INTERVAL '30 days');
+INSERT INTO followup_tasks (id, plan_id, assignee_id, execute_date, type, content, status, created_at) VALUES
+('fut_001', 'fup_demo_001', 'demo-nurse', to_char(CURRENT_DATE - INTERVAL '21 days', 'YYYY-MM-DD'), 1, '自测血压并记录数值', 1, CURRENT_TIMESTAMP - INTERVAL '30 days'),
+('fut_002', 'fup_demo_001', 'demo-nurse', to_char(CURRENT_DATE - INTERVAL '7 days', 'YYYY-MM-DD'), 1, '电话询问用药情况', 1, CURRENT_TIMESTAMP - INTERVAL '30 days'),
+('fut_003', 'fup_demo_001', 'demo-doctor', to_char(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD'), 2, '来院复查血压控制情况', 0, CURRENT_TIMESTAMP - INTERVAL '30 days');
 
 -- ============================================================
 -- 大量演示假数据 — 用于功能验证
@@ -254,7 +254,7 @@ INSERT INTO followup_plans (id, patient_id, plan_name, start_date, end_date, fre
 ('fup_demo_003', 'patient_005', '肺炎康复随访', to_char(CURRENT_DATE, 'YYYY-MM-DD'), to_char(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD'), 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('fup_demo_004', 'patient_002', '年度健康随访', to_char(CURRENT_DATE - INTERVAL '60 days', 'YYYY-MM-DD'), to_char(CURRENT_DATE + INTERVAL '120 days', 'YYYY-MM-DD'), 3, 1, CURRENT_TIMESTAMP - INTERVAL '60 days', CURRENT_TIMESTAMP - INTERVAL '60 days');
 
-INSERT INTO followup_tasks (id, plan_id, task_name, description, execute_date, status, created_at) VALUES
-('fut_004', 'fup_demo_003', '首次电话随访', '询问体温恢复情况和用药依从性', to_char(CURRENT_DATE + INTERVAL '3 days', 'YYYY-MM-DD'), 0, CURRENT_TIMESTAMP),
-('fut_005', 'fup_demo_003', '复查胸片', '来院复查胸部正位片', to_char(CURRENT_DATE + INTERVAL '14 days', 'YYYY-MM-DD'), 0, CURRENT_TIMESTAMP),
-('fut_006', 'fup_demo_004', '健康问卷', '完成年度健康状况调查问卷', to_char(CURRENT_DATE - INTERVAL '30 days', 'YYYY-MM-DD'), 1, CURRENT_TIMESTAMP - INTERVAL '60 days');
+INSERT INTO followup_tasks (id, plan_id, assignee_id, execute_date, type, content, status, created_at) VALUES
+('fut_004', 'fup_demo_003', 'demo-nurse', to_char(CURRENT_DATE + INTERVAL '3 days', 'YYYY-MM-DD'), 1, '询问体温恢复情况和用药依从性', 0, CURRENT_TIMESTAMP),
+('fut_005', 'fup_demo_003', 'demo-doctor', to_char(CURRENT_DATE + INTERVAL '14 days', 'YYYY-MM-DD'), 2, '来院复查胸部正位片', 0, CURRENT_TIMESTAMP),
+('fut_006', 'fup_demo_004', 'demo-nurse', to_char(CURRENT_DATE - INTERVAL '30 days', 'YYYY-MM-DD'), 2, '完成年度健康状况调查问卷', 1, CURRENT_TIMESTAMP - INTERVAL '60 days');

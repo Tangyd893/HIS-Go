@@ -387,7 +387,7 @@ kubectl apply -k k8s/base/
 | 文档 | 说明 |
 |:-----|:-----|
 | [项目架构设计文档](docs/项目架构设计文档.md) | 系统总体架构、技术选型、微服务划分 |
-| [SonarCloud 质量报告](docs/sonarcloud-report.md) | 代码质量分析（待运行首次分析） |
+| [SonarCloud 质量报告](docs/sonarcloud-report.md) | 代码质量分析（551 Issue，见待办 SQ-*） |
 | [云端部署指南](docs/云端部署指南.md) | 云服务器演示部署 |
 
 ## 🗺️ 后续规划

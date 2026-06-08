@@ -6,7 +6,7 @@
         <a-tag :color="statusColor[item.status]">{{ statusText[item.status] || item.status }}</a-tag>
       </div>
       <div class="report-date">{{ item.createdAt }}</div>
-      <div v-if="item.result" class="report-result">{{ item.result }}</div>
+      <div v-if="item.conclusion || item.impression" class="report-result">{{ item.conclusion || item.impression }}</div>
     </div>
     <a-empty v-if="!reports.length" description="暂无检查报告" />
   </a-card>
@@ -16,14 +16,19 @@
 import { ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { getReports } from '@/api'
+import { useAuthStore } from '@/store/auth'
+import { resolvePatientId } from '@/utils/patient'
 
 const reports = ref<any[]>([])
-const statusText: Record<number, string> = { 0: '待审核', 1: '已审核', 2: '已取消' }
-const statusColor: Record<number, string> = { 0: 'orange', 1: 'green', 2: 'red' }
+const authStore = useAuthStore()
+const statusText: Record<number, string> = { 0: '待审核', 1: '已审核', 2: '已出报告', 3: '已归档' }
+const statusColor: Record<number, string> = { 0: 'orange', 1: 'blue', 2: 'green', 3: 'default' }
 
 async function fetchData() {
+  authStore.restoreUserInfo()
+  const patientId = resolvePatientId(authStore.userInfo)
   try {
-    const res: any = await getReports({})
+    const res: any = await getReports({ patientId })
     reports.value = res?.list || []
   } catch { reports.value = [] }
 }

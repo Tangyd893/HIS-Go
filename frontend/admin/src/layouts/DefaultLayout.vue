@@ -66,7 +66,7 @@
             <GlobalOutlined />
             <span>院外服务</span>
           </template>
-          <a-menu-item key="outpatient">在线问诊</a-menu-item>
+          <a-menu-item key="outpatient">院外患者</a-menu-item>
           <a-menu-item key="followup">随访管理</a-menu-item>
           <a-menu-item key="health-record">健康档案</a-menu-item>
         </a-sub-menu>

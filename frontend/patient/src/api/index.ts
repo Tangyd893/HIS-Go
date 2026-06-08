@@ -1,7 +1,7 @@
 import http from './client'
 
 /** 登录 */
-export function login(data: { username: string; password: string }): Promise<{ token: string; user: any }> {
+export function login(data: { username: string; password: string }): Promise<{ token: string; userInfo?: any; user?: any }> {
   return http.post('/auth/login', data)
 }
 
@@ -14,6 +14,11 @@ export function getHealthTimeline(patientId: string): Promise<any[]> {
   return http.get(`/health-record/timeline/${patientId}`)
 }
 
+/** 科室 */
+export function getDepartments(): Promise<{ id: string; name: string }[]> {
+  return http.get('/user/departments')
+}
+
 /** 挂号 */
 export function getSchedules(params: { deptId?: string; date?: string }): Promise<any[]> {
   return http.get('/registration/schedules', { params })
@@ -21,23 +26,6 @@ export function getSchedules(params: { deptId?: string; date?: string }): Promis
 
 export function register(data: { patientId: string; patientName: string; scheduleId: string }): Promise<any> {
   return http.post('/registration/register', data)
-}
-
-/** 在线问诊 */
-export function createConsultation(data: any): Promise<any> {
-  return http.post('/outpatient/consultation', data)
-}
-
-export function getConsultations(params: any): Promise<any> {
-  return http.get('/outpatient/consultations', { params })
-}
-
-export function sendMessage(data: any): Promise<void> {
-  return http.post('/outpatient/message', data)
-}
-
-export function getMessages(consultationId: string): Promise<any[]> {
-  return http.get('/outpatient/messages', { params: { consultationId } })
 }
 
 /** 处方 */
@@ -56,6 +44,10 @@ export function getFollowupPlans(params: any): Promise<any> {
 }
 
 /** 慢病管理 */
+export function getContract(patientId: string): Promise<any> {
+  return http.get('/outpatient/contract', { params: { patientId } })
+}
+
 export function createContract(data: any): Promise<any> {
   return http.post('/outpatient/contract', data)
 }
@@ -66,4 +58,19 @@ export function reportHealthData(data: any): Promise<void> {
 
 export function getHealthData(patientId: string): Promise<any[]> {
   return http.get('/outpatient/health-data', { params: { patientId } })
+}
+
+/** 就诊助手 */
+export interface TriageResponse {
+  symptom: string
+  advice: string
+  depts: { id: string; name: string }[]
+  knowledgeRef: string
+  urgency: string
+  mode: string
+  disclaimer: string
+}
+
+export function triageChat(symptom: string): Promise<TriageResponse> {
+  return http.post('/outpatient/assistant/chat', { symptom })
 }

@@ -7,7 +7,9 @@ echo "[OK] 数据库创建完成"
 
 echo ""
 echo "=== 导入种子数据 ==="
+psql -h postgresql -U "${DB_USER:-his_admin}" -f /seed_data_reset.sql
 psql -h postgresql -U "${DB_USER:-his_admin}" -f /seed_data.sql
+psql -h postgresql -U "${DB_USER:-his_admin}" -f /seed_data_extended.sql
 echo "[OK] 种子数据导入完成"
 
 echo ""

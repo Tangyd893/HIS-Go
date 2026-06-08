@@ -7,17 +7,18 @@
 
       <a-descriptions v-if="contract" :column="2" bordered size="small" title="签约信息">
         <a-descriptions-item label="签约状态">{{ contract.status || '已签约' }}</a-descriptions-item>
-        <a-descriptions-item label="签约日期">{{ contract.signDate }}</a-descriptions-item>
-        <a-descriptions-item label="管理医生">{{ contract.doctorId }}</a-descriptions-item>
+        <a-descriptions-item label="签约日期">{{ contract.contractDate }}</a-descriptions-item>
+        <a-descriptions-item label="病种">{{ contract.diseaseType }}</a-descriptions-item>
+        <a-descriptions-item label="管理医生">张医生</a-descriptions-item>
       </a-descriptions>
       <a-empty v-else description="暂无慢病签约信息" />
     </a-card>
 
     <a-card title="健康数据" size="small" style="margin-top: 12px">
       <div v-for="item in healthData" :key="item.id" class="data-item">
-        <div class="data-type">{{ item.dataType }}</div>
-        <div class="data-value">{{ item.dataValue }}</div>
-        <div class="data-time">{{ item.createdAt }}</div>
+        <div class="data-type">{{ dataTypeLabel[item.dataType] || item.dataType }}</div>
+        <div class="data-value">{{ item.value }}{{ item.unit ? ' ' + item.unit : '' }}</div>
+        <div class="data-time">{{ item.measureTime || item.createdAt }}</div>
       </div>
       <a-empty v-if="!healthData.length" description="暂无健康数据" />
     </a-card>
@@ -43,8 +44,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { reportHealthData, getHealthData } from '@/api'
+import { getContract, reportHealthData, getHealthData } from '@/api'
 import { useAuthStore } from '@/store/auth'
+import { resolvePatientId } from '@/utils/patient'
 
 const authStore = useAuthStore()
 const contract = ref<any>(null)
@@ -52,17 +54,40 @@ const healthData = ref<any[]>([])
 const modalOpen = ref(false)
 const form = reactive({ dataType: 'blood_pressure', dataValue: '' })
 
+const dataTypeLabel: Record<string, string> = {
+  blood_pressure: '血压',
+  blood_glucose: '血糖',
+  blood_sugar: '血糖',
+  weight: '体重',
+  heart_rate: '心率',
+}
+
 async function fetchData() {
+  authStore.restoreUserInfo()
+  const patientId = resolvePatientId(authStore.userInfo)
   try {
-    healthData.value = await getHealthData(authStore.userInfo?.id || 'current-patient')
-  } catch { healthData.value = [] }
+    const [contractData, healthDataList] = await Promise.all([
+      getContract(patientId).catch(() => null),
+      getHealthData(patientId).catch(() => []),
+    ])
+    contract.value = contractData
+    healthData.value = healthDataList || []
+  } catch {
+    healthData.value = []
+  }
 }
 
 function showReportModal() { modalOpen.value = true }
 
 async function handleReport() {
+  const patientId = resolvePatientId(authStore.userInfo)
   try {
-    await reportHealthData(form)
+    await reportHealthData({
+      patientId,
+      dataType: form.dataType,
+      value: form.dataValue,
+      measureTime: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    })
     message.success('上报成功')
     modalOpen.value = false
     fetchData()

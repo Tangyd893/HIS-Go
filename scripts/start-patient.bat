@@ -32,11 +32,17 @@ echo   OK
 REM ===== Step 2: Init Database =====
 echo [2/4] Initializing database...
 docker exec his-postgres-demo psql -U his_admin -f /sql-init/init_all.sql >nul 2>&1
+docker exec his-postgres-demo psql -U his_admin -f /sql-init/seed_data_reset.sql >nul 2>&1
 docker exec his-postgres-demo psql -U his_admin -f /sql-init/seed_data.sql >nul 2>&1
+docker exec his-postgres-demo psql -U his_admin -f /sql-init/seed_data_extended.sql >nul 2>&1
 echo   OK
 
 REM ===== Step 3: Start Go Services (patient profile) =====
 echo [3/4] Starting backend services...
+if not exist "%ENV%" (
+    echo   [WARN] %ENV% 不存在
+    echo   请复制 deploy\config\demo.env.example 为 demo.env 并填入 API Key
+)
 set DB_PASSWORD=change_me_123
 set REDIS_PASSWORD=change_me_456
 
@@ -49,6 +55,7 @@ start "Prescription"  /D "%BACKEND%" cmd /c "go run ./cmd/prescription"
 start "Examination"   /D "%BACKEND%" cmd /c "go run ./cmd/examination"
 start "Followup"      /D "%BACKEND%" cmd /c "go run ./cmd/followup"
 start "HealthRecord"  /D "%BACKEND%" cmd /c "go run ./cmd/health_record"
+start "Outpatient"    /D "%ROOT%\scripts" cmd /c "run-with-demo-env.bat go run ./cmd/outpatient"
 
 echo   Waiting for Gateway (port 8080)...
 set /a TRIES=0

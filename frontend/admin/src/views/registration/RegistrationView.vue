@@ -95,8 +95,13 @@ async function fetchSchedules() {
 async function fetchRegistrations() {
   regLoading.value = true
   try {
-    registrations.value = []
-  } catch { } finally { regLoading.value = false }
+    const res = await registrationApi.getRegistrations({
+      page: 1,
+      pageSize: 50,
+      date: searchDate.value?.format('YYYY-MM-DD') || undefined,
+    })
+    registrations.value = res?.list || []
+  } catch { registrations.value = [] } finally { regLoading.value = false }
 }
 
 function showRegisterModal(record: any) {
@@ -116,15 +121,26 @@ async function doRegister() {
     message.success('挂号成功')
     registerModalOpen.value = false
     fetchSchedules()
+    fetchRegistrations()
   } catch { }
 }
 
 async function signin(id: string) {
-  try { await registrationApi.signin(id); message.success('签到成功'); fetchRegistrations() } catch { }
+  try {
+    await registrationApi.signin(id)
+    message.success('签到成功')
+    fetchRegistrations()
+    fetchSchedules()
+  } catch { }
 }
 
 async function cancelReg(id: string) {
-  try { await registrationApi.cancel(id); message.success('已取消'); fetchRegistrations() } catch { }
+  try {
+    await registrationApi.cancel(id)
+    message.success('已取消')
+    fetchRegistrations()
+    fetchSchedules()
+  } catch { }
 }
 
 onMounted(() => { fetchSchedules(); fetchRegistrations() })

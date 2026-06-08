@@ -96,7 +96,7 @@ services:
   his-gateway:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: gateway
     image: his-go/gateway:latest
@@ -116,7 +116,7 @@ services:
   his-auth:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: auth
     image: his-go/auth:latest
@@ -145,7 +145,7 @@ services:
   his-user:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: user
     image: his-go/user:latest
@@ -172,7 +172,7 @@ services:
   his-registration:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: registration
     image: his-go/registration:latest
@@ -199,7 +199,7 @@ services:
   his-clinic:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: clinic
     image: his-go/clinic:latest
@@ -224,7 +224,7 @@ services:
   his-prescription:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: prescription
     image: his-go/prescription:latest
@@ -249,7 +249,7 @@ services:
   his-billing:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: billing
     image: his-go/billing:latest
@@ -274,7 +274,7 @@ services:
   his-pharmacy:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: pharmacy
     image: his-go/pharmacy:latest
@@ -299,7 +299,7 @@ services:
   his-examination:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: examination
     image: his-go/examination:latest
@@ -324,7 +324,7 @@ services:
   his-inpatient:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: inpatient
     image: his-go/inpatient:latest
@@ -349,7 +349,7 @@ services:
   his-schedule:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: schedule
     image: his-go/schedule:latest
@@ -374,7 +374,7 @@ services:
   his-outpatient:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: outpatient
     image: his-go/outpatient:latest
@@ -399,7 +399,7 @@ services:
   his-followup:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: followup
     image: his-go/followup:latest
@@ -424,7 +424,7 @@ services:
   his-health-record:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: health_record
     image: his-go/health-record:latest
@@ -449,7 +449,7 @@ services:
   his-notification:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: notification
     image: his-go/notification:latest
@@ -476,7 +476,7 @@ services:
   his-statistics:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: statistics
     image: his-go/statistics:latest
@@ -501,7 +501,7 @@ services:
   his-system:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: system
     image: his-go/system:latest
@@ -526,7 +526,7 @@ services:
   his-emr:
     build:
       context: ../../backend
-      dockerfile: ../Dockerfile
+      dockerfile: ../deploy/Dockerfile
       args:
         SERVICE_NAME: emr
     image: his-go/emr:latest
