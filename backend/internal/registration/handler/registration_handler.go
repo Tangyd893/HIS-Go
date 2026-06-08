@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,25 @@ type RegistrationRequest struct {
 	PatientID   string `json:"patientId" binding:"required"`
 	PatientName string `json:"patientName"`
 	ScheduleID  string `json:"scheduleId" binding:"required"`
+}
+
+// ListRegistrations 分页查询挂号记录（管理端用）
+func (h *RegistrationHandler) ListRegistrations(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	date := c.Query("date")
+
+	list, total, err := h.svc.ListAll(page, pageSize, nil, date)
+	if err != nil {
+		response.FailWithMsg(c, errors.CodeInternalError, err.Error())
+		return
+	}
+	response.Success(c, gin.H{
+		"list":     list,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
+	})
 }
 
 // ListSchedules 查询某科室某天的号源

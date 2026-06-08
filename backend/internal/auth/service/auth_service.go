@@ -92,7 +92,7 @@ func (s *AuthService) Login(username, password string) (*LoginResult, error) {
 	}
 
 	ctx := context.Background()
-	tokenKey := fmt.Sprintf("auth:token:%s", user.ID)
+	tokenKey := "auth:token:" + user.ID
 	if err := s.rdb.Set(ctx, tokenKey, token, 24*time.Hour); err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *AuthService) Login(username, password string) (*LoginResult, error) {
 // Logout 用户登出
 func (s *AuthService) Logout(userID string) error {
 	ctx := context.Background()
-	tokenKey := fmt.Sprintf("auth:token:%s", userID)
+	tokenKey := "auth:token:" + userID
 	return s.rdb.Del(ctx, tokenKey)
 }
 
@@ -132,7 +132,7 @@ func (s *AuthService) RefreshToken(tokenString string) (*LoginResult, error) {
 	}
 
 	ctx := context.Background()
-	tokenKey := fmt.Sprintf("auth:token:%s", claims.UserID)
+	tokenKey := "auth:token:" + claims.UserID
 	_, err = s.rdb.Get(ctx, tokenKey)
 	if err != nil {
 		return nil, fmt.Errorf("令牌已失效，请重新登录")
@@ -178,7 +178,7 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.Claims, error) {
 	}
 
 	ctx := context.Background()
-	tokenKey := fmt.Sprintf("auth:token:%s", claims.UserID)
+	tokenKey := "auth:token:" + claims.UserID
 	storedToken, err := s.rdb.Get(ctx, tokenKey)
 	if err != nil || storedToken != tokenString {
 		return nil, fmt.Errorf("令牌已失效")

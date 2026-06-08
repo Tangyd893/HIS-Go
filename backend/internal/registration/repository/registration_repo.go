@@ -54,6 +54,30 @@ func (r *RegistrationRepository) ListByPatient(patientID string, page, pageSize 
 	return list, total, nil
 }
 
+// ListAll 分页查询全部挂号记录（管理端用）
+func (r *RegistrationRepository) ListAll(page, pageSize int, status *int, date string) ([]model.Registration, int64, error) {
+	var list []model.Registration
+	var total int64
+
+	query := r.db.Model(&model.Registration{})
+	if status != nil {
+		query = query.Where("status = ?", *status)
+	}
+	if date != "" {
+		query = query.Where("registration_date = ?", date)
+	}
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("统计挂号记录失败: %w", err)
+	}
+
+	offset := (page - 1) * pageSize
+	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
+		return nil, 0, fmt.Errorf("查询挂号记录列表失败: %w", err)
+	}
+
+	return list, total, nil
+}
+
 // Create 创建挂号记录（事务：锁定号源 → 扣减剩余号数 → 插入挂号记录）
 func (r *RegistrationRepository) Create(reg *model.Registration) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
@@ -71,6 +95,8 @@ func (r *RegistrationRepository) Create(reg *model.Registration) error {
 		if schedule.RemainCount <= 0 {
 			return errors.NewAppError(errors.CodeScheduleFull, "号源已满")
 		}
+
+		reg.RegistrationDate = schedule.Date
 
 		// 3. 扣减剩余号源数（乐观锁 version 自动递增）
 		schedule.RemainCount--
@@ -163,13 +189,13 @@ func (r *RegistrationRepository) ListSchedules(deptID, date string) ([]model.Sch
 
 // PushToQueue 将挂号记录加入 Redis 排队队列（Sorted Set）
 func (r *RegistrationRepository) PushToQueue(ctx context.Context, scheduleID, registrationID string, queueNumber int) error {
-	key := fmt.Sprintf("queue:%s", scheduleID)
+	key := "queue:" + scheduleID
 	return r.rdb.ZAdd(ctx, key, goredis.Z{Score: float64(queueNumber), Member: registrationID})
 }
 
 // PopFromQueue 从排队队列中弹出下一个排队号
 func (r *RegistrationRepository) PopFromQueue(ctx context.Context, scheduleID string) ([]string, error) {
-	key := fmt.Sprintf("queue:%s", scheduleID)
+	key := "queue:" + scheduleID
 	zList, err := r.rdb.ZPopMin(ctx, key, 1).Result()
 	if err != nil {
 		return nil, err
@@ -183,6 +209,6 @@ func (r *RegistrationRepository) PopFromQueue(ctx context.Context, scheduleID st
 
 // GetQueueRank 查询某挂号记录在排队队列中的位置
 func (r *RegistrationRepository) GetQueueRank(ctx context.Context, scheduleID, registrationID string) (int64, error) {
-	key := fmt.Sprintf("queue:%s", scheduleID)
+	key := "queue:" + scheduleID
 	return r.rdb.ZRank(ctx, key, registrationID).Result()
 }

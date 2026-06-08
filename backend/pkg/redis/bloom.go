@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/binary"
-	"fmt"
 	"hash"
 
 	"github.com/redis/go-redis/v9"
@@ -50,7 +49,7 @@ func (c *Client) NewBloomFilter(key string, expectedItems int, falsePositiveRate
 	size, hashFuncs := estimateBloomParams(uint32(expectedItems), falsePositiveRate)
 	return &BloomFilter{
 		client:    c,
-		key:       fmt.Sprintf("bf:%s", key),
+		key:       "bf:" + key,
 		hashFuncs: hashFuncs,
 		size:      size,
 	}
@@ -113,7 +112,7 @@ func NewBloomFilterClient(client *redis.Client, key string, expectedItems int, f
 	wrappedClient := &Client{Client: client}
 	return &BloomFilter{
 		client:    wrappedClient,
-		key:       fmt.Sprintf("bf:%s", key),
+		key:       "bf:" + key,
 		hashFuncs: hashFuncs,
 		size:      size,
 	}

@@ -261,7 +261,10 @@ func loadRoutesFromNacos(cfg *config.Config) {
 
 	for prefix, serviceName := range nacos.ServiceMap {
 		host := strings.Replace(serviceName, "his-", "", 1)
-		defaultTarget := fmt.Sprintf("http://localhost:%s", extractPort(serviceRoutes[prefix]))
+		defaultTarget := serviceRoutes[prefix]
+		if defaultTarget == "" {
+			defaultTarget = "http://localhost:" + extractPort(serviceRoutes[prefix])
+		}
 		routeManager.RegisterRoute(prefix, host, []string{defaultTarget})
 	}
 

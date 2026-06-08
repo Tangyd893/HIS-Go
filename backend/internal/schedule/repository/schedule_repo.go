@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -42,7 +43,7 @@ func (r *ScheduleRepository) GenerateWeekly(startDate, endDate string, deptID st
 				DeptID:      deptID,
 				MaxPatients: 50,
 				Status:      1,
-				RoomNo:      fmt.Sprintf("%d室", slot),
+				RoomNo:      strconv.Itoa(slot) + "室",
 			}
 			schedules = append(schedules, schedule)
 		}

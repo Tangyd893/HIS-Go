@@ -185,7 +185,7 @@ func (s *Saga) compensate(ctx context.Context, fromIndex int) {
 
 		if err := step.Compensate(compCtx, s.data); err != nil {
 			// 补偿失败记录日志，但继续执行剩余补偿
-			step.Error = fmt.Sprintf("补偿失败: %v", err)
+			step.Error = "补偿失败: " + err.Error()
 		}
 
 		step.Status = StepCompensate

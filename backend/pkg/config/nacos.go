@@ -28,13 +28,7 @@ func (c NacosConfig) IsConfigured() bool {
 
 // UseNacos 判断是否应启用 Nacos
 func UseNacos() bool {
-	if os.Getenv("USE_NACOS") == "true" {
-		return true
-	}
-	if os.Getenv("NACOS_HOST") != "" {
-		return true
-	}
-	return false
+	return os.Getenv("USE_NACOS") == "true" || os.Getenv("NACOS_HOST") != ""
 }
 
 func getNacosEnv(key, defaultValue string) string {

@@ -88,9 +88,9 @@ type APIResponse struct {
 
 // TokenResponse 登录 token 响应
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
+	AccessToken  string `json:"token"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int    `json:"expiresIn"`
 }
 
 // LoginRequest 登录请求

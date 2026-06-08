@@ -195,7 +195,7 @@ func (s *StubPayChannel) Pay(ctx context.Context, order *PayOrder) (*PayResult, 
 			OrderNo:   order.OrderNo,
 			Amount:    order.Amount,
 			ErrorCode: "SIM_FAIL",
-			ErrorMsg:  fmt.Sprintf("[桩] %s 支付模拟失败", s.name),
+			ErrorMsg:  "[桩] " + s.name + " 支付模拟失败",
 		}, nil
 	}
 
@@ -220,7 +220,7 @@ func (s *StubPayChannel) Refund(ctx context.Context, order *RefundOrder) (*Refun
 			Success:  false,
 			RefundNo: order.RefundNo,
 			Amount:   order.Amount,
-			ErrorMsg: fmt.Sprintf("[桩] %s 退款模拟失败", s.name),
+			ErrorMsg: "[桩] " + s.name + " 退款模拟失败",
 		}, nil
 	}
 

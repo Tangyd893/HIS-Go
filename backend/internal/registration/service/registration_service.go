@@ -34,10 +34,15 @@ func (s *RegistrationService) ListByPatient(patientID string, page, pageSize int
 	return s.repo.ListByPatient(patientID, page, pageSize)
 }
 
+// ListAll 分页查询全部挂号记录（管理端用）
+func (s *RegistrationService) ListAll(page, pageSize int, status *int, date string) ([]model.Registration, int64, error) {
+	return s.repo.ListAll(page, pageSize, status, date)
+}
+
 // Register 挂号：使用 Redis 分布式锁防止并发超卖
 func (s *RegistrationService) Register(patientID, patientName, scheduleID, date string) (*model.Registration, error) {
 	ctx := context.Background()
-	lockKey := fmt.Sprintf("lock:registration:%s", scheduleID)
+	lockKey := "lock:registration:" + scheduleID
 
 	// 获取分布式锁，TTL 10 秒
 	lockValue, lockErr := s.rdb.Lock(ctx, lockKey, 10*time.Second)
@@ -95,7 +100,7 @@ func (s *RegistrationService) Cancel(id string) error {
 	}
 
 	// 从排队队列中移除
-	queueKey := fmt.Sprintf("queue:%s", reg.ScheduleID)
+	queueKey := "queue:" + reg.ScheduleID
 	_ = s.rdb.ZRem(ctx, queueKey, id)
 
 	return nil

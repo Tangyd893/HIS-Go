@@ -50,6 +50,11 @@ func (s *OutpatientService) CreateChronicContract(contract *model.ChronicContrac
 	return s.repo.CreateContract(contract)
 }
 
+// GetContract 查询患者慢病签约
+func (s *OutpatientService) GetContract(patientID string) (*model.ChronicContract, error) {
+	return s.repo.FindContract(patientID, "")
+}
+
 // ReportHealthData 上报健康数据并自动标记异常
 func (s *OutpatientService) ReportHealthData(data *model.HealthData) error {
 	data.Abnormal = s.CheckHealthDataAbnormal(data)
@@ -84,13 +89,7 @@ func (s *OutpatientService) isBloodPressureAbnormal(value string) bool {
 	if err1 != nil || err2 != nil {
 		return false
 	}
-	if systolic > 140 || diastolic > 90 {
-		return true
-	}
-	if systolic < 90 || diastolic < 60 {
-		return true
-	}
-	return false
+	return systolic > 140 || diastolic > 90 || systolic < 90 || diastolic < 60
 }
 
 // isBloodSugarAbnormal 判断血糖是否异常（空腹血糖>7.0 或 <3.9）
