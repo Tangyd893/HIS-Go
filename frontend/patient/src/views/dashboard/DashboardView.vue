@@ -21,10 +21,7 @@
       <a-col :span="8" v-for="svc in services" :key="svc.path">
         <div class="service-card" @click="router.push(svc.path)">
           <component :is="svc.icon" class="service-icon" :style="{ color: svc.color }" />
-          <span class="service-label">
-            {{ svc.label }}
-            <span v-if="svc.count != null && svc.count > 0" class="count-badge">{{ svc.count }}</span>
-          </span>
+          <span class="service-label">{{ svc.label }}</span>
         </div>
       </a-col>
     </a-row>
@@ -32,11 +29,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
-import { getPrescriptions, getReports, getFollowupPlans } from '@/api'
-import { resolvePatientId } from '@/utils/patient'
 import {
   ScheduleOutlined, FileTextOutlined, FileSearchOutlined,
   HeartOutlined, SafetyCertificateOutlined, PhoneOutlined,
@@ -45,25 +40,15 @@ import {
 const router = useRouter()
 const authStore = useAuthStore()
 
-const prescriptionCount = ref<number | null>(null)
-const reportCount = ref<number | null>(null)
-const followupCount = ref<number | null>(null)
-
-onMounted(async () => {
-  authStore.restoreUserInfo()
-  const patientId = resolvePatientId(authStore.userInfo)
-  try { const r: any = await getPrescriptions({ patientId, page: 1, pageSize: 1 }); prescriptionCount.value = r?.total ?? 0 } catch { prescriptionCount.value = 0 }
-  try { const r: any = await getReports({ patientId, page: 1, pageSize: 1 }); reportCount.value = r?.total ?? 0 } catch { reportCount.value = 0 }
-  try { const r: any = await getFollowupPlans({ patientId, page: 1, pageSize: 1 }); followupCount.value = r?.total ?? 0 } catch { followupCount.value = 0 }
-})
-
+// 首页仅作导航入口，具体数据由各页面独立加载
+// 角标统一不展示（总数≠待办，避免患者困惑）
 const services = computed(() => [
-  { path: '/appointment', label: '预约挂号', icon: ScheduleOutlined, color: '#1890ff', count: null as number | null },
-  { path: '/prescription', label: '我的处方', icon: FileTextOutlined, color: '#faad14', count: prescriptionCount.value },
-  { path: '/report', label: '检查报告', icon: FileSearchOutlined, color: '#722ed1', count: reportCount.value },
-  { path: '/health-record', label: '健康档案', icon: HeartOutlined, color: '#eb2f96', count: null as number | null },
-  { path: '/chronic', label: '慢病管理', icon: SafetyCertificateOutlined, color: '#13c2c2', count: null as number | null },
-  { path: '/followup', label: '我的随访', icon: PhoneOutlined, color: '#52c41a', count: followupCount.value },
+  { path: '/appointment', label: '预约挂号', icon: ScheduleOutlined, color: '#1890ff' },
+  { path: '/prescription', label: '我的处方', icon: FileTextOutlined, color: '#faad14' },
+  { path: '/report', label: '检查报告', icon: FileSearchOutlined, color: '#722ed1' },
+  { path: '/health-record', label: '健康档案', icon: HeartOutlined, color: '#eb2f96' },
+  { path: '/chronic', label: '慢病管理', icon: SafetyCertificateOutlined, color: '#13c2c2' },
+  { path: '/followup', label: '我的随访', icon: PhoneOutlined, color: '#52c41a' },
 ])
 </script>
 
