@@ -32,6 +32,11 @@ export function register(data: { patientId: string; patientName: string; schedul
   return http.post('/registration/register', data)
 }
 
+/** 取消挂号 */
+export function cancelRegistration(id: string): Promise<void> {
+  return http.post(`/registration/cancel/${id}`)
+}
+
 /** 处方 */
 export function getPrescriptions(params: any): Promise<any> {
   return http.get('/prescription/list', { params })

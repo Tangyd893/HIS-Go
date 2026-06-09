@@ -6,7 +6,7 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/login/LoginView.vue'),
-    meta: { title: '登录', noAuth: true },
+    meta: { title: '医院患者端', noAuth: true },
   },
   {
     path: '/',
@@ -75,7 +75,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  document.title = (to.meta.title as string) || 'HIS-Go 患者服务中心'
+  document.title = (to.meta.title as string) || '医院患者端'
   if (to.meta.noAuth) { next(); return }
   const authStore = useAuthStore()
   authStore.restoreUserInfo()

@@ -23,13 +23,20 @@ INSERT INTO users (id, username, password, real_name, phone, role, dept_id) VALU
 
 \c his_user;
 
--- 科室数据
+-- 科室数据（≥12 个科室，覆盖常见门诊）
 INSERT INTO departments (id, name, parent_id, description, sort_order) VALUES
 ('dept_001', '内科', NULL, '内科门诊', 1),
 ('dept_002', '外科', NULL, '外科门诊', 2),
 ('dept_003', '儿科', NULL, '儿科门诊', 3),
 ('dept_004', '妇产科', NULL, '妇产科门诊', 4),
-('dept_005', '急诊科', NULL, '急诊科室', 5);
+('dept_005', '急诊科', NULL, '急诊科室', 5),
+('dept_006', '骨科', NULL, '骨科门诊', 6),
+('dept_007', '眼科', NULL, '眼科门诊', 7),
+('dept_008', '耳鼻喉科', NULL, '耳鼻喉科门诊', 8),
+('dept_009', '口腔科', NULL, '口腔科门诊', 9),
+('dept_010', '皮肤科', NULL, '皮肤科门诊', 10),
+('dept_011', '中医科', NULL, '中医科门诊', 11),
+('dept_012', '康复科', NULL, '康复理疗科', 12);
 
 -- 演示患者
 INSERT INTO patients (id, name, id_card, phone, gender, birth_date, address) VALUES
@@ -88,24 +95,121 @@ INSERT INTO dict_items (dict_type, label, value, sort_order) VALUES
 
 \c his_registration;
 
--- 排班号源（未来 7 天，每天上午/下午各一个号源）
-INSERT INTO schedules (id, dept_id, dept_name, doctor_id, doctor_name, date, time_slot, total_count, remain_count, fee, status) VALUES
-('sched_001', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 30, 30, 15.00, 1),
-('sched_002', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 30, 30, 15.00, 1),
-('sched_003', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 1, 30, 30, 15.00, 1),
-('sched_004', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 2, 30, 30, 15.00, 1),
-('sched_005', 'dept_002', '外科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 20, 20.00, 1);
+-- 清理过期排班（今日之前）
+DELETE FROM schedules WHERE date < CURRENT_DATE;
+
+-- 清理已取消/已完成的过期挂号
+DELETE FROM registrations WHERE registration_date < to_char(CURRENT_DATE, 'YYYY-MM-DD');
+
+-- ============================================================
+-- 自动生成全科室 × 未来 7 天 × 上午/下午 排班号源
+-- 科室-医生映射：
+--   内科→张医生  外科→王医生  儿科→李医生  妇产科→赵医生
+--   急诊科→陈医生  骨科→张医生  眼科→王医生  耳鼻喉科→李医生
+--   口腔科→赵医生  皮肤科→陈医生  中医科→张医生  康复科→王医生
+-- ============================================================
+DO $$
+DECLARE
+    dept RECORD;
+    d INT;
+    slot INT;
+    sched_id TEXT;
+    doc_id TEXT;
+    doc_name TEXT;
+    fee_val NUMERIC;
+    total_val INT;
+BEGIN
+    FOR dept IN
+        SELECT id, name FROM (
+            VALUES
+                ('dept_001','内科'),('dept_002','外科'),('dept_003','儿科'),
+                ('dept_004','妇产科'),('dept_005','急诊科'),('dept_006','骨科'),
+                ('dept_007','眼科'),('dept_008','耳鼻喉科'),('dept_009','口腔科'),
+                ('dept_010','皮肤科'),('dept_011','中医科'),('dept_012','康复科')
+        ) AS t(id, name)
+    LOOP
+        -- 医生轮换分配
+        CASE dept.id
+            WHEN 'dept_001' THEN doc_id := 'demo-doctor'; doc_name := '张医生'; fee_val := 15.00; total_val := 30;
+            WHEN 'dept_002' THEN doc_id := 'doctor-wang'; doc_name := '王医生'; fee_val := 20.00; total_val := 25;
+            WHEN 'dept_003' THEN doc_id := 'doctor-li'; doc_name := '李医生'; fee_val := 15.00; total_val := 25;
+            WHEN 'dept_004' THEN doc_id := 'doctor-zhao'; doc_name := '赵医生'; fee_val := 20.00; total_val := 20;
+            WHEN 'dept_005' THEN doc_id := 'doctor-chen'; doc_name := '陈医生'; fee_val := 25.00; total_val := 50;
+            WHEN 'dept_006' THEN doc_id := 'demo-doctor'; doc_name := '张医生'; fee_val := 20.00; total_val := 25;
+            WHEN 'dept_007' THEN doc_id := 'doctor-wang'; doc_name := '王医生'; fee_val := 15.00; total_val := 30;
+            WHEN 'dept_008' THEN doc_id := 'doctor-li'; doc_name := '李医生'; fee_val := 15.00; total_val := 25;
+            WHEN 'dept_009' THEN doc_id := 'doctor-zhao'; doc_name := '赵医生'; fee_val := 15.00; total_val := 20;
+            WHEN 'dept_010' THEN doc_id := 'doctor-chen'; doc_name := '陈医生'; fee_val := 15.00; total_val := 30;
+            WHEN 'dept_011' THEN doc_id := 'demo-doctor'; doc_name := '张医生'; fee_val := 20.00; total_val := 25;
+            WHEN 'dept_012' THEN doc_id := 'doctor-wang'; doc_name := '王医生'; fee_val := 15.00; total_val := 20;
+        END CASE;
+
+        FOR d IN 0..6 LOOP
+            FOR slot IN 1..2 LOOP
+                sched_id := 'sched_' || dept.id || '_' || d || '_' || slot;
+                INSERT INTO schedules (id, dept_id, dept_name, doctor_id, doctor_name, date, time_slot, total_count, remain_count, fee, status)
+                VALUES (sched_id, dept.id, dept.name, doc_id, doc_name,
+                        to_char(CURRENT_DATE + d, 'YYYY-MM-DD'), slot,
+                        total_val, total_val, fee_val, 1)
+                ON CONFLICT (id) DO NOTHING;
+            END LOOP;
+        END LOOP;
+    END LOOP;
+END $$;
 
 \c his_schedule;
 
--- 排班管理（与 registration 侧对应）
-INSERT INTO schedules (id, doctor_id, doctor_name, dept_id, dept_name, work_date, time_slot, max_patients, current_patients, room_no, status) VALUES
-('sched_001', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 30, 0, '201', 1),
-('sched_002', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 30, 0, '201', 1),
-('sched_003', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 1, 30, 0, '201', 1),
-('sched_004', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 2, 30, 0, '201', 1),
-('sched_005', 'demo-doctor', '张医生', 'dept_002', '外科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 0, '302', 1)
-ON CONFLICT (id) DO NOTHING;
+-- 清理过期排班
+DELETE FROM schedules WHERE work_date < CURRENT_DATE;
+
+-- 自动生成 his_schedule 侧排班（与 registration 对应）
+DO $$
+DECLARE
+    dept RECORD;
+    d INT;
+    slot INT;
+    sched_id TEXT;
+    doc_id TEXT;
+    doc_name TEXT;
+    max_val INT;
+    room TEXT;
+BEGIN
+    FOR dept IN
+        SELECT id, name FROM (
+            VALUES
+                ('dept_001','内科'),('dept_002','外科'),('dept_003','儿科'),
+                ('dept_004','妇产科'),('dept_005','急诊科'),('dept_006','骨科'),
+                ('dept_007','眼科'),('dept_008','耳鼻喉科'),('dept_009','口腔科'),
+                ('dept_010','皮肤科'),('dept_011','中医科'),('dept_012','康复科')
+        ) AS t(id, name)
+    LOOP
+        CASE dept.id
+            WHEN 'dept_001' THEN doc_id := 'demo-doctor'; doc_name := '张医生'; max_val := 30; room := '201';
+            WHEN 'dept_002' THEN doc_id := 'doctor-wang'; doc_name := '王医生'; max_val := 25; room := '302';
+            WHEN 'dept_003' THEN doc_id := 'doctor-li'; doc_name := '李医生'; max_val := 25; room := '103';
+            WHEN 'dept_004' THEN doc_id := 'doctor-zhao'; doc_name := '赵医生'; max_val := 20; room := '405';
+            WHEN 'dept_005' THEN doc_id := 'doctor-chen'; doc_name := '陈医生'; max_val := 50; room := 'E01';
+            WHEN 'dept_006' THEN doc_id := 'demo-doctor'; doc_name := '张医生'; max_val := 25; room := '306';
+            WHEN 'dept_007' THEN doc_id := 'doctor-wang'; doc_name := '王医生'; max_val := 30; room := '207';
+            WHEN 'dept_008' THEN doc_id := 'doctor-li'; doc_name := '李医生'; max_val := 25; room := '208';
+            WHEN 'dept_009' THEN doc_id := 'doctor-zhao'; doc_name := '赵医生'; max_val := 20; room := '309';
+            WHEN 'dept_010' THEN doc_id := 'doctor-chen'; doc_name := '陈医生'; max_val := 30; room := '410';
+            WHEN 'dept_011' THEN doc_id := 'demo-doctor'; doc_name := '张医生'; max_val := 25; room := '511';
+            WHEN 'dept_012' THEN doc_id := 'doctor-wang'; doc_name := '王医生'; max_val := 20; room := '612';
+        END CASE;
+
+        FOR d IN 0..6 LOOP
+            FOR slot IN 1..2 LOOP
+                sched_id := 'sched_' || dept.id || '_' || d || '_' || slot;
+                INSERT INTO schedules (id, doctor_id, doctor_name, dept_id, dept_name, work_date, time_slot, max_patients, current_patients, room_no, status)
+                VALUES (sched_id, doc_id, doc_name, dept.id, dept.name,
+                        to_char(CURRENT_DATE + d, 'YYYY-MM-DD'), slot,
+                        max_val, 0, room, 1)
+                ON CONFLICT (id) DO NOTHING;
+            END LOOP;
+        END LOOP;
+    END LOOP;
+END $$;
 
 \c his_pharmacy;
 
@@ -172,24 +276,15 @@ ON CONFLICT (id) DO NOTHING;
 
 \c his_registration;
 
--- 扩展排班 (未来 5 天，3 个科室)
-INSERT INTO schedules (id, dept_id, dept_name, doctor_id, doctor_name, date, time_slot, total_count, remain_count, fee, status) VALUES
-('sched_006', 'dept_003', '儿科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 25, 23, 15.00, 1),
-('sched_007', 'dept_003', '儿科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 25, 25, 15.00, 1),
-('sched_008', 'dept_004', '妇产科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 18, 20.00, 1),
-('sched_009', 'dept_005', '急诊科', 'demo-doctor', '张医生', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 50, 45, 25.00, 1),
-('sched_010', 'dept_001', '内科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '2 days', 'YYYY-MM-DD'), 1, 30, 28, 15.00, 1),
-('sched_011', 'dept_002', '外科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '2 days', 'YYYY-MM-DD'), 1, 20, 19, 20.00, 1),
-('sched_012', 'dept_003', '儿科', 'demo-doctor', '张医生', to_char(CURRENT_DATE + INTERVAL '2 days', 'YYYY-MM-DD'), 1, 25, 25, 15.00, 1);
-
--- 挂号记录 (过去几天的模拟数据)
+-- 挂号记录（基于自动生成的排班，引用新 ID 格式 sched_<dept>_<day>_<slot>）
+-- 说明：day=0 为今天，slot=1 上午，slot=2 下午
 INSERT INTO registrations (id, patient_id, patient_name, schedule_id, registration_date, queue_number, status, created_at, updated_at) VALUES
-('reg_001', 'patient_001', '王小明', 'sched_001', to_char(CURRENT_DATE - INTERVAL '1 day', 'YYYY-MM-DD'), 1, 2, CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day'),
-('reg_002', 'patient_003', '张三',   'sched_001', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 0, CURRENT_TIMESTAMP - INTERVAL '2 hours', CURRENT_TIMESTAMP - INTERVAL '2 hours'),
-('reg_003', 'patient_004', '赵四',   'sched_001', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 3, 0, CURRENT_TIMESTAMP - INTERVAL '1 hour', CURRENT_TIMESTAMP - INTERVAL '1 hour'),
-('reg_004', 'patient_005', '孙七',   'sched_006', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 1, CURRENT_TIMESTAMP - INTERVAL '3 hours', CURRENT_TIMESTAMP - INTERVAL '2 hours'),
-('reg_005', 'patient_006', '周八',   'sched_008', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 0, CURRENT_TIMESTAMP - INTERVAL '30 minutes', CURRENT_TIMESTAMP - INTERVAL '30 minutes'),
-('reg_006', 'patient_007', '吴九',   'sched_009', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 5, 2, CURRENT_TIMESTAMP - INTERVAL '4 hours', CURRENT_TIMESTAMP - INTERVAL '3 hours');
+('reg_001', 'patient_001', '王小明', 'sched_dept_001_0_1', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 2, CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+('reg_002', 'patient_003', '张三',   'sched_dept_001_0_1', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 0, CURRENT_TIMESTAMP - INTERVAL '2 hours', CURRENT_TIMESTAMP - INTERVAL '2 hours'),
+('reg_003', 'patient_004', '赵四',   'sched_dept_001_0_1', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 3, 0, CURRENT_TIMESTAMP - INTERVAL '1 hour', CURRENT_TIMESTAMP - INTERVAL '1 hour'),
+('reg_004', 'patient_005', '孙七',   'sched_dept_003_0_1', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 1, CURRENT_TIMESTAMP - INTERVAL '3 hours', CURRENT_TIMESTAMP - INTERVAL '2 hours'),
+('reg_005', 'patient_006', '周八',   'sched_dept_004_0_1', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 0, CURRENT_TIMESTAMP - INTERVAL '30 minutes', CURRENT_TIMESTAMP - INTERVAL '30 minutes'),
+('reg_006', 'patient_007', '吴九',   'sched_dept_005_0_1', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 5, 2, CURRENT_TIMESTAMP - INTERVAL '4 hours', CURRENT_TIMESTAMP - INTERVAL '3 hours');
 
 \c his_clinic;
 

@@ -52,8 +52,19 @@
 
     <a-card v-if="myRegistrations.length" title="我的预约" size="small" style="margin-top: 12px">
       <div v-for="reg in myRegistrations" :key="reg.id" class="reg-item">
-        <div>{{ reg.registrationDate }} · 排队号 {{ reg.queueNumber }}</div>
-        <a-tag>{{ regStatusText[reg.status] ?? '已预约' }}</a-tag>
+        <div class="reg-left">
+          <div>{{ reg.registrationDate }} · 排队号 {{ reg.queueNumber }}</div>
+          <a-tag>{{ regStatusText[reg.status] ?? '已预约' }}</a-tag>
+        </div>
+        <a-popconfirm
+          v-if="reg.status === 0"
+          title="确定取消该预约吗？"
+          ok-text="确定"
+          cancel-text="再想想"
+          @confirm="handleCancel(reg.id)"
+        >
+          <a-button size="small" danger type="link">取消</a-button>
+        </a-popconfirm>
       </div>
     </a-card>
 
@@ -85,7 +96,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { getDepartments, getSchedules, register } from '@/api'
+import { getDepartments, getSchedules, getRegistrations, register, cancelRegistration } from '@/api'
 import { useAuthStore } from '@/store/auth'
 import { flattenDepartments, normalizeSchedule, resolvePatientId } from '@/utils/patient'
 import dayjs, { type Dayjs } from 'dayjs'
@@ -180,7 +191,32 @@ async function handleBook() {
     successOpen.value = true
     myRegistrations.value.unshift(reg)
     fetchSchedules()
-  } catch { }
+  } catch {
+    message.error('挂号失败，请稍后重试')
+  }
+}
+
+async function fetchMyRegistrations() {
+  const patientId = resolvePatientId(authStore.userInfo)
+  try {
+    const res: any = await getRegistrations({ patientId, page: 1, pageSize: 20 })
+    const list = res?.list || []
+    // 只展示待就诊的预约（状态0=已预约, 1=已签到）
+    myRegistrations.value = list.filter((r: any) => r.status === 0 || r.status === 1)
+  } catch {
+    // 静默失败，不影响主流程
+  }
+}
+
+async function handleCancel(regId: string) {
+  try {
+    await cancelRegistration(regId)
+    message.success('已取消预约')
+    myRegistrations.value = myRegistrations.value.filter(r => r.id !== regId)
+    fetchSchedules()
+  } catch {
+    message.error('取消失败，请稍后重试')
+  }
 }
 
 onMounted(async () => {
@@ -190,6 +226,7 @@ onMounted(async () => {
   }
   await fetchDepartments()
   await fetchSchedules()
+  await fetchMyRegistrations()
 })
 </script>
 
@@ -220,5 +257,10 @@ onMounted(async () => {
   padding: 8px 0;
   border-bottom: 1px dashed #f0f0f0;
   font-size: 14px;
+}
+.reg-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 </style>

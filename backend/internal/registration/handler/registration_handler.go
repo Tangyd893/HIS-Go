@@ -28,13 +28,24 @@ type RegistrationRequest struct {
 	ScheduleID  string `json:"scheduleId" binding:"required"`
 }
 
-// ListRegistrations 分页查询挂号记录（管理端用）
+// ListRegistrations 分页查询挂号记录（管理端/患者端通用）
+// 若传入 patientId 则按患者过滤，否则查询全部
 func (h *RegistrationHandler) ListRegistrations(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	date := c.Query("date")
+	patientID := c.Query("patientId")
 
-	list, total, err := h.svc.ListAll(page, pageSize, nil, date)
+	var list interface{}
+	var total int64
+	var err error
+
+	if patientID != "" {
+		list, total, err = h.svc.ListByPatient(patientID, page, pageSize)
+	} else {
+		list, total, err = h.svc.ListAll(page, pageSize, nil, date)
+	}
+
 	if err != nil {
 		response.FailWithMsg(c, errors.CodeInternalError, err.Error())
 		return

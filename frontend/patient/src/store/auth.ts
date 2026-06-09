@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = res.token
     userInfo.value = res.userInfo || res.user
     localStorage.setItem('token', res.token)
-    localStorage.setItem('userInfo', JSON.stringify(res.user))
+    localStorage.setItem('userInfo', JSON.stringify(res.userInfo || res.user))
   }
 
   function logout() {

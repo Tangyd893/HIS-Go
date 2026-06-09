@@ -1,7 +1,7 @@
 {
   "pages": ["pages/index/index"],
   "window": {
-    "navigationBarTitleText": "HIS 患者端",
+    "navigationBarTitleText": "医院患者端",
     "navigationBarBackgroundColor": "#1890ff",
     "navigationBarTextStyle": "white"
   }

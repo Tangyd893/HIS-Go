@@ -1,11 +1,11 @@
 <template>
   <div class="patient-app">
     <a-layout-header class="patient-header">
-      <div class="header-title">HIS-Go 患者服务中心</div>
+      <div class="header-title">医院患者端</div>
       <a-dropdown>
         <a-space>
           <a-avatar size="small" :style="{ backgroundColor: '#1890ff' }">{{ authStore.username.charAt(0).toUpperCase() }}</a-avatar>
-          <span>{{ authStore.username }}</span>
+          <span>{{ authStore.userInfo?.realName || authStore.username }}</span>
         </a-space>
         <template #overlay>
           <a-menu>
