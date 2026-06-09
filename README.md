@@ -380,6 +380,8 @@ kubectl apply -k k8s/base/
 | 护士 | `demo-nurse` | `demo123` |
 | 管理员 | `demo-admin` | `demo123` |
 
+> ⚠️ **安全声明**：以上账号密码 `demo123` **仅限本地/局域网 Docker 演示环境使用**，严禁部署到公网或生产环境。生产部署前务必修改 `deploy/config/demo.env` 中的数据库密码、Redis 密码、JWT 密钥，并替换所有演示账号密码。
+>
 > 更多角色和权限数据见 `backend/sql/seed_data.sql`
 
 ## 📖 相关文档

@@ -40,8 +40,9 @@ INSERT INTO role_permissions (role_id, perm_id) VALUES
 ON CONFLICT DO NOTHING;
 
 -- 补充演示药师账号（密码 demo123）
+-- NOSONAR: 以下 bcrypt hash 为公开演示密码（demo123），非生产密钥
 INSERT INTO users (id, username, password, real_name, phone, role, dept_id) VALUES
-('demo-pharmacist', 'demo-pharmacist', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '王药师', '13800000004', 'pharmacist', 'dept_001')
+('demo-pharmacist', 'demo-pharmacist', '$2a$10$avEr2y6CrrENS8/NMWeeNOJcA2S76iJOzdkZzLLnrvbmor6fLiQVW', '王药师', '13800000004', 'pharmacist', 'dept_001')  -- NOSONAR
 ON CONFLICT (id) DO NOTHING;
 
 \c his_system;

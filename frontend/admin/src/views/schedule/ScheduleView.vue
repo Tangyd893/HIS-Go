@@ -28,7 +28,16 @@
           <a-date-picker v-model:value="genForm.endDate" style="width: 100%" />
         </a-form-item>
         <a-form-item label="科室">
-          <a-input v-model:value="genForm.deptId" placeholder="科室ID" />
+          <a-select
+            v-model:value="genForm.deptId"
+            placeholder="请选择科室"
+            :loading="deptLoading"
+            :options="deptOptions"
+            show-search
+            option-filter-prop="label"
+            style="width: 100%"
+            allow-clear
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -36,17 +45,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { scheduleApi } from '@/api/schedule'
+import { userApi } from '@/api/user'
 import dayjs from 'dayjs'
 
 const loading = ref(false)
+const deptLoading = ref(false)
 const dataSource = ref<any[]>([])
 const filterDate = ref<dayjs.Dayjs | null>(dayjs())
 const modalOpen = ref(false)
+const departments = ref<{ id: string; name: string }[]>([])
 const genForm = reactive({ startDate: null as dayjs.Dayjs | null, endDate: null as dayjs.Dayjs | null, deptId: '' })
+
+const deptOptions = computed(() => departments.value.map(d => ({ value: d.id, label: d.name })))
 
 const columns = [
   { title: '医生', dataIndex: 'doctorName' },
@@ -65,7 +79,15 @@ async function fetchData() {
   } catch { dataSource.value = [] } finally { loading.value = false }
 }
 
-function showGenerateModal() { modalOpen.value = true }
+function showGenerateModal() {
+  if (!departments.value.length) fetchDepartments()
+  modalOpen.value = true
+}
+
+async function fetchDepartments() {
+  deptLoading.value = true
+  try { departments.value = await userApi.getDepartments() } catch { departments.value = [] } finally { deptLoading.value = false }
+}
 
 async function handleGenerate() {
   try {
