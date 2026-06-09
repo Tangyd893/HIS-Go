@@ -3,6 +3,7 @@ package service
 import (
 	"his-go/internal/emr/model"
 	"his-go/internal/emr/repository"
+	"his-go/pkg/demo"
 	"his-go/pkg/errors"
 )
 
@@ -31,7 +32,17 @@ func (s *EMRService) GetRecord(id string) (*model.MedicalRecord, error) {
 
 // ListRecords 分页查询患者病历
 func (s *EMRService) ListRecords(patientID string, page, pageSize int) ([]model.MedicalRecord, int64, error) {
-	return s.repo.ListByPatient(patientID, page, pageSize)
+	records, total, err := s.repo.ListByPatient(patientID, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range records {
+		records[i].PatientName = demo.PatientName(records[i].PatientID)
+		if records[i].DoctorID == "" {
+			records[i].DoctorID = "demo-doctor"
+		}
+	}
+	return records, total, nil
 }
 
 // UpdateRecord 更新病历

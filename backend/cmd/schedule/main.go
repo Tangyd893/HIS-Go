@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/schedule"
 	grpcsched "his-go/internal/schedule"
@@ -47,6 +48,16 @@ func main() {
 		logger.Fatal("数据库连接失败: " + err.Error())
 	}
 
+	regDB, err := database.NewPostgres(
+		cfg.Database.Host, cfg.Database.Port,
+		cfg.Database.User, cfg.Database.Password,
+		"his_registration", cfg.Database.SSLMode,
+		cfg.Database.MaxIdleConns, cfg.Database.MaxOpenConns, cfg.Database.ConnMaxLifetime,
+	)
+	if err != nil {
+		logger.Fatal("挂号数据库连接失败: " + err.Error())
+	}
+
 	rdb, err := redis.NewClient(
 		cfg.Redis.Host, cfg.Redis.Port,
 		cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.PoolSize,
@@ -56,8 +67,11 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	scheduleRepo := repository.NewScheduleRepository(db)
-	scheduleSvc := service.NewScheduleService(scheduleRepo)
+	regSync := repository.NewRegistrationSyncRepository(regDB)
+	scheduleSvc := service.NewScheduleService(scheduleRepo, regSync)
 	scheduleHandler := handler.NewScheduleHandler(scheduleSvc)
 
 	sqlDB, _ := db.DB()
@@ -66,7 +80,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupScheduleRouter(cfg, scheduleHandler, deps)
+	router := setupScheduleRouter(cfg, scheduleHandler, deps, jwtSvc)
 
 	go startGrpcServer(scheduleSvc, cfg)
 
@@ -79,7 +93,7 @@ func main() {
 	}
 }
 
-func setupScheduleRouter(cfg *config.Config, scheduleHandler *handler.ScheduleHandler, deps *health.Dependencies) *gin.Engine {
+func setupScheduleRouter(cfg *config.Config, scheduleHandler *handler.ScheduleHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +105,7 @@ func setupScheduleRouter(cfg *config.Config, scheduleHandler *handler.ScheduleHa
 	router.GET("/ready", health.ReadinessHandler("his-schedule", deps))
 
 	api := router.Group("/api/schedule")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/generate", scheduleHandler.GenerateWeeklySchedules)
 		api.GET("/list", scheduleHandler.ListSchedules)

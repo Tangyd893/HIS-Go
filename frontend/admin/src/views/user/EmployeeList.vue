@@ -6,7 +6,13 @@
         <a-button type="primary"><PlusOutlined /> 新增员工</a-button>
       </a-space>
     </template>
-    <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="pagination" row-key="id" @change="onTableChange" />
+    <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="pagination" :scroll="{ x: 800 }" row-key="id" @change="onTableChange">
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'status'">
+          {{ record.status === 1 ? '在职' : '停用' }}
+        </template>
+      </template>
+    </a-table>
   </a-card>
 </template>
 
@@ -23,12 +29,11 @@ const dataSource = ref<any[]>([])
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
 
 const columns = [
-  { title: '姓名', dataIndex: 'name' },
-  { title: '性别', dataIndex: 'gender' },
-  { title: '手机号', dataIndex: 'phone' },
-  { title: '科室', dataIndex: 'deptName' },
-  { title: '职称', dataIndex: 'title' },
-  { title: '角色', dataIndex: 'role' },
+  { title: '姓名', dataIndex: 'name', key: 'name', width: 100 },
+  { title: '手机号', dataIndex: 'phone', key: 'phone', width: 130 },
+  { title: '科室', dataIndex: 'deptName', key: 'deptName', width: 120 },
+  { title: '职称', dataIndex: 'title', key: 'title', width: 120 },
+  { title: '状态', key: 'status', width: 80 },
 ]
 
 async function fetchData() {

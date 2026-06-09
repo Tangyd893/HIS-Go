@@ -66,7 +66,10 @@ func (r *BillingRepository) ListByPatient(patientID string, status int, page, pa
 	var bills []model.Bill
 	var total int64
 
-	query := r.db.Model(&model.Bill{}).Where("patient_id = ?", patientID)
+	query := r.db.Model(&model.Bill{})
+	if patientID != "" {
+		query = query.Where("patient_id = ?", patientID)
+	}
 	if status >= 0 {
 		query = query.Where("status = ?", status)
 	}

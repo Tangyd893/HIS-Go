@@ -56,7 +56,10 @@ func (r *FollowupRepository) ListPlans(patientID string, status int, page, pageS
 	var list []model.FollowupPlan
 	var total int64
 
-	query := r.db.Model(&model.FollowupPlan{}).Where("patient_id = ?", patientID)
+	query := r.db.Model(&model.FollowupPlan{})
+	if patientID != "" {
+		query = query.Where("patient_id = ?", patientID)
+	}
 	if status >= 0 {
 		query = query.Where("status = ?", status)
 	}

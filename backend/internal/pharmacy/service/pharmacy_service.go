@@ -53,6 +53,11 @@ func (s *PharmacyService) DispenseDrug(prescriptionID string, drugID string, qty
 	return s.repo.Dispense(prescriptionID, drugID, qty, dispenserID)
 }
 
+// ListExpiredDrugs 查询过期药品列表
+func (s *PharmacyService) ListExpiredDrugs() ([]model.Drug, error) {
+	return s.repo.FindExpiredDrugs()
+}
+
 // CheckAndAlertExpired 扫描过期药品并发送告警
 func (s *PharmacyService) CheckAndAlertExpired() {
 	drugs, err := s.repo.FindExpiredDrugs()

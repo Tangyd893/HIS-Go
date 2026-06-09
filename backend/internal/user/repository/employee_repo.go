@@ -26,26 +26,41 @@ func (r *EmployeeRepository) FindByID(id string) (*model.Employee, error) {
 	return &emp, nil
 }
 
-// List 分页查询员工列表
+// List 分页查询员工列表（关联科室名称）
 func (r *EmployeeRepository) List(deptID, name string, page, pageSize int) ([]model.Employee, int64, error) {
-	var employees []model.Employee
 	var total int64
 
-	query := r.db.Model(&model.Employee{})
+	query := r.db.Table("employees").
+		Joins("LEFT JOIN departments ON departments.id = employees.dept_id")
 	if deptID != "" {
-		query = query.Where("dept_id = ?", deptID)
+		query = query.Where("employees.dept_id = ?", deptID)
 	}
 	if name != "" {
-		query = query.Where("name LIKE ?", "%"+name+"%")
+		query = query.Where("employees.name LIKE ?", "%"+name+"%")
 	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
+	type row struct {
+		model.Employee
+		DeptName string `gorm:"column:dept_name"`
+	}
+	var rows []row
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&employees).Error; err != nil {
+	if err := query.
+		Select("employees.*, departments.name AS dept_name").
+		Offset(offset).Limit(pageSize).
+		Order("employees.created_at DESC").
+		Scan(&rows).Error; err != nil {
 		return nil, 0, err
+	}
+
+	employees := make([]model.Employee, len(rows))
+	for i, item := range rows {
+		employees[i] = item.Employee
+		employees[i].DeptName = item.DeptName
 	}
 
 	return employees, total, nil

@@ -35,8 +35,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   async login(data: LoginRequest) {
     const res = await authApi.login(data)
     localStorage.setItem('token', res.token)
-    localStorage.setItem('userInfo', JSON.stringify(res.user))
-    set({ token: res.token, userInfo: res.user })
+    localStorage.setItem('userInfo', JSON.stringify(res.userInfo))
+    set({ token: res.token, userInfo: res.userInfo })
   },
   logout() {
     localStorage.removeItem('token')

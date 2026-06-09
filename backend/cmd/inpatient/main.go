@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/inpatient"
 	grpcinpat "his-go/internal/inpatient"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	inpatientRepo := repository.NewInpatientRepository(db)
 	inpatientSvc := service.NewInpatientService(inpatientRepo)
 	inpatientHandler := handler.NewInpatientHandler(inpatientSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupInpatientRouter(cfg, inpatientHandler, deps)
+	router := setupInpatientRouter(cfg, inpatientHandler, deps, jwtSvc)
 
 	go startGrpcServer(inpatientSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupInpatientRouter(cfg *config.Config, inpatientHandler *handler.InpatientHandler, deps *health.Dependencies) *gin.Engine {
+func setupInpatientRouter(cfg *config.Config, inpatientHandler *handler.InpatientHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupInpatientRouter(cfg *config.Config, inpatientHandler *handler.Inpatien
 	router.GET("/ready", health.ReadinessHandler("his-inpatient", deps))
 
 	api := router.Group("/api/inpatient")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/admit", inpatientHandler.AdmitPatient)
 		api.POST("/discharge/:id", inpatientHandler.DischargePatient)

@@ -48,7 +48,6 @@ const sendForm = reactive({ receiverId: '', title: '', content: '', channel: 1 }
 
 const templateColumns = [
   { title: '模板名称', dataIndex: 'name' },
-  { title: '类型', dataIndex: 'type' },
   { title: '渠道', dataIndex: 'channel' },
   { title: '创建时间', dataIndex: 'createdAt' },
 ]

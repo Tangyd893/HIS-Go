@@ -35,7 +35,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-change_me_123}
     volumes:
       - ../../backend/sql:/sql-init:ro
-    entrypoint: ["bash", "-c", "echo '=== Running seed data ===' && for f in /sql-init/seed_data.sql /sql-init/seed_data_extended.sql; do echo \"Running $$f...\"; psql -h postgresql -U ${POSTGRES_USER:-his_admin} -f \"$$f\" -v ON_ERROR_STOP=0 || echo \"(some inserts already exist, continuing)\"; done && echo '=== Seed complete ==='"]
+    entrypoint: ["bash", "-c", "echo '=== Running seed data ===' && for f in /sql-init/seed_data.sql /sql-init/seed_data_extended.sql /sql-init/seed_admin_sync.sql; do echo \"Running $$f...\"; psql -h postgresql -U ${POSTGRES_USER:-his_admin} -f \"$$f\" -v ON_ERROR_STOP=0 || echo \"(some inserts already exist, continuing)\"; done && echo '=== Seed complete ==='"]
     networks:
       - his-net
     restart: "no"
@@ -351,6 +351,246 @@ services:
     ports:
       - "8096:8096"
       - "9096:9096"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-inpatient:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: inpatient
+    image: his-go/inpatient:latest
+    container_name: his-inpatient-demo
+    ports:
+      - "8089:8089"
+      - "9089:9089"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-emr:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: emr
+    image: his-go/emr:latest
+    container_name: his-emr-demo
+    ports:
+      - "8097:8097"
+      - "9097:9097"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-examination:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: examination
+    image: his-go/examination:latest
+    container_name: his-examination-demo
+    ports:
+      - "8088:8088"
+      - "9088:9088"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-outpatient:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: outpatient
+    image: his-go/outpatient:latest
+    container_name: his-outpatient-demo
+    ports:
+      - "8091:8091"
+      - "9091:9091"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-followup:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: followup
+    image: his-go/followup:latest
+    container_name: his-followup-demo
+    ports:
+      - "8092:8092"
+      - "9092:9092"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-health-record:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: health_record
+    image: his-go/health-record:latest
+    container_name: his-health-record-demo
+    ports:
+      - "8093:8093"
+      - "9093:9093"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-notification:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: notification
+    image: his-go/notification:latest
+    container_name: his-notification-demo
+    ports:
+      - "8094:8094"
+      - "9094:9094"
+    environment:
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - MQ_HOST=rabbitmq
+      - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - his-net
+    restart: unless-stopped
+
+  his-statistics:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/Dockerfile
+      args:
+        SERVICE_NAME: statistics
+    image: his-go/statistics:latest
+    container_name: his-statistics-demo
+    ports:
+      - "8095:8095"
+      - "9095:9095"
     environment:
       - DB_HOST=postgresql
       - DB_PORT=5432

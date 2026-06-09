@@ -19,6 +19,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/outpatient"
 	grpcoutpat "his-go/internal/outpatient"
@@ -57,6 +58,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	outpatientRepo := repository.NewOutpatientRepository(db)
 	outpatientSvc := service.NewOutpatientService(outpatientRepo)
 
@@ -77,7 +80,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupOutpatientRouter(cfg, outpatientHandler, deps)
+	router := setupOutpatientRouter(cfg, outpatientHandler, deps, jwtSvc)
 
 	go startGrpcServer(outpatientSvc, cfg)
 
@@ -90,7 +93,7 @@ func main() {
 	}
 }
 
-func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.OutpatientHandler, deps *health.Dependencies) *gin.Engine {
+func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.OutpatientHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -102,6 +105,7 @@ func setupOutpatientRouter(cfg *config.Config, outpatientHandler *handler.Outpat
 	router.GET("/ready", health.ReadinessHandler("his-outpatient", deps))
 
 	api := router.Group("/api/outpatient")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/consultation", outpatientHandler.CreateConsultation)
 		api.GET("/consultation/:id", outpatientHandler.GetConsultation)

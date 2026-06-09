@@ -19,6 +19,7 @@
         :data-source="dataSource"
         :loading="loading"
         :pagination="pagination"
+        :scroll="{ x: 900 }"
         row-key="id"
         @change="onTableChange"
       >
@@ -64,7 +65,13 @@
 
     <a-modal v-model:open="detailOpen" title="患者详情" :footer="null" width="600px">
       <a-descriptions v-if="detailRecord" :column="2" bordered size="small">
-        <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+        <a-descriptions-item label="ID">{{ detailRecord.id }}</a-descriptions-item>
+        <a-descriptions-item label="姓名">{{ detailRecord.name }}</a-descriptions-item>
+        <a-descriptions-item label="性别">{{ genderMap[detailRecord.gender] || detailRecord.gender || '—' }}</a-descriptions-item>
+        <a-descriptions-item label="手机号">{{ detailRecord.phone || '—' }}</a-descriptions-item>
+        <a-descriptions-item label="身份证号" :span="2">{{ detailRecord.idCard || '—' }}</a-descriptions-item>
+        <a-descriptions-item label="地址" :span="2">{{ detailRecord.address || '—' }}</a-descriptions-item>
+        <a-descriptions-item label="创建时间" :span="2">{{ detailRecord.createdAt || '—' }}</a-descriptions-item>
       </a-descriptions>
     </a-modal>
   </div>

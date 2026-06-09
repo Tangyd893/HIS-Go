@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/health_record"
 	grpchr "his-go/internal/health_record"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	hrRepo := repository.NewHealthRecordRepository(db)
 	hrSvc := service.NewHealthRecordService(hrRepo)
 	hrHandler := handler.NewHealthRecordHandler(hrSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupHealthRecordRouter(cfg, hrHandler, deps)
+	router := setupHealthRecordRouter(cfg, hrHandler, deps, jwtSvc)
 
 	go startGrpcServer(hrSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupHealthRecordRouter(cfg *config.Config, hrHandler *handler.HealthRecordHandler, deps *health.Dependencies) *gin.Engine {
+func setupHealthRecordRouter(cfg *config.Config, hrHandler *handler.HealthRecordHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupHealthRecordRouter(cfg *config.Config, hrHandler *handler.HealthRecord
 	router.GET("/ready", health.ReadinessHandler("his-health-record", deps))
 
 	api := router.Group("/api/health-record")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.GET("/summary/:patientId", hrHandler.GetSummary)
 		api.GET("/timeline/:patientId", hrHandler.GetTimeline)

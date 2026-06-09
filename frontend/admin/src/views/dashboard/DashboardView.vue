@@ -42,8 +42,8 @@
         <a-card title="系统信息">
           <a-descriptions :column="1" size="small">
             <a-descriptions-item label="系统版本">HIS-Go v1.0.0</a-descriptions-item>
-            <a-descriptions-item label="当前用户">{{ authStore.username }}</a-descriptions-item>
-            <a-descriptions-item label="角色">{{ authStore.role }}</a-descriptions-item>
+            <a-descriptions-item label="当前用户">{{ authStore.userInfo?.realName || authStore.username || '—' }}</a-descriptions-item>
+            <a-descriptions-item label="角色">{{ roleLabel }}</a-descriptions-item>
             <a-descriptions-item label="后端服务">Go + Gin + gRPC</a-descriptions-item>
             <a-descriptions-item label="前端框架">Vue 3 + Ant Design Vue 4</a-descriptions-item>
             <a-descriptions-item label="数据库">PostgreSQL 17</a-descriptions-item>
@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { h } from 'vue'
@@ -80,6 +80,15 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const roleLabels: Record<string, string> = {
+  admin: '管理员',
+  doctor: '医生',
+  nurse: '护士',
+  pharmacist: '药师',
+  patient: '患者',
+}
+const roleLabel = computed(() => roleLabels[authStore.role] || authStore.role || '—')
 
 const statCards = ref([
   { title: '今日挂号（演示）', value: 128, icon: h(FormOutlined), color: '#1890ff' },
@@ -99,14 +108,14 @@ const services = ref([
   { name: 'Pharmacy', status: 'running' },
   { name: 'Schedule', status: 'running' },
   { name: 'System', status: 'running' },
-  { name: 'Examination', status: 'demo-only' },
-  { name: 'Inpatient', status: 'demo-only' },
+  { name: 'Examination', status: 'running' },
+  { name: 'Inpatient', status: 'running' },
   { name: 'Outpatient', status: 'running' },
   { name: 'Followup', status: 'running' },
   { name: 'HealthRecord', status: 'running' },
-  { name: 'EMR', status: 'demo-only' },
-  { name: 'Notification', status: 'demo-only' },
-  { name: 'Statistics', status: 'demo-only' },
+  { name: 'EMR', status: 'running' },
+  { name: 'Notification', status: 'running' },
+  { name: 'Statistics', status: 'running' },
 ])
 </script>
 

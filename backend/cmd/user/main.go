@@ -21,6 +21,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 )
 
 func main() {
@@ -54,6 +55,8 @@ func main() {
 		logger.Fatal("Redis 连接失败: " + err.Error())
 	}
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	patientRepo := repository.NewPatientRepository(db)
 	empRepo := repository.NewEmployeeRepository(db)
 	deptRepo := repository.NewDepartmentRepository(db)
@@ -67,7 +70,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupUserRouter(cfg, userHandler, deps)
+	router := setupUserRouter(cfg, userHandler, deps, jwtSvc)
 
 	go startUserGrpcServer(userSvc, cfg)
 
@@ -80,7 +83,7 @@ func main() {
 	}
 }
 
-func setupUserRouter(cfg *config.Config, userHandler *handler.UserHandler, deps *health.Dependencies) *gin.Engine {
+func setupUserRouter(cfg *config.Config, userHandler *handler.UserHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -92,6 +95,7 @@ func setupUserRouter(cfg *config.Config, userHandler *handler.UserHandler, deps 
 	router.GET("/ready", health.ReadinessHandler("his-user", deps))
 
 	api := router.Group("/api/user")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		// 患者
 		api.GET("/patients", userHandler.ListPatients)

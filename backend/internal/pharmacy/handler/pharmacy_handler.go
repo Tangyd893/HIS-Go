@@ -5,9 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"his-go/internal/pharmacy/model"
 	"his-go/internal/pharmacy/service"
 	"his-go/pkg/errors"
 	"his-go/pkg/response"
+	"his-go/pkg/security/auth"
 )
 
 // PharmacyHandler 药房管理HTTP处理器
@@ -90,7 +92,8 @@ func (h *PharmacyHandler) DispenseDrug(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.DispenseDrug(req.PrescriptionID, req.DrugID, req.Quantity, req.DispatcherID); err != nil {
+	dispenserID := auth.ResolveUserID(c, req.DispatcherID)
+	if err := h.svc.DispenseDrug(req.PrescriptionID, req.DrugID, req.Quantity, dispenserID); err != nil {
 		if appErr, ok := err.(*errors.AppError); ok {
 			response.Fail(c, appErr.Code)
 		} else {
@@ -101,8 +104,15 @@ func (h *PharmacyHandler) DispenseDrug(c *gin.Context) {
 	response.Success(c, gin.H{"message": "发药成功"})
 }
 
-// CheckExpiredDrugs 检查过期药品
+// CheckExpiredDrugs 查询过期药品
 func (h *PharmacyHandler) CheckExpiredDrugs(c *gin.Context) {
-	h.svc.CheckAndAlertExpired()
-	response.Success(c, gin.H{"message": "过期药品扫描已触发"})
+	drugs, err := h.svc.ListExpiredDrugs()
+	if err != nil {
+		response.FailWithMsg(c, errors.CodeInternalError, err.Error())
+		return
+	}
+	if drugs == nil {
+		drugs = []model.Drug{}
+	}
+	response.Success(c, drugs)
 }

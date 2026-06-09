@@ -3,6 +3,7 @@ package service
 import (
 	"his-go/internal/clinic/model"
 	"his-go/internal/clinic/repository"
+	"his-go/pkg/demo"
 )
 
 // ClinicService 门诊诊疗业务服务
@@ -25,9 +26,18 @@ func (s *ClinicService) GetByID(id string) (*model.ClinicRecord, error) {
 	return s.repo.FindByID(id)
 }
 
-// ListByPatient 分页查询患者诊疗记录
+// ListByPatient 分页查询诊疗记录（patientID 为空时返回全部，管理端列表用）
 func (s *ClinicService) ListByPatient(patientID string, page, pageSize int) ([]model.ClinicRecord, int64, error) {
-	return s.repo.ListByPatient(patientID, page, pageSize)
+	list, total, err := s.repo.ListByPatient(patientID, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range list {
+		if list[i].DoctorName == "" {
+			list[i].DoctorName = demo.DoctorName(list[i].DoctorID)
+		}
+	}
+	return list, total, nil
 }
 
 // ListByDoctor 分页查询医生诊疗记录

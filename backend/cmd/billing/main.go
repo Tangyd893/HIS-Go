@@ -19,6 +19,7 @@ import (
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/billing"
 	grpcbill "his-go/internal/billing"
@@ -57,6 +58,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	rabbitMQ, err := mq.NewRabbitMQ(
 		cfg.RabbitMQ.Host, cfg.RabbitMQ.Port,
 		cfg.RabbitMQ.User, cfg.RabbitMQ.Password, cfg.RabbitMQ.VHost,
@@ -79,7 +82,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupBillingRouter(cfg, billingHandler, deps)
+	router := setupBillingRouter(cfg, billingHandler, deps, jwtSvc)
 
 	go startGrpcServer(billingSvc, cfg)
 
@@ -92,7 +95,7 @@ func main() {
 	}
 }
 
-func setupBillingRouter(cfg *config.Config, billingHandler *handler.BillingHandler, deps *health.Dependencies) *gin.Engine {
+func setupBillingRouter(cfg *config.Config, billingHandler *handler.BillingHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -104,6 +107,7 @@ func setupBillingRouter(cfg *config.Config, billingHandler *handler.BillingHandl
 	router.GET("/ready", health.ReadinessHandler("his-billing", deps))
 
 	api := router.Group("/api/billing")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/create", billingHandler.CreateBill)
 		api.GET("/:id", billingHandler.GetBill)

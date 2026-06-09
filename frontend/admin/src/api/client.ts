@@ -1,7 +1,6 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { message } from 'ant-design-vue'
 import { useAuthStore } from '@/store/auth'
-import router from '@/router'
 
 const http: AxiosInstance = axios.create({
   baseURL: '/api',
@@ -28,10 +27,9 @@ http.interceptors.response.use(
     if (code === 0) {
       return data
     }
-    if (code === 10001 || code === 10002) {
+    if (code === 10002) {
       const authStore = useAuthStore()
       authStore.logout()
-      router.push('/login')
       return Promise.reject(new Error(msg || '登录已过期'))
     }
     message.error(msg || '请求失败')
@@ -41,7 +39,6 @@ http.interceptors.response.use(
     if (error.response?.status === 401) {
       const authStore = useAuthStore()
       authStore.logout()
-      router.push('/login')
     }
     message.error(error.message || '网络异常')
     return Promise.reject(error)

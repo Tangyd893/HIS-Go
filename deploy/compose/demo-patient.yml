@@ -35,7 +35,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-change_me_123}
     volumes:
       - ../../backend/sql:/sql-init:ro
-    entrypoint: ["bash", "-c", "echo '=== Running seed data ===' && for f in /sql-init/seed_data.sql /sql-init/seed_data_extended.sql; do echo \"Running $$f...\"; psql -h postgresql -U ${POSTGRES_USER:-his_admin} -f \"$$f\" -v ON_ERROR_STOP=0 || echo \"(some inserts already exist, continuing)\"; done && echo '=== Seed complete ==='"]
+    entrypoint: ["bash", "-c", "echo '=== Running seed data ===' && for f in /sql-init/seed_data.sql /sql-init/seed_data_extended.sql /sql-init/seed_admin_sync.sql; do echo \"Running $$f...\"; psql -h postgresql -U ${POSTGRES_USER:-his_admin} -f \"$$f\" -v ON_ERROR_STOP=0 || echo \"(some inserts already exist, continuing)\"; done && echo '=== Seed complete ==='"]
     networks:
       - his-net
     restart: "no"

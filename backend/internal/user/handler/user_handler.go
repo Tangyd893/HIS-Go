@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 
 	"his-go/internal/user/model"
@@ -25,9 +27,14 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 func (h *UserHandler) ListPatients(c *gin.Context) {
 	name := c.Query("name")
 	phone := c.Query("phone")
-	page := 1
-	pageSize := 10
-	// 简单处理分页参数，实际项目可使用更完善的解析方式
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
 	list, total, err := h.svc.ListPatients(name, phone, page, pageSize)
 	if err != nil {
 		response.Fail(c, apperrors.CodeInternalError)
@@ -122,8 +129,14 @@ func (h *UserHandler) ListDepartments(c *gin.Context) {
 func (h *UserHandler) ListEmployees(c *gin.Context) {
 	deptID := c.Query("deptId")
 	name := c.Query("name")
-	page := 1
-	pageSize := 10
+	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
 	list, total, err := h.svc.ListEmployees(deptID, name, page, pageSize)
 	if err != nil {
 		response.Fail(c, apperrors.CodeInternalError)

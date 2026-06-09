@@ -21,13 +21,14 @@ export interface PageQuery {
 
 /** 用户信息 */
 export interface UserInfo {
-  id: string
+  userId?: string
   username: string
-  realName: string
+  realName?: string
+  avatar?: string
   role: string
-  deptId: string
-  deptName: string
-  perms: string[]
+  deptId?: string
+  deptName?: string
+  perms?: string[]
 }
 
 /** 登录请求 */
@@ -39,7 +40,9 @@ export interface LoginRequest {
 /** 登录响应 */
 export interface LoginResponse {
   token: string
-  user: UserInfo
+  refreshToken?: string
+  expiresIn?: number
+  userInfo: UserInfo
 }
 
 /** 患者 */
@@ -226,15 +229,16 @@ export interface MedicalOrder {
 export interface EMRRecord {
   id: string
   patientId: string
-  patientName: string
-  doctorId: string
-  templateId: string
-  subjective: string
-  objective: string
-  assessment: string
-  plan: string
-  status: number
-  createdAt: string
+  patientName?: string
+  doctorId?: string
+  templateId?: string
+  chiefComplaint?: string
+  presentIllness?: string
+  physicalExam?: string
+  diagnosis?: string
+  treatmentPlan?: string
+  status?: number
+  createdAt?: string
 }
 
 /** 字典 */

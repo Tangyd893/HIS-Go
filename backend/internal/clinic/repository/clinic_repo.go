@@ -44,7 +44,10 @@ func (r *ClinicRepository) ListByPatient(patientID string, page, pageSize int) (
 	var list []model.ClinicRecord
 	var total int64
 
-	query := r.db.Model(&model.ClinicRecord{}).Where("patient_id = ?", patientID)
+	query := r.db.Model(&model.ClinicRecord{})
+	if patientID != "" {
+		query = query.Where("patient_id = ?", patientID)
+	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("统计诊疗记录失败: %w", err)
 	}

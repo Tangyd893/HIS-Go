@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/system"
 	grpcsys "his-go/internal/system"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	sysRepo := repository.NewSystemRepository(db)
 	sysSvc := service.NewSystemService(sysRepo)
 	sysHandler := handler.NewSystemHandler(sysSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupSystemRouter(cfg, sysHandler, deps)
+	router := setupSystemRouter(cfg, sysHandler, deps, jwtSvc)
 
 	go startGrpcServer(sysSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupSystemRouter(cfg *config.Config, sysHandler *handler.SystemHandler, deps *health.Dependencies) *gin.Engine {
+func setupSystemRouter(cfg *config.Config, sysHandler *handler.SystemHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupSystemRouter(cfg *config.Config, sysHandler *handler.SystemHandler, de
 	router.GET("/ready", health.ReadinessHandler("his-system", deps))
 
 	api := router.Group("/api/system")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.GET("/dict-types", sysHandler.ListDictTypes)
 		api.GET("/dict-items", sysHandler.ListDictItems)

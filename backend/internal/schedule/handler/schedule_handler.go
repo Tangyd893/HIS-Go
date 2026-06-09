@@ -21,9 +21,9 @@ func NewScheduleHandler(svc *service.ScheduleService) *ScheduleHandler {
 
 // GenerateSchedulesRequest 生成排班请求
 type GenerateSchedulesRequest struct {
-	StartDate string `json:"start_date" binding:"required"`
-	EndDate   string `json:"end_date" binding:"required"`
-	DeptID    string `json:"dept_id" binding:"required"`
+	StartDate string `json:"startDate" binding:"required"`
+	EndDate   string `json:"endDate" binding:"required"`
+	DeptID    string `json:"deptId" binding:"required"`
 }
 
 // GenerateWeeklySchedules 生成一周排班

@@ -76,6 +76,9 @@ func (h *PrescriptionHandler) GetPrescription(c *gin.Context) {
 // ListPrescriptions 查询处方列表
 func (h *PrescriptionHandler) ListPrescriptions(c *gin.Context) {
 	patientID := c.Query("patientId")
+	if patientID == "" {
+		patientID = c.Query("patient_id")
+	}
 	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
 	if page <= 0 {

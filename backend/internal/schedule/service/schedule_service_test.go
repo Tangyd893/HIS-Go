@@ -44,7 +44,7 @@ func setupScheduleService(t *testing.T) (*ScheduleService, *gorm.DB) {
 	}
 
 	repo := repository.NewScheduleRepository(db)
-	svc := NewScheduleService(repo)
+	svc := NewScheduleService(repo, nil)
 
 	return svc, db
 }

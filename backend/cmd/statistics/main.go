@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/statistics"
 	grpcstats "his-go/internal/statistics"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	statsRepo := repository.NewStatisticsRepository(db)
 	statsSvc := service.NewStatisticsService(statsRepo)
 	statsHandler := handler.NewStatisticsHandler(statsSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupStatisticsRouter(cfg, statsHandler, deps)
+	router := setupStatisticsRouter(cfg, statsHandler, deps, jwtSvc)
 
 	go startGrpcServer(statsSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupStatisticsRouter(cfg *config.Config, statsHandler *handler.StatisticsHandler, deps *health.Dependencies) *gin.Engine {
+func setupStatisticsRouter(cfg *config.Config, statsHandler *handler.StatisticsHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupStatisticsRouter(cfg *config.Config, statsHandler *handler.StatisticsH
 	router.GET("/ready", health.ReadinessHandler("his-statistics", deps))
 
 	api := router.Group("/api/statistics")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/operation", statsHandler.GetOperationStats)
 		api.POST("/dept-workload", statsHandler.GetDeptWorkload)

@@ -152,7 +152,7 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  next()
+  authStore.ensureUserInfo().finally(() => next())
 })
 
 export default router

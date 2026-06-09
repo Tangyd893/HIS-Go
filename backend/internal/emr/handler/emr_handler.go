@@ -9,6 +9,7 @@ import (
 	"his-go/internal/emr/service"
 	"his-go/pkg/errors"
 	"his-go/pkg/response"
+	"his-go/pkg/security/auth"
 )
 
 // EMRHandler 电子病历HTTP处理器
@@ -27,6 +28,9 @@ func (h *EMRHandler) CreateRecord(c *gin.Context) {
 	if err := c.ShouldBindJSON(&record); err != nil {
 		response.Fail(c, errors.CodeParamInvalid)
 		return
+	}
+	if record.DoctorID == "" {
+		record.DoctorID = auth.ResolveUserID(c, "current")
 	}
 
 	if err := h.svc.CreateRecord(&record); err != nil {
@@ -60,12 +64,11 @@ func (h *EMRHandler) GetRecord(c *gin.Context) {
 	response.Success(c, record)
 }
 
-// ListRecords 分页查询患者病历
+// ListRecords 分页查询病历（patient_id 为空时返回全部，供管理端演示）
 func (h *EMRHandler) ListRecords(c *gin.Context) {
 	patientID := c.Query("patient_id")
 	if patientID == "" {
-		response.Fail(c, errors.CodeParamInvalid)
-		return
+		patientID = c.Query("patientId")
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
@@ -93,7 +96,8 @@ func (h *EMRHandler) QualityControl(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.QualityControl(recordID, req.ReviewerID, req.Level, req.Comment); err != nil {
+	reviewerID := auth.ResolveUserID(c, req.ReviewerID)
+	if err := h.svc.QualityControl(recordID, reviewerID, req.Level, req.Comment); err != nil {
 		if appErr, ok := err.(*errors.AppError); ok {
 			response.Fail(c, appErr.Code)
 		} else {

@@ -7,6 +7,7 @@ import (
 
 	"his-go/internal/billing/model"
 	"his-go/internal/billing/repository"
+	"his-go/pkg/demo"
 	"his-go/pkg/mq"
 )
 
@@ -31,9 +32,16 @@ func (s *BillingService) GetBill(id string) (*model.Bill, error) {
 	return s.repo.FindByID(id)
 }
 
-// ListBills 分页查询患者账单
+// ListBills 分页查询账单（patientID 为空时返回全部）
 func (s *BillingService) ListBills(patientID string, status int, page, pageSize int) ([]model.Bill, int64, error) {
-	return s.repo.ListByPatient(patientID, status, page, pageSize)
+	bills, total, err := s.repo.ListByPatient(patientID, status, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range bills {
+		bills[i].PatientName = demo.PatientName(bills[i].PatientID)
+	}
+	return bills, total, nil
 }
 
 // Pay 支付并发送缴费成功消息到 RabbitMQ

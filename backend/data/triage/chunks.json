@@ -1,0 +1,578 @@
+[
+  {
+    "id": "k01-kw",
+    "source_id": "k01",
+    "text": "症状关键词: 咳嗽, 咳痰, 咳血, 气喘, 胸闷, 呼吸困难, 哮喘, 支气管炎, 肺炎, 感冒, 发烧, 发热, 流涕, 鼻塞, 咽喉痛, 嗓子疼, 扁桃体",
+    "type": "keywords",
+    "dept_types": [
+      "内科",
+      "呼吸内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "呼吸系统疾病",
+    "notes": "伴高热/呼吸困难建议急诊"
+  },
+  {
+    "id": "k01-desc",
+    "source_id": "k01",
+    "text": "病症分类: 呼吸系统疾病。常见症状包括: 咳嗽, 咳痰, 咳血, 气喘, 胸闷, 呼吸困难, 哮喘, 支气管炎等。建议挂号科室: 内科, 呼吸内科, 急诊科。",
+    "type": "description",
+    "dept_types": [
+      "内科",
+      "呼吸内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "呼吸系统疾病",
+    "notes": "伴高热/呼吸困难建议急诊"
+  },
+  {
+    "id": "k01-note",
+    "source_id": "k01",
+    "text": "呼吸系统疾病注意事项: 伴高热/呼吸困难建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科",
+      "呼吸内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "呼吸系统疾病",
+    "notes": "伴高热/呼吸困难建议急诊"
+  },
+  {
+    "id": "k02-kw",
+    "source_id": "k02",
+    "text": "症状关键词: 胸痛, 心慌, 心悸, 胸闷胸痛, 高血压, 头晕, 头痛, 高血脂, 冠心病, 心绞痛, 心律不齐, 心跳快, 心跳慢",
+    "type": "keywords",
+    "dept_types": [
+      "内科",
+      "心血管内科",
+      "急诊科"
+    ],
+    "urgency": "high",
+    "category": "心血管系统疾病",
+    "notes": "持续胸痛>15分钟、伴大汗淋漓建议立即急诊"
+  },
+  {
+    "id": "k02-desc",
+    "source_id": "k02",
+    "text": "病症分类: 心血管系统疾病。常见症状包括: 胸痛, 心慌, 心悸, 胸闷胸痛, 高血压, 头晕, 头痛, 高血脂等。建议挂号科室: 内科, 心血管内科, 急诊科。",
+    "type": "description",
+    "dept_types": [
+      "内科",
+      "心血管内科",
+      "急诊科"
+    ],
+    "urgency": "high",
+    "category": "心血管系统疾病",
+    "notes": "持续胸痛>15分钟、伴大汗淋漓建议立即急诊"
+  },
+  {
+    "id": "k02-note",
+    "source_id": "k02",
+    "text": "心血管系统疾病注意事项: 持续胸痛>15分钟、伴大汗淋漓建议立即急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科",
+      "心血管内科",
+      "急诊科"
+    ],
+    "urgency": "high",
+    "category": "心血管系统疾病",
+    "notes": "持续胸痛>15分钟、伴大汗淋漓建议立即急诊"
+  },
+  {
+    "id": "k03-kw",
+    "source_id": "k03",
+    "text": "症状关键词: 腹痛, 胃痛, 胃胀, 胃酸, 反酸, 烧心, 恶心, 呕吐, 腹泻, 便秘, 便血, 消化不良, 胃炎, 胃溃疡, 肠炎",
+    "type": "keywords",
+    "dept_types": [
+      "内科",
+      "消化内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "消化系统疾病",
+    "notes": "剧烈腹痛、便血建议急诊"
+  },
+  {
+    "id": "k03-desc",
+    "source_id": "k03",
+    "text": "病症分类: 消化系统疾病。常见症状包括: 腹痛, 胃痛, 胃胀, 胃酸, 反酸, 烧心, 恶心, 呕吐等。建议挂号科室: 内科, 消化内科, 急诊科。",
+    "type": "description",
+    "dept_types": [
+      "内科",
+      "消化内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "消化系统疾病",
+    "notes": "剧烈腹痛、便血建议急诊"
+  },
+  {
+    "id": "k03-note",
+    "source_id": "k03",
+    "text": "消化系统疾病注意事项: 剧烈腹痛、便血建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科",
+      "消化内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "消化系统疾病",
+    "notes": "剧烈腹痛、便血建议急诊"
+  },
+  {
+    "id": "k04-kw",
+    "source_id": "k04",
+    "text": "症状关键词: 头晕, 眩晕, 头痛, 偏头痛, 失眠, 手麻, 脚麻, 面瘫, 抽搐, 癫痫, 帕金森, 记忆力下降, 手脚发抖, 走路不稳",
+    "type": "keywords",
+    "dept_types": [
+      "内科",
+      "神经内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "神经系统疾病",
+    "notes": "突发剧烈头痛、一侧肢体无力建议急诊"
+  },
+  {
+    "id": "k04-desc",
+    "source_id": "k04",
+    "text": "病症分类: 神经系统疾病。常见症状包括: 头晕, 眩晕, 头痛, 偏头痛, 失眠, 手麻, 脚麻, 面瘫等。建议挂号科室: 内科, 神经内科, 急诊科。",
+    "type": "description",
+    "dept_types": [
+      "内科",
+      "神经内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "神经系统疾病",
+    "notes": "突发剧烈头痛、一侧肢体无力建议急诊"
+  },
+  {
+    "id": "k04-note",
+    "source_id": "k04",
+    "text": "神经系统疾病注意事项: 突发剧烈头痛、一侧肢体无力建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科",
+      "神经内科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "神经系统疾病",
+    "notes": "突发剧烈头痛、一侧肢体无力建议急诊"
+  },
+  {
+    "id": "k05-kw",
+    "source_id": "k05",
+    "text": "症状关键词: 尿频, 尿急, 尿痛, 尿血, 血尿, 水肿, 浮肿, 腰痛, 肾结石, 肾炎, 蛋白尿, 肾功能",
+    "type": "keywords",
+    "dept_types": [
+      "内科",
+      "泌尿外科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "泌尿系统疾病",
+    "notes": "无尿>12小时建议急诊"
+  },
+  {
+    "id": "k05-desc",
+    "source_id": "k05",
+    "text": "病症分类: 泌尿系统疾病。常见症状包括: 尿频, 尿急, 尿痛, 尿血, 血尿, 水肿, 浮肿, 腰痛等。建议挂号科室: 内科, 泌尿外科, 急诊科。",
+    "type": "description",
+    "dept_types": [
+      "内科",
+      "泌尿外科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "泌尿系统疾病",
+    "notes": "无尿>12小时建议急诊"
+  },
+  {
+    "id": "k05-note",
+    "source_id": "k05",
+    "text": "泌尿系统疾病注意事项: 无尿>12小时建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科",
+      "泌尿外科",
+      "急诊科"
+    ],
+    "urgency": "medium",
+    "category": "泌尿系统疾病",
+    "notes": "无尿>12小时建议急诊"
+  },
+  {
+    "id": "k06-kw",
+    "source_id": "k06",
+    "text": "症状关键词: 血糖高, 糖尿病, 口渴, 多饮, 多尿, 消瘦, 甲亢, 甲减, 甲状腺, 肥胖, 内分泌, 激素",
+    "type": "keywords",
+    "dept_types": [
+      "内科",
+      "内分泌科"
+    ],
+    "urgency": "low",
+    "category": "内分泌系统疾病",
+    "notes": "血糖极高伴意识障碍建议急诊"
+  },
+  {
+    "id": "k06-desc",
+    "source_id": "k06",
+    "text": "病症分类: 内分泌系统疾病。常见症状包括: 血糖高, 糖尿病, 口渴, 多饮, 多尿, 消瘦, 甲亢, 甲减等。建议挂号科室: 内科, 内分泌科。",
+    "type": "description",
+    "dept_types": [
+      "内科",
+      "内分泌科"
+    ],
+    "urgency": "low",
+    "category": "内分泌系统疾病",
+    "notes": "血糖极高伴意识障碍建议急诊"
+  },
+  {
+    "id": "k06-note",
+    "source_id": "k06",
+    "text": "内分泌系统疾病注意事项: 血糖极高伴意识障碍建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科",
+      "内分泌科"
+    ],
+    "urgency": "low",
+    "category": "内分泌系统疾病",
+    "notes": "血糖极高伴意识障碍建议急诊"
+  },
+  {
+    "id": "k07-kw",
+    "source_id": "k07",
+    "text": "症状关键词: 关节痛, 关节肿, 腰腿痛, 颈椎痛, 腰椎, 骨质疏松, 骨折, 扭伤, 拉伤, 风湿, 类风湿, 痛风, 背痛, 肩痛, 膝盖痛, 脚踝痛",
+    "type": "keywords",
+    "dept_types": [
+      "外科",
+      "骨科"
+    ],
+    "urgency": "low",
+    "category": "骨骼肌肉系统疾病",
+    "notes": "外伤后无法站立/活动建议急诊"
+  },
+  {
+    "id": "k07-desc",
+    "source_id": "k07",
+    "text": "病症分类: 骨骼肌肉系统疾病。常见症状包括: 关节痛, 关节肿, 腰腿痛, 颈椎痛, 腰椎, 骨质疏松, 骨折, 扭伤等。建议挂号科室: 外科, 骨科。",
+    "type": "description",
+    "dept_types": [
+      "外科",
+      "骨科"
+    ],
+    "urgency": "low",
+    "category": "骨骼肌肉系统疾病",
+    "notes": "外伤后无法站立/活动建议急诊"
+  },
+  {
+    "id": "k07-note",
+    "source_id": "k07",
+    "text": "骨骼肌肉系统疾病注意事项: 外伤后无法站立/活动建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "外科",
+      "骨科"
+    ],
+    "urgency": "low",
+    "category": "骨骼肌肉系统疾病",
+    "notes": "外伤后无法站立/活动建议急诊"
+  },
+  {
+    "id": "k08-kw",
+    "source_id": "k08",
+    "text": "症状关键词: 皮疹, 湿疹, 荨麻疹, 过敏, 瘙痒, 红斑, 银屑病, 痤疮, 青春痘, 脱发, 色斑, 痣, 皮肤溃烂",
+    "type": "keywords",
+    "dept_types": [
+      "外科",
+      "皮肤科"
+    ],
+    "urgency": "low",
+    "category": "皮肤疾病",
+    "notes": ""
+  },
+  {
+    "id": "k08-desc",
+    "source_id": "k08",
+    "text": "病症分类: 皮肤疾病。常见症状包括: 皮疹, 湿疹, 荨麻疹, 过敏, 瘙痒, 红斑, 银屑病, 痤疮等。建议挂号科室: 外科, 皮肤科。",
+    "type": "description",
+    "dept_types": [
+      "外科",
+      "皮肤科"
+    ],
+    "urgency": "low",
+    "category": "皮肤疾病",
+    "notes": ""
+  },
+  {
+    "id": "k09-kw",
+    "source_id": "k09",
+    "text": "症状关键词: 眼红, 眼痛, 视力下降, 模糊, 流泪, 眼干, 白内障, 青光眼, 结膜炎, 近视, 飞蚊症",
+    "type": "keywords",
+    "dept_types": [
+      "外科",
+      "眼科"
+    ],
+    "urgency": "low",
+    "category": "眼科疾病",
+    "notes": "突发视力丧失建议急诊"
+  },
+  {
+    "id": "k09-desc",
+    "source_id": "k09",
+    "text": "病症分类: 眼科疾病。常见症状包括: 眼红, 眼痛, 视力下降, 模糊, 流泪, 眼干, 白内障, 青光眼等。建议挂号科室: 外科, 眼科。",
+    "type": "description",
+    "dept_types": [
+      "外科",
+      "眼科"
+    ],
+    "urgency": "low",
+    "category": "眼科疾病",
+    "notes": "突发视力丧失建议急诊"
+  },
+  {
+    "id": "k09-note",
+    "source_id": "k09",
+    "text": "眼科疾病注意事项: 突发视力丧失建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "外科",
+      "眼科"
+    ],
+    "urgency": "low",
+    "category": "眼科疾病",
+    "notes": "突发视力丧失建议急诊"
+  },
+  {
+    "id": "k10-kw",
+    "source_id": "k10",
+    "text": "症状关键词: 耳痛, 耳鸣, 听力下降, 耳聋, 中耳炎, 鼻炎, 鼻窦炎, 鼻出血, 流鼻血, 咽喉炎, 声音嘶哑, 打鼾",
+    "type": "keywords",
+    "dept_types": [
+      "外科",
+      "耳鼻喉科"
+    ],
+    "urgency": "low",
+    "category": "耳鼻喉疾病",
+    "notes": ""
+  },
+  {
+    "id": "k10-desc",
+    "source_id": "k10",
+    "text": "病症分类: 耳鼻喉疾病。常见症状包括: 耳痛, 耳鸣, 听力下降, 耳聋, 中耳炎, 鼻炎, 鼻窦炎, 鼻出血等。建议挂号科室: 外科, 耳鼻喉科。",
+    "type": "description",
+    "dept_types": [
+      "外科",
+      "耳鼻喉科"
+    ],
+    "urgency": "low",
+    "category": "耳鼻喉疾病",
+    "notes": ""
+  },
+  {
+    "id": "k11-kw",
+    "source_id": "k11",
+    "text": "症状关键词: 牙痛, 牙龈出血, 口腔溃疡, 口臭, 牙周炎, 龋齿, 补牙, 拔牙",
+    "type": "keywords",
+    "dept_types": [
+      "外科",
+      "口腔科"
+    ],
+    "urgency": "low",
+    "category": "口腔疾病",
+    "notes": ""
+  },
+  {
+    "id": "k11-desc",
+    "source_id": "k11",
+    "text": "病症分类: 口腔疾病。常见症状包括: 牙痛, 牙龈出血, 口腔溃疡, 口臭, 牙周炎, 龋齿, 补牙, 拔牙等。建议挂号科室: 外科, 口腔科。",
+    "type": "description",
+    "dept_types": [
+      "外科",
+      "口腔科"
+    ],
+    "urgency": "low",
+    "category": "口腔疾病",
+    "notes": ""
+  },
+  {
+    "id": "k12-kw",
+    "source_id": "k12",
+    "text": "症状关键词: 月经不调, 痛经, 闭经, 白带异常, 阴道炎, 盆腔炎, 子宫肌瘤, 卵巢囊肿, 更年期, 不孕, 怀孕, 孕检, 产检, 孕吐",
+    "type": "keywords",
+    "dept_types": [
+      "妇产科"
+    ],
+    "urgency": "medium",
+    "category": "妇产科疾病",
+    "notes": "孕期出血/剧烈腹痛建议急诊"
+  },
+  {
+    "id": "k12-desc",
+    "source_id": "k12",
+    "text": "病症分类: 妇产科疾病。常见症状包括: 月经不调, 痛经, 闭经, 白带异常, 阴道炎, 盆腔炎, 子宫肌瘤, 卵巢囊肿等。建议挂号科室: 妇产科。",
+    "type": "description",
+    "dept_types": [
+      "妇产科"
+    ],
+    "urgency": "medium",
+    "category": "妇产科疾病",
+    "notes": "孕期出血/剧烈腹痛建议急诊"
+  },
+  {
+    "id": "k12-note",
+    "source_id": "k12",
+    "text": "妇产科疾病注意事项: 孕期出血/剧烈腹痛建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "妇产科"
+    ],
+    "urgency": "medium",
+    "category": "妇产科疾病",
+    "notes": "孕期出血/剧烈腹痛建议急诊"
+  },
+  {
+    "id": "k13-kw",
+    "source_id": "k13",
+    "text": "症状关键词: 小儿发热, 小儿咳嗽, 小儿腹泻, 小儿皮疹, 发育迟缓, 营养不良, 疫苗接种, 儿童体检, 新生儿, 黄疸, 夜啼, 食欲不振",
+    "type": "keywords",
+    "dept_types": [
+      "儿科"
+    ],
+    "urgency": "medium",
+    "category": "儿科疾病",
+    "notes": "新生儿发热、持续高热建议急诊"
+  },
+  {
+    "id": "k13-desc",
+    "source_id": "k13",
+    "text": "病症分类: 儿科疾病。常见症状包括: 小儿发热, 小儿咳嗽, 小儿腹泻, 小儿皮疹, 发育迟缓, 营养不良, 疫苗接种, 儿童体检等。建议挂号科室: 儿科。",
+    "type": "description",
+    "dept_types": [
+      "儿科"
+    ],
+    "urgency": "medium",
+    "category": "儿科疾病",
+    "notes": "新生儿发热、持续高热建议急诊"
+  },
+  {
+    "id": "k13-note",
+    "source_id": "k13",
+    "text": "儿科疾病注意事项: 新生儿发热、持续高热建议急诊",
+    "type": "notes",
+    "dept_types": [
+      "儿科"
+    ],
+    "urgency": "medium",
+    "category": "儿科疾病",
+    "notes": "新生儿发热、持续高热建议急诊"
+  },
+  {
+    "id": "k14-kw",
+    "source_id": "k14",
+    "text": "症状关键词: 焦虑, 抑郁, 失眠, 情绪低落, 烦躁, 精神紧张, 强迫症, 恐惧症, 心理, 心理咨询",
+    "type": "keywords",
+    "dept_types": [
+      "内科"
+    ],
+    "urgency": "low",
+    "category": "精神心理疾病",
+    "notes": "有自伤/伤人倾向建议立即急诊"
+  },
+  {
+    "id": "k14-desc",
+    "source_id": "k14",
+    "text": "病症分类: 精神心理疾病。常见症状包括: 焦虑, 抑郁, 失眠, 情绪低落, 烦躁, 精神紧张, 强迫症, 恐惧症等。建议挂号科室: 内科。",
+    "type": "description",
+    "dept_types": [
+      "内科"
+    ],
+    "urgency": "low",
+    "category": "精神心理疾病",
+    "notes": "有自伤/伤人倾向建议立即急诊"
+  },
+  {
+    "id": "k14-note",
+    "source_id": "k14",
+    "text": "精神心理疾病注意事项: 有自伤/伤人倾向建议立即急诊",
+    "type": "notes",
+    "dept_types": [
+      "内科"
+    ],
+    "urgency": "low",
+    "category": "精神心理疾病",
+    "notes": "有自伤/伤人倾向建议立即急诊"
+  },
+  {
+    "id": "k15-kw",
+    "source_id": "k15",
+    "text": "症状关键词: 外伤, 擦伤, 割伤, 烫伤, 烧伤, 摔伤, 刀伤, 缝合, 拆线, 换药, 清创",
+    "type": "keywords",
+    "dept_types": [
+      "外科",
+      "急诊科"
+    ],
+    "urgency": "high",
+    "category": "创伤与急诊",
+    "notes": "大出血、昏迷、严重烧伤建议立即120"
+  },
+  {
+    "id": "k15-desc",
+    "source_id": "k15",
+    "text": "病症分类: 创伤与急诊。常见症状包括: 外伤, 擦伤, 割伤, 烫伤, 烧伤, 摔伤, 刀伤, 缝合等。建议挂号科室: 外科, 急诊科。",
+    "type": "description",
+    "dept_types": [
+      "外科",
+      "急诊科"
+    ],
+    "urgency": "high",
+    "category": "创伤与急诊",
+    "notes": "大出血、昏迷、严重烧伤建议立即120"
+  },
+  {
+    "id": "k15-note",
+    "source_id": "k15",
+    "text": "创伤与急诊注意事项: 大出血、昏迷、严重烧伤建议立即120",
+    "type": "notes",
+    "dept_types": [
+      "外科",
+      "急诊科"
+    ],
+    "urgency": "high",
+    "category": "创伤与急诊",
+    "notes": "大出血、昏迷、严重烧伤建议立即120"
+  },
+  {
+    "id": "k16-kw",
+    "source_id": "k16",
+    "text": "症状关键词: 体检, 健康检查, 入职体检, 年度体检, 全身检查",
+    "type": "keywords",
+    "dept_types": [
+      "内科"
+    ],
+    "urgency": "low",
+    "category": "健康体检",
+    "notes": ""
+  },
+  {
+    "id": "k16-desc",
+    "source_id": "k16",
+    "text": "病症分类: 健康体检。常见症状包括: 体检, 健康检查, 入职体检, 年度体检, 全身检查等。建议挂号科室: 内科。",
+    "type": "description",
+    "dept_types": [
+      "内科"
+    ],
+    "urgency": "low",
+    "category": "健康体检",
+    "notes": ""
+  }
+]

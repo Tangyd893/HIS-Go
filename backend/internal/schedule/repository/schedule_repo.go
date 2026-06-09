@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"his-go/internal/schedule/model"
+	"his-go/pkg/demo"
 	"his-go/pkg/errors"
 )
 
@@ -36,14 +37,19 @@ func (r *ScheduleRepository) GenerateWeekly(startDate, endDate string, deptID st
 
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
 		workDate := d.Format("2006-01-02")
+		doctorID := "doctor-wang"
 		for slot := 1; slot <= 3; slot++ {
 			schedule := model.ScheduleInfo{
-				WorkDate:    workDate,
-				TimeSlot:    slot,
-				DeptID:      deptID,
-				MaxPatients: 50,
-				Status:      1,
-				RoomNo:      strconv.Itoa(slot) + "室",
+				DoctorID:        doctorID,
+				DoctorName:      demo.DoctorName(doctorID),
+				DeptID:          deptID,
+				DeptName:        demo.DeptName(deptID),
+				WorkDate:        workDate,
+				TimeSlot:        slot,
+				MaxPatients:     50,
+				CurrentPatients: 0,
+				Status:          1,
+				RoomNo:          strconv.Itoa(slot) + "室",
 			}
 			schedules = append(schedules, schedule)
 		}
@@ -56,11 +62,17 @@ func (r *ScheduleRepository) GenerateWeekly(startDate, endDate string, deptID st
 	return schedules, nil
 }
 
-// FindByDeptAndDate 按科室和日期查询排班
+// FindByDeptAndDate 按科室和日期查询排班（deptID 为空时返回当日全部排班）
 func (r *ScheduleRepository) FindByDeptAndDate(deptID, date string) ([]model.ScheduleInfo, error) {
 	var list []model.ScheduleInfo
-	if err := r.db.Where("dept_id = ? AND work_date = ?", deptID, date).
-		Order("time_slot ASC").Find(&list).Error; err != nil {
+	q := r.db.Model(&model.ScheduleInfo{})
+	if date != "" {
+		q = q.Where("work_date = ?", date)
+	}
+	if deptID != "" {
+		q = q.Where("dept_id = ?", deptID)
+	}
+	if err := q.Order("dept_id ASC, time_slot ASC").Find(&list).Error; err != nil {
 		return nil, fmt.Errorf("查询排班失败: %w", err)
 	}
 	return list, nil

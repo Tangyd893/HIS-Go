@@ -3,6 +3,7 @@ package service
 import (
 	"his-go/internal/prescription/model"
 	"his-go/internal/prescription/repository"
+	"his-go/pkg/demo"
 	"his-go/pkg/errors"
 )
 
@@ -27,9 +28,18 @@ func (s *PrescriptionService) GetByID(id string) (*model.Prescription, error) {
 	return s.repo.FindByID(id)
 }
 
-// ListByPatient 分页查询患者处方
+// ListByPatient 分页查询处方（patientID 为空时返回全部）
 func (s *PrescriptionService) ListByPatient(patientID string, page, pageSize int) ([]model.Prescription, int64, error) {
-	return s.repo.ListByPatient(patientID, page, pageSize)
+	list, total, err := s.repo.ListByPatient(patientID, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range list {
+		if list[i].DoctorName == "" {
+			list[i].DoctorName = demo.DoctorName(list[i].DoctorID)
+		}
+	}
+	return list, total, nil
 }
 
 // ListByDoctor 分页查询医生处方

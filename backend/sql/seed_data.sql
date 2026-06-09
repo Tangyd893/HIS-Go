@@ -104,7 +104,8 @@ INSERT INTO schedules (id, doctor_id, doctor_name, dept_id, dept_name, work_date
 ('sched_002', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 2, 30, 0, '201', 1),
 ('sched_003', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 1, 30, 0, '201', 1),
 ('sched_004', 'demo-doctor', '张医生', 'dept_001', '内科', to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD'), 2, 30, 0, '201', 1),
-('sched_005', 'demo-doctor', '张医生', 'dept_002', '外科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 0, '302', 1);
+('sched_005', 'demo-doctor', '张医生', 'dept_002', '外科', to_char(CURRENT_DATE, 'YYYY-MM-DD'), 1, 20, 0, '302', 1)
+ON CONFLICT (id) DO NOTHING;
 
 \c his_pharmacy;
 
@@ -165,7 +166,9 @@ INSERT INTO patients (id, name, id_card, phone, gender, birth_date, address) VAL
 -- 补充员工
 INSERT INTO employees (id, user_id, name, phone, dept_id, title, status) VALUES
 ('emp_001', 'demo-doctor', '张医生', '13800000001', 'dept_001', '主任医师', 1),
-('emp_002', 'demo-nurse', '李护士', '13800000002', 'dept_001', '主管护师', 1);
+('emp_002', 'demo-nurse', '李护士', '13800000002', 'dept_001', '主管护师', 1),
+('emp_007', 'demo-pharmacist', '王药师', '13800000004', 'dept_001', '主管药师', 1)
+ON CONFLICT (id) DO NOTHING;
 
 \c his_registration;
 

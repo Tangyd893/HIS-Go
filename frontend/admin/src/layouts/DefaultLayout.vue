@@ -97,7 +97,7 @@
           <a-dropdown>
             <a-space>
               <a-avatar size="small" :style="{ backgroundColor: '#1890ff' }">
-                {{ authStore.username.charAt(0).toUpperCase() }}
+                {{ (authStore.username || '?').charAt(0).toUpperCase() }}
               </a-avatar>
               <span>{{ authStore.username }}</span>
               <DownOutlined />

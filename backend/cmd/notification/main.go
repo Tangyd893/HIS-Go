@@ -19,6 +19,7 @@ import (
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/notification"
 	grpcnotif "his-go/internal/notification"
@@ -57,6 +58,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	rabbitMQ, err := mq.NewRabbitMQ(
 		cfg.RabbitMQ.Host, cfg.RabbitMQ.Port,
 		cfg.RabbitMQ.User, cfg.RabbitMQ.Password, cfg.RabbitMQ.VHost,
@@ -77,7 +80,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupNotificationRouter(cfg, notifHandler, deps)
+	router := setupNotificationRouter(cfg, notifHandler, deps, jwtSvc)
 
 	go startGrpcServer(notifSvc, cfg)
 
@@ -90,7 +93,7 @@ func main() {
 	}
 }
 
-func setupNotificationRouter(cfg *config.Config, notifHandler *handler.NotificationHandler, deps *health.Dependencies) *gin.Engine {
+func setupNotificationRouter(cfg *config.Config, notifHandler *handler.NotificationHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -102,6 +105,7 @@ func setupNotificationRouter(cfg *config.Config, notifHandler *handler.Notificat
 	router.GET("/ready", health.ReadinessHandler("his-notification", deps))
 
 	api := router.Group("/api/notification")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/send", notifHandler.SendNotification)
 		api.POST("/batch-send", notifHandler.BatchSend)

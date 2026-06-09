@@ -9,6 +9,7 @@ import (
 	"his-go/internal/examination/service"
 	"his-go/pkg/errors"
 	"his-go/pkg/response"
+	"his-go/pkg/security/auth"
 )
 
 // ExaminationHandler 检查检验接口处理器
@@ -71,6 +72,9 @@ func (h *ExaminationHandler) GetReport(c *gin.Context) {
 // ListReports 查询检查报告列表
 func (h *ExaminationHandler) ListReports(c *gin.Context) {
 	patientID := c.Query("patientId")
+	if patientID == "" {
+		patientID = c.Query("patient_id")
+	}
 	status, _ := strconv.Atoi(c.DefaultQuery("status", "-1"))
 	page, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPage, response.DefaultPage))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery(response.QueryKeyPageSize, response.DefaultPageSize))
@@ -97,7 +101,8 @@ func (h *ExaminationHandler) ReviewReport(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.Review(req.ReportID, req.ReviewerID, req.Approved, req.Comment); err != nil {
+	reviewerID := auth.ResolveUserID(c, req.ReviewerID)
+	if err := h.svc.Review(req.ReportID, reviewerID, req.Approved, req.Comment); err != nil {
 		if appErr, ok := err.(*errors.AppError); ok {
 			response.FailWithMsg(c, appErr.Code, appErr.Message)
 			return

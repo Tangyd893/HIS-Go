@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/clinic"
 	grpcclinic "his-go/internal/clinic"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	clinicRepo := repository.NewClinicRepository(db)
 	clinicSvc := service.NewClinicService(clinicRepo)
 	clinicHandler := handler.NewClinicHandler(clinicSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupClinicRouter(cfg, clinicHandler, deps)
+	router := setupClinicRouter(cfg, clinicHandler, deps, jwtSvc)
 
 	go startGrpcServer(clinicSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupClinicRouter(cfg *config.Config, clinicHandler *handler.ClinicHandler, deps *health.Dependencies) *gin.Engine {
+func setupClinicRouter(cfg *config.Config, clinicHandler *handler.ClinicHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupClinicRouter(cfg *config.Config, clinicHandler *handler.ClinicHandler,
 	router.GET("/ready", health.ReadinessHandler("his-clinic", deps))
 
 	api := router.Group("/api/clinic")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/record", clinicHandler.CreateClinicRecord)
 		api.GET("/record/:id", clinicHandler.GetClinicRecord)

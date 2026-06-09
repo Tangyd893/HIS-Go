@@ -61,6 +61,57 @@ func JwtAuth(jwtService *jwt.JWTService) gin.HandlerFunc {
 	}
 }
 
+// GatewayUserContext 从网关转发的 X-User-* 请求头解析用户上下文
+func GatewayUserContext() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := c.GetHeader("X-User-ID")
+		if userID == "" {
+			response.Fail(c, apperrors.CodeUnauthorized)
+			c.Abort()
+			return
+		}
+
+		permsHeader := c.GetHeader("X-User-Perms")
+		var perms []string
+		if permsHeader != "" {
+			perms = strings.Split(permsHeader, ",")
+		}
+
+		c.Set(UserContextKey, &UserContext{
+			UserID:   userID,
+			Username: c.GetHeader("X-Username"),
+			Role:     c.GetHeader("X-User-Role"),
+			DeptID:   c.GetHeader("X-User-Dept"),
+			Perms:    perms,
+		})
+		c.Next()
+	}
+}
+
+// UserContextFromGatewayOrJWT 优先使用网关头，否则回退 JWT 解析（直连调试）
+func UserContextFromGatewayOrJWT(jwtService *jwt.JWTService) gin.HandlerFunc {
+	gateway := GatewayUserContext()
+	jwtAuth := JwtAuth(jwtService)
+	return func(c *gin.Context) {
+		if c.GetHeader("X-User-ID") != "" {
+			gateway(c)
+			return
+		}
+		jwtAuth(c)
+	}
+}
+
+// ResolveUserID 将 "current" 解析为当前登录用户 ID
+func ResolveUserID(c *gin.Context, id string) string {
+	if id != "" && id != "current" {
+		return id
+	}
+	if uc := GetUserContext(c); uc != nil && uc.UserID != "" {
+		return uc.UserID
+	}
+	return "demo-admin"
+}
+
 // GetUserContext 从 Gin Context 中获取用户上下文
 func GetUserContext(c *gin.Context) *UserContext {
 	if val, ok := c.Get(UserContextKey); ok {

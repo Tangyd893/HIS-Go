@@ -75,7 +75,8 @@ func (h *BillingHandler) GetBill(c *gin.Context) {
 	}
 
 	details, _ := h.svc.GetBillDetails(id)
-	response.Success(c, gin.H{"bill": bill, "details": details})
+	bill.Details = details
+	response.Success(c, bill)
 }
 
 // PayBill 支付账单
@@ -124,8 +125,7 @@ func (h *BillingHandler) RefundBill(c *gin.Context) {
 func (h *BillingHandler) ListBills(c *gin.Context) {
 	patientID := c.Query("patient_id")
 	if patientID == "" {
-		response.Fail(c, errors.CodeParamInvalid)
-		return
+		patientID = c.Query("patientId")
 	}
 
 	status, _ := strconv.Atoi(c.DefaultQuery("status", "-1"))

@@ -42,7 +42,10 @@ func (r *EMRRepository) ListByPatient(patientID string, page, pageSize int) ([]m
 	var records []model.MedicalRecord
 	var total int64
 
-	query := r.db.Model(&model.MedicalRecord{}).Where("patient_id = ?", patientID)
+	query := r.db.Model(&model.MedicalRecord{})
+	if patientID != "" {
+		query = query.Where("patient_id = ?", patientID)
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err

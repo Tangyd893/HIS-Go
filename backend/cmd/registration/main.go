@@ -19,6 +19,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/registration"
 	grpcreg "his-go/internal/registration"
@@ -56,6 +57,8 @@ func main() {
 		logger.Fatal("Redis 连接失败: " + err.Error())
 	}
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	sf, err := snowflake.NewSnowflake(1, 1)
 	if err != nil {
 		logger.Fatal("雪花ID生成器初始化失败: " + err.Error())
@@ -71,7 +74,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupRegistrationRouter(cfg, regHandler, deps)
+	router := setupRegistrationRouter(cfg, regHandler, deps, jwtSvc)
 
 	go startGrpcServer(regSvc, cfg)
 
@@ -84,7 +87,7 @@ func main() {
 	}
 }
 
-func setupRegistrationRouter(cfg *config.Config, regHandler *handler.RegistrationHandler, deps *health.Dependencies) *gin.Engine {
+func setupRegistrationRouter(cfg *config.Config, regHandler *handler.RegistrationHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -96,6 +99,7 @@ func setupRegistrationRouter(cfg *config.Config, regHandler *handler.Registratio
 	router.GET("/ready", health.ReadinessHandler("his-registration", deps))
 
 	api := router.Group("/api/registration")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.GET("/schedules", regHandler.ListSchedules)
 		api.GET("/list", regHandler.ListRegistrations)

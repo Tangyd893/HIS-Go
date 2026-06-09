@@ -22,6 +22,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	secauth "his-go/pkg/security/auth"
 	"his-go/pkg/security/jwt"
 )
 
@@ -82,7 +83,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupAuthRouter(cfg, authHandler, deps)
+	router := setupAuthRouter(cfg, authHandler, deps, jwtSvc)
 
 	go startGrpcServer(authSvc, cfg)
 
@@ -95,7 +96,7 @@ func main() {
 	}
 }
 
-func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps *health.Dependencies) *gin.Engine {
+func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -109,9 +110,12 @@ func setupAuthRouter(cfg *config.Config, authHandler *handler.AuthHandler, deps 
 	api := router.Group("/api/auth")
 	{
 		api.POST("/login", authHandler.Login)
-		api.POST("/logout", authHandler.Logout)
 		api.POST("/refresh", authHandler.RefreshToken)
-		api.GET("/current", authHandler.Current)
+
+		protected := api.Group("")
+		protected.Use(secauth.UserContextFromGatewayOrJWT(jwtSvc))
+		protected.POST("/logout", authHandler.Logout)
+		protected.GET("/current", authHandler.Current)
 	}
 
 	return router

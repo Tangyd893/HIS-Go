@@ -1,6 +1,6 @@
 {
   "libVersion": "3.16.1",
-  "projectname": "his-mp-webview",
+  "projectname": "mp-webview",
   "setting": {
     "urlCheck": false,
     "coverView": false,

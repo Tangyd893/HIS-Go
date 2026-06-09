@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/examination"
 	grpcexam "his-go/internal/examination"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	examRepo := repository.NewExaminationRepository(db)
 	examSvc := service.NewExaminationService(examRepo)
 	examHandler := handler.NewExaminationHandler(examSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupExaminationRouter(cfg, examHandler, deps)
+	router := setupExaminationRouter(cfg, examHandler, deps, jwtSvc)
 
 	go startGrpcServer(examSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupExaminationRouter(cfg *config.Config, examHandler *handler.ExaminationHandler, deps *health.Dependencies) *gin.Engine {
+func setupExaminationRouter(cfg *config.Config, examHandler *handler.ExaminationHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupExaminationRouter(cfg *config.Config, examHandler *handler.Examination
 	router.GET("/ready", health.ReadinessHandler("his-examination", deps))
 
 	api := router.Group("/api/examination")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/report", examHandler.CreateReport)
 		api.GET("/report/:id", examHandler.GetReport)

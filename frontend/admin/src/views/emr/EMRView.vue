@@ -80,7 +80,19 @@ function viewDetail(id: string) { message.info(`查看病历: ${id}`) }
 function showCreateModal() { modalOpen.value = true }
 
 async function handleCreate() {
-  try { await emrApi.create(form); message.success('创建成功'); modalOpen.value = false; fetchData() } catch { message.error('创建失败') }
+  try {
+    await emrApi.create({
+      patientId: form.patientId,
+      chiefComplaint: form.subjective,
+      presentIllness: form.subjective,
+      physicalExam: form.objective,
+      diagnosis: form.assessment,
+      treatmentPlan: form.plan,
+    })
+    message.success('创建成功')
+    modalOpen.value = false
+    fetchData()
+  } catch { message.error('创建失败') }
 }
 
 async function doQualityControl(record: any) {

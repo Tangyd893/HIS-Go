@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/prescription"
 	grpcps "his-go/internal/prescription"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	prescRepo := repository.NewPrescriptionRepository(db)
 	prescSvc := service.NewPrescriptionService(prescRepo)
 	prescHandler := handler.NewPrescriptionHandler(prescSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupPrescriptionRouter(cfg, prescHandler, deps)
+	router := setupPrescriptionRouter(cfg, prescHandler, deps, jwtSvc)
 
 	go startGrpcServer(prescSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.PrescriptionHandler, deps *health.Dependencies) *gin.Engine {
+func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.PrescriptionHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupPrescriptionRouter(cfg *config.Config, prescHandler *handler.Prescript
 	router.GET("/ready", health.ReadinessHandler("his-prescription", deps))
 
 	api := router.Group("/api/prescription")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/create", prescHandler.CreatePrescription)
 		api.GET("/:id", prescHandler.GetPrescription)

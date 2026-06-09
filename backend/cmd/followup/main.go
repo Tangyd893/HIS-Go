@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/followup"
 	grpcfup "his-go/internal/followup"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	followupRepo := repository.NewFollowupRepository(db)
 	followupSvc := service.NewFollowupService(followupRepo)
 	followupHandler := handler.NewFollowupHandler(followupSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupFollowupRouter(cfg, followupHandler, deps)
+	router := setupFollowupRouter(cfg, followupHandler, deps, jwtSvc)
 
 	go startGrpcServer(followupSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupFollowupRouter(cfg *config.Config, followupHandler *handler.FollowupHandler, deps *health.Dependencies) *gin.Engine {
+func setupFollowupRouter(cfg *config.Config, followupHandler *handler.FollowupHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupFollowupRouter(cfg *config.Config, followupHandler *handler.FollowupHa
 	router.GET("/ready", health.ReadinessHandler("his-followup", deps))
 
 	api := router.Group("/api/followup")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/plan", followupHandler.CreatePlan)
 		api.GET("/plan/:id", followupHandler.GetPlan)

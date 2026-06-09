@@ -18,6 +18,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/emr"
 	grpcemr "his-go/internal/emr"
@@ -56,6 +57,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	emrRepo := repository.NewEMRRepository(db)
 	emrSvc := service.NewEMRService(emrRepo)
 	emrHandler := handler.NewEMRHandler(emrSvc)
@@ -66,7 +69,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupEMRRouter(cfg, emrHandler, deps)
+	router := setupEMRRouter(cfg, emrHandler, deps, jwtSvc)
 
 	go startGrpcServer(emrSvc, cfg)
 
@@ -79,7 +82,7 @@ func main() {
 	}
 }
 
-func setupEMRRouter(cfg *config.Config, emrHandler *handler.EMRHandler, deps *health.Dependencies) *gin.Engine {
+func setupEMRRouter(cfg *config.Config, emrHandler *handler.EMRHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -91,6 +94,7 @@ func setupEMRRouter(cfg *config.Config, emrHandler *handler.EMRHandler, deps *he
 	router.GET("/ready", health.ReadinessHandler("his-emr", deps))
 
 	api := router.Group("/api/emr")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.POST("/record", emrHandler.CreateRecord)
 		api.GET("/record/:id", emrHandler.GetRecord)

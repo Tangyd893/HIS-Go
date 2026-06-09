@@ -44,7 +44,10 @@ func (r *ExaminationRepository) ListByPatient(patientID string, status int, page
 	var list []model.ExaminationReport
 	var total int64
 
-	query := r.db.Model(&model.ExaminationReport{}).Where("patient_id = ?", patientID)
+	query := r.db.Model(&model.ExaminationReport{})
+	if patientID != "" {
+		query = query.Where("patient_id = ?", patientID)
+	}
 	if status >= 0 {
 		query = query.Where("status = ?", status)
 	}

@@ -8,20 +8,28 @@ import (
 
 // ScheduleService 排班业务服务
 type ScheduleService struct {
-	repo *repository.ScheduleRepository
+	repo    *repository.ScheduleRepository
+	regSync *repository.RegistrationSyncRepository
 }
 
 // NewScheduleService 创建排班业务服务
-func NewScheduleService(repo *repository.ScheduleRepository) *ScheduleService {
-	return &ScheduleService{repo: repo}
+func NewScheduleService(repo *repository.ScheduleRepository, regSync *repository.RegistrationSyncRepository) *ScheduleService {
+	return &ScheduleService{repo: repo, regSync: regSync}
 }
 
-// GenerateWeekly 按科室医生生成一周排班
+// GenerateWeekly 按科室医生生成一周排班，并同步到挂号号源库
 func (s *ScheduleService) GenerateWeekly(startDate, endDate, deptID string) ([]model.ScheduleInfo, error) {
 	if startDate >= endDate {
 		return nil, errors.NewAppError(errors.CodeParamInvalid, "开始日期必须早于结束日期")
 	}
-	return s.repo.GenerateWeekly(startDate, endDate, deptID)
+	schedules, err := s.repo.GenerateWeekly(startDate, endDate, deptID)
+	if err != nil {
+		return nil, err
+	}
+	if s.regSync != nil {
+		_ = s.regSync.SyncSchedules(schedules)
+	}
+	return schedules, nil
 }
 
 // ListByDept 按科室和日期查询排班

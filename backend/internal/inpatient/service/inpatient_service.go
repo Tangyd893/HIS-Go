@@ -3,6 +3,7 @@ package service
 import (
 	"his-go/internal/inpatient/model"
 	"his-go/internal/inpatient/repository"
+	"his-go/pkg/demo"
 	"his-go/pkg/errors"
 )
 
@@ -79,7 +80,14 @@ func (s *InpatientService) ListInpatients(deptID string, status int, page, pageS
 	if pageSize <= 0 {
 		pageSize = 10
 	}
-	return s.repo.List(deptID, status, page, pageSize)
+	records, total, err := s.repo.List(deptID, status, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range records {
+		records[i].DeptName = demo.DeptName(records[i].DeptID)
+	}
+	return records, total, nil
 }
 
 // CreateMedicalOrder 创建医嘱

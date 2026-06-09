@@ -15,7 +15,7 @@
     <a-card v-if="timeline.length" title="健康时间轴" style="margin-top: 16px" size="small">
       <a-timeline>
         <a-timeline-item v-for="(item, index) in timeline" :key="index" :color="item.color || 'blue'">
-          {{ item.event }} — {{ item.date }}
+          {{ item.description || item.event }} — {{ item.date }}
         </a-timeline-item>
       </a-timeline>
     </a-card>

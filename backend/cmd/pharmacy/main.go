@@ -20,6 +20,7 @@ import (
 	"his-go/pkg/middleware"
 	"his-go/pkg/mq"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/jwt"
 
 	"his-go/api/proto/pharmacy"
 	grpcpharm "his-go/internal/pharmacy"
@@ -58,6 +59,8 @@ func main() {
 	}
 	_ = rdb
 
+	jwtSvc := middleware.InitJWT(cfg)
+
 	rabbitMQ, err := mq.NewRabbitMQ(
 		cfg.RabbitMQ.Host, cfg.RabbitMQ.Port,
 		cfg.RabbitMQ.User, cfg.RabbitMQ.Password, cfg.RabbitMQ.VHost,
@@ -84,7 +87,7 @@ func main() {
 		Redis: rdb,
 	}
 
-	router := setupPharmacyRouter(cfg, pharmacyHandler, deps)
+	router := setupPharmacyRouter(cfg, pharmacyHandler, deps, jwtSvc)
 
 	go startGrpcServer(pharmacySvc, cfg)
 
@@ -97,7 +100,7 @@ func main() {
 	}
 }
 
-func setupPharmacyRouter(cfg *config.Config, pharmacyHandler *handler.PharmacyHandler, deps *health.Dependencies) *gin.Engine {
+func setupPharmacyRouter(cfg *config.Config, pharmacyHandler *handler.PharmacyHandler, deps *health.Dependencies, jwtSvc *jwt.JWTService) *gin.Engine {
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -109,6 +112,7 @@ func setupPharmacyRouter(cfg *config.Config, pharmacyHandler *handler.PharmacyHa
 	router.GET("/ready", health.ReadinessHandler("his-pharmacy", deps))
 
 	api := router.Group("/api/pharmacy")
+	api.Use(middleware.UserContext(jwtSvc))
 	{
 		api.GET("/drugs", pharmacyHandler.ListDrugs)
 		api.GET("/drug/:id", pharmacyHandler.GetDrug)

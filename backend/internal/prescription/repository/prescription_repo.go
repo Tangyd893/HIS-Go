@@ -56,7 +56,10 @@ func (r *PrescriptionRepository) ListByPatient(patientID string, page, pageSize 
 	var list []model.Prescription
 	var total int64
 
-	query := r.db.Model(&model.Prescription{}).Where("patient_id = ?", patientID)
+	query := r.db.Model(&model.Prescription{})
+	if patientID != "" {
+		query = query.Where("patient_id = ?", patientID)
+	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("统计处方失败: %w", err)
 	}
