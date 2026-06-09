@@ -41,6 +41,7 @@ import { useAuthStore } from '@/store/auth'
 import {
   HomeOutlined, ScheduleOutlined,
   FileTextOutlined, HeartOutlined, RobotOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -57,6 +58,7 @@ const tabs = [
   { path: 'triage', label: '助手', icon: RobotOutlined },
   { path: 'appointment', label: '挂号', icon: ScheduleOutlined },
   { path: 'prescription', label: '处方', icon: FileTextOutlined },
+  { path: 'report', label: '报告', icon: FileSearchOutlined },
   { path: 'health-record', label: '档案', icon: HeartOutlined },
 ]
 

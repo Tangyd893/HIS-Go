@@ -62,7 +62,8 @@ function onTableChange(pag: any) { pagination.current = pag.current; fetchData()
 function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 
 async function handlePay(record: any) {
-  try { await billingApi.pay(record.id, 0); message.success('支付成功'); fetchData() } catch { message.error('支付失败') }
+  const amount = Number(record.totalAmount) - Number(record.paidAmount || 0) || Number(record.totalAmount) || 0
+  try { await billingApi.pay(record.id, amount); message.success('收费成功'); fetchData() } catch { message.error('收费失败') }
 }
 
 async function handleRefund(id: string) {

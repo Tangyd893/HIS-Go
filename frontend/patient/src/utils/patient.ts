@@ -1,6 +1,13 @@
 /** 演示环境：登录账号与 his_user.patients 表 ID 映射 */
 const DEMO_PATIENT_MAP: Record<string, string> = {
   'demo-patient': 'patient_001',
+  'patient_001': 'patient_001',
+  'patient_002': 'patient_002',
+  'patient_003': 'patient_003',
+  'patient_004': 'patient_004',
+  'patient_005': 'patient_005',
+  'patient_006': 'patient_006',
+  'patient_007': 'patient_007',
 }
 
 /** 获取当前登录用户对应的患者档案 ID */

@@ -8,8 +8,8 @@
       <a-descriptions v-if="contract" :column="2" bordered size="small" title="签约信息">
         <a-descriptions-item label="签约状态">{{ contract.status || '已签约' }}</a-descriptions-item>
         <a-descriptions-item label="签约日期">{{ contract.contractDate }}</a-descriptions-item>
-        <a-descriptions-item label="病种">{{ contract.diseaseType }}</a-descriptions-item>
-        <a-descriptions-item label="管理医生">张医生</a-descriptions-item>
+        <a-descriptions-item label="病种">{{ diseaseLabel[contract.diseaseType] || contract.diseaseType }}</a-descriptions-item>
+        <a-descriptions-item label="管理医生">{{ contract.doctorName || '张医生' }}</a-descriptions-item>
       </a-descriptions>
       <a-empty v-else description="暂无慢病签约信息" />
     </a-card>
@@ -53,6 +53,17 @@ const contract = ref<any>(null)
 const healthData = ref<any[]>([])
 const modalOpen = ref(false)
 const form = reactive({ dataType: 'blood_pressure', dataValue: '' })
+
+const diseaseLabel: Record<string, string> = {
+  hypertension: '高血压',
+  diabetes: '糖尿病',
+  coronary_heart_disease: '冠心病',
+  copd: '慢性阻塞性肺病',
+  asthma: '哮喘',
+  stroke: '脑卒中',
+  hyperlipidemia: '高脂血症',
+  osteoporosis: '骨质疏松',
+}
 
 const dataTypeLabel: Record<string, string> = {
   blood_pressure: '血压',
