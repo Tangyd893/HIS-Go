@@ -97,6 +97,7 @@ const statCards = ref([
   { title: '今日收入（演示）', value: '¥12,580', icon: h(DollarOutlined), color: '#f5222d' },
 ])
 
+// demo-admin.yml 实际启动 10 个服务，其余为 demo-off
 const services = ref([
   { name: 'Gateway', status: 'running' },
   { name: 'Auth', status: 'running' },
@@ -108,14 +109,14 @@ const services = ref([
   { name: 'Pharmacy', status: 'running' },
   { name: 'Schedule', status: 'running' },
   { name: 'System', status: 'running' },
-  { name: 'Examination', status: 'running' },
-  { name: 'Inpatient', status: 'running' },
-  { name: 'Outpatient', status: 'running' },
-  { name: 'Followup', status: 'running' },
-  { name: 'HealthRecord', status: 'running' },
-  { name: 'EMR', status: 'running' },
-  { name: 'Notification', status: 'running' },
-  { name: 'Statistics', status: 'running' },
+  { name: 'Examination', status: 'demo-off' },
+  { name: 'Inpatient', status: 'demo-off' },
+  { name: 'Outpatient', status: 'demo-off' },
+  { name: 'Followup', status: 'demo-off' },
+  { name: 'HealthRecord', status: 'demo-off' },
+  { name: 'EMR', status: 'demo-off' },
+  { name: 'Notification', status: 'demo-off' },
+  { name: 'Statistics', status: 'demo-off' },
 ])
 </script>
 

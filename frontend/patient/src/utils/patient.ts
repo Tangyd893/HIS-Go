@@ -13,7 +13,8 @@ const DEMO_PATIENT_MAP: Record<string, string> = {
 /** 获取当前登录用户对应的患者档案 ID */
 export function resolvePatientId(userInfo: { userId?: string; username?: string } | null): string {
   const userId = userInfo?.userId || userInfo?.username || ''
-  return DEMO_PATIENT_MAP[userId] || userId || 'patient_001'
+  // 先查演示映射表，再回退到 userId 本身（适用于 userId 即为 patientId 的场景）
+  return DEMO_PATIENT_MAP[userId] || userId
 }
 
 const TIME_SLOT_LABELS: Record<number, string> = {
