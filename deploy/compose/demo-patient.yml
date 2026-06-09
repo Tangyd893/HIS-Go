@@ -69,6 +69,7 @@ services:
       - "8080:8080"
     environment:
       - RUNNING_IN_DOCKER=true
+      - HIS_DEMO_MODE=true
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:
       postgresql:
@@ -96,6 +97,7 @@ services:
       - DB_PASSWORD=${POSTGRES_PASSWORD:-change_me_123}
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
+      - HIS_DEMO_MODE=true
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:

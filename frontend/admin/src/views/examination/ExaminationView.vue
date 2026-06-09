@@ -8,13 +8,19 @@
         </template>
         <template v-if="column.key === 'action'">
           <a-space>
-            <a @click="viewDetail(record.id)">详情</a>
+            <a @click="viewDetail(record)">详情</a>
             <a-button size="small" type="primary" @click="reviewReport(record)" v-if="record.status === 1">审核</a-button>
           </a-space>
         </template>
       </template>
     </a-table>
   </a-card>
+
+  <a-modal v-model:open="detailOpen" title="报告详情" :footer="null" width="600px">
+    <a-descriptions v-if="detailRecord" :column="1" bordered size="small">
+      <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+    </a-descriptions>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -26,6 +32,8 @@ import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 const serviceUnavailable = ref(false)
 const loading = ref(false)
 const dataSource = ref<any[]>([])
+const detailOpen = ref(false)
+const detailRecord = ref<any>(null)
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
 
 const statusText: Record<number, string> = { 0: '待检查', 1: '已检查', 2: '已审核', 3: '已发布' }
@@ -50,7 +58,7 @@ async function fetchData() {
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
-function viewDetail(id: string) { message.info(`查看报告: ${id}`) }
+function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 
 async function reviewReport(record: any) {
   try { await examinationApi.review({ report_id: record.id, reviewer_id: 'current', approved: true }); message.success('审核通过'); fetchData() } catch { }

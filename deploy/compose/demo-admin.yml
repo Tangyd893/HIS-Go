@@ -88,6 +88,7 @@ services:
       - "8080:8080"
     environment:
       - RUNNING_IN_DOCKER=true
+      - HIS_DEMO_MODE=true
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:
       postgresql:
@@ -117,6 +118,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-change_me_456}
       - MQ_HOST=rabbitmq
       - MQ_PASSWORD=${RABBITMQ_PASSWORD:-change_me_789}
+      - HIS_DEMO_MODE=true
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}
     depends_on:

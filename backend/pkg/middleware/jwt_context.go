@@ -15,6 +15,11 @@ func InitJWT(cfg *config.Config) *jwt.JWTService {
 	if os.Getenv("USE_JWT_SIMPLE") == "true" || cfg.JWT.PrivateKey == "" {
 		secret := cfg.JWT.PrivateKey
 		if secret == "" {
+			if os.Getenv("HIS_DEMO_MODE") != "true" {
+				// 非演示模式且密钥为空：返回 nil，由调用方处理
+				// 各 cmd 入口在调用 InitJWT 后会检查 nil 并 Fatal
+				return nil
+			}
 			secret = "his-go-default-secret"
 		}
 		return jwt.NewSimpleJWTService(secret, cfg.JWT.ExpireHour)

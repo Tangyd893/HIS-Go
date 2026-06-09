@@ -4,22 +4,29 @@
     <a-table :columns="columns" :data-source="dataSource" :loading="loading" :pagination="pagination" row-key="id" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
-          <a @click="viewDetail(record.id)">查看详情</a>
+          <a @click="viewDetail(record)">查看详情</a>
         </template>
       </template>
     </a-table>
   </a-card>
+
+  <a-modal v-model:open="detailOpen" title="问诊详情" :footer="null" width="600px">
+    <a-descriptions v-if="detailRecord" :column="1" bordered size="small">
+      <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+    </a-descriptions>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
 import { outpatientApi } from '@/api/others'
 import ServicePlaceholder from '@/components/ServicePlaceholder.vue'
 
 const serviceUnavailable = ref(false)
 const loading = ref(false)
 const dataSource = ref<any[]>([])
+const detailOpen = ref(false)
+const detailRecord = ref<any>(null)
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
 
 const columns = [
@@ -40,7 +47,7 @@ async function fetchData() {
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
-function viewDetail(id: string) { message.info(`查看问诊: ${id}`) }
+function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 
 onMounted(fetchData)
 </script>

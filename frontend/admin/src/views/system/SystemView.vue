@@ -13,6 +13,8 @@
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'action'">
                 <a @click="editParam(record)">编辑</a>
+                <a-divider type="vertical" />
+                <a @click="viewDetail(record)">详情</a>
               </template>
             </template>
           </a-table>
@@ -22,6 +24,12 @@
         </a-tab-pane>
       </a-tabs>
     </a-card>
+
+    <a-modal v-model:open="detailOpen" title="参数详情" :footer="null" width="500px">
+      <a-descriptions v-if="detailRecord" :column="1" bordered size="small">
+        <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+      </a-descriptions>
+    </a-modal>
   </div>
 </template>
 
@@ -37,6 +45,8 @@ const dictItems = ref<any[]>([])
 const params = ref<any[]>([])
 const logs = ref<any[]>([])
 const logLoading = ref(false)
+const detailOpen = ref(false)
+const detailRecord = ref<any>(null)
 const logPagination = reactive({ current: 1, pageSize: 10, total: 0 })
 
 const dictColumns = [
@@ -82,6 +92,7 @@ async function loadLogs() {
 }
 
 function editParam(record: any) { message.info(`编辑参数: ${record.paramKey}`) }
+function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 
 onMounted(() => { loadDictTypes(); loadParams(); loadLogs() })
 </script>

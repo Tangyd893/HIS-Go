@@ -119,7 +119,11 @@ func initJWT(cfg *config.Config) *jwt.JWTService {
 
 	secret := cfg.JWT.PrivateKey
 	if secret == "" {
+		if os.Getenv("HIS_DEMO_MODE") != "true" {
+			logger.Fatal("JWT 密钥未配置且非演示模式。请设置环境变量 JWT_PRIVATE_KEY 或 HIS_DEMO_MODE=true（仅限本地演示）")
+		}
 		secret = "his-go-default-secret"
+		logger.Warn("JWT 使用演示默认密钥，严禁用于生产环境")
 	}
 	logger.Info("JWT 验证模式 HS256")
 	return jwt.NewSimpleJWTService(secret, cfg.JWT.ExpireHour)

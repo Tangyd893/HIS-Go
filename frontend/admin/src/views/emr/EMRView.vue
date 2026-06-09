@@ -16,13 +16,19 @@
           </template>
           <template v-if="column.key === 'action'">
             <a-space>
-              <a @click="viewDetail(record.id)">详情</a>
+              <a @click="viewDetail(record)">详情</a>
               <a-button size="small" type="primary" @click="doQualityControl(record)" v-if="record.status === 0">质控</a-button>
             </a-space>
           </template>
         </template>
       </a-table>
     </a-card>
+
+    <a-modal v-model:open="detailOpen" title="病历详情" :footer="null" width="600px">
+      <a-descriptions v-if="detailRecord" :column="1" bordered size="small">
+        <a-descriptions-item v-for="(v, k) in detailRecord" :key="k" :label="k">{{ v }}</a-descriptions-item>
+      </a-descriptions>
+    </a-modal>
 
     <a-modal v-model:open="modalOpen" title="新建病历" @ok="handleCreate" width="800px">
       <a-form layout="vertical">
@@ -47,6 +53,8 @@ const loading = ref(false)
 const serviceUnavailable = ref(false)
 const dataSource = ref<any[]>([])
 const modalOpen = ref(false)
+const detailOpen = ref(false)
+const detailRecord = ref<any>(null)
 const pagination = reactive({ current: 1, pageSize: 10, total: 0 })
 const form = reactive({ patientId: '', subjective: '', objective: '', assessment: '', plan: '' })
 
@@ -76,7 +84,7 @@ async function fetchData() {
 }
 
 function onTableChange(pag: any) { pagination.current = pag.current; fetchData() }
-function viewDetail(id: string) { message.info(`查看病历: ${id}`) }
+function viewDetail(record: any) { detailRecord.value = record; detailOpen.value = true }
 function showCreateModal() { modalOpen.value = true }
 
 async function handleCreate() {

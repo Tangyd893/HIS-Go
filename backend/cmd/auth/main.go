@@ -61,7 +61,11 @@ func main() {
 	if os.Getenv("USE_JWT_SIMPLE") == "true" || cfg.JWT.PrivateKey == "" {
 		secret := cfg.JWT.PrivateKey
 		if secret == "" {
+			if os.Getenv("HIS_DEMO_MODE") != "true" {
+				logger.Fatal("JWT 密钥未配置且非演示模式。请设置环境变量 JWT_PRIVATE_KEY 或 HIS_DEMO_MODE=true（仅限本地演示）")
+			}
 			secret = "his-go-default-secret"
+			logger.Warn("JWT 使用演示默认密钥，严禁用于生产环境")
 		}
 		jwtSvc = jwt.NewSimpleJWTService(secret, cfg.JWT.ExpireHour)
 		logger.Info("JWT 使用简化模式 HS256")
