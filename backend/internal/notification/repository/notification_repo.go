@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"his-go/internal/notification/model"
+	"his-go/pkg/errors"
 )
 
 // NotificationRepository 消息通知数据仓库
@@ -32,7 +33,7 @@ func (r *NotificationRepository) Send(notif *model.Notification) error {
 func (r *NotificationRepository) BatchSend(receiverIDs []string, templateID string, params map[string]string) error {
 	var template model.NotificationTemplate
 	if err := r.db.Where("id = ?", templateID).First(&template).Error; err != nil {
-		return fmt.Errorf("查询模板失败: %w", err)
+		return errors.WrapQueryError("模板", err)
 	}
 
 	notifications := make([]model.Notification, 0, len(receiverIDs))
@@ -67,7 +68,7 @@ func (r *NotificationRepository) BatchSend(receiverIDs []string, templateID stri
 func (r *NotificationRepository) ListTemplates() ([]model.NotificationTemplate, error) {
 	var list []model.NotificationTemplate
 	if err := r.db.Order("created_at DESC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询模板列表失败: %w", err)
+		return nil, errors.WrapQueryError("模板列表", err)
 	}
 	return list, nil
 }
@@ -75,7 +76,7 @@ func (r *NotificationRepository) ListTemplates() ([]model.NotificationTemplate, 
 // CreateTemplate 创建通知模板
 func (r *NotificationRepository) CreateTemplate(template *model.NotificationTemplate) error {
 	if err := r.db.Create(template).Error; err != nil {
-		return fmt.Errorf("创建模板失败: %w", err)
+		return errors.WrapCreateError("模板", err)
 	}
 	return nil
 }
@@ -84,7 +85,7 @@ func (r *NotificationRepository) CreateTemplate(template *model.NotificationTemp
 func (r *NotificationRepository) ConsumeNotification(templateID string, receiverID string, params map[string]string) error {
 	var template model.NotificationTemplate
 	if err := r.db.Where("id = ?", templateID).First(&template).Error; err != nil {
-		return fmt.Errorf("查询模板失败: %w", err)
+		return errors.WrapQueryError("模板", err)
 	}
 
 	title := template.TitleTemplate

@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"his-go/internal/health_record/model"
+	"his-go/pkg/errors"
 )
 
 // HealthRecordRepository 健康档案数据仓库
@@ -27,12 +28,12 @@ func (r *HealthRecordRepository) GetSummary(patientID string) (*model.HealthReco
 		return &summary, nil
 	}
 	if err != gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("查询档案摘要失败: %w", err)
+		return nil, errors.WrapQueryError("档案摘要", err)
 	}
 
 	summary = model.HealthRecordSummary{PatientID: patientID}
 	if err := r.db.Create(&summary).Error; err != nil {
-		return nil, fmt.Errorf("创建档案摘要失败: %w", err)
+		return nil, errors.WrapCreateError("档案摘要", err)
 	}
 	return &summary, nil
 }
@@ -42,7 +43,7 @@ func (r *HealthRecordRepository) GetTimeline(patientID string) ([]model.Timeline
 	var events []model.TimelineEvent
 	if err := r.db.Where("patient_id = ?", patientID).
 		Order("date DESC, created_at DESC").Find(&events).Error; err != nil {
-		return nil, fmt.Errorf("查询时间轴事件失败: %w", err)
+		return nil, errors.WrapQueryError("时间轴事件", err)
 	}
 	return events, nil
 }

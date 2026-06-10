@@ -22,7 +22,7 @@ func NewExaminationRepository(db *gorm.DB) *ExaminationRepository {
 // CreateReport 创建检查报告
 func (r *ExaminationRepository) CreateReport(report *model.ExaminationReport) error {
 	if err := r.db.Create(report).Error; err != nil {
-		return fmt.Errorf("创建检查报告失败: %w", err)
+		return errors.WrapCreateError("检查报告", err)
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func (r *ExaminationRepository) FindByID(id string) (*model.ExaminationReport, e
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "检查报告不存在")
 		}
-		return nil, fmt.Errorf("查询检查报告失败: %w", err)
+		return nil, errors.WrapQueryError("检查报告", err)
 	}
 	return &report, nil
 }
@@ -52,12 +52,12 @@ func (r *ExaminationRepository) ListByPatient(patientID string, status int, page
 		query = query.Where("status = ?", status)
 	}
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计检查报告失败: %w", err)
+		return nil, 0, errors.WrapCountError("检查报告", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询检查报告列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("检查报告列表", err)
 	}
 
 	return list, total, nil
@@ -67,7 +67,7 @@ func (r *ExaminationRepository) ListByPatient(patientID string, status int, page
 func (r *ExaminationRepository) UpdateReport(report *model.ExaminationReport) error {
 	result := r.db.Model(&model.ExaminationReport{}).Where("id = ?", report.ID).Updates(report)
 	if result.Error != nil {
-		return fmt.Errorf("更新检查报告失败: %w", result.Error)
+		return errors.WrapUpdateError("检查报告", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return errors.NewAppError(errors.CodeNotFound, "检查报告不存在")
@@ -82,7 +82,7 @@ func (r *ExaminationRepository) Review(reportID, reviewerID string, approved boo
 		if err == gorm.ErrRecordNotFound {
 			return errors.NewAppError(errors.CodeNotFound, "检查报告不存在")
 		}
-		return fmt.Errorf("查询检查报告失败: %w", err)
+		return errors.WrapQueryError("检查报告", err)
 	}
 
 	if report.Status != 1 {

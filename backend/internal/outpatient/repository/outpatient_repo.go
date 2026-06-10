@@ -22,7 +22,7 @@ func NewOutpatientRepository(db *gorm.DB) *OutpatientRepository {
 // CreateConsultation 创建在线问诊
 func (r *OutpatientRepository) CreateConsultation(c *model.Consultation) error {
 	if err := r.db.Create(c).Error; err != nil {
-		return fmt.Errorf("创建问诊失败: %w", err)
+		return errors.WrapCreateError("问诊", err)
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func (r *OutpatientRepository) FindConsultationByID(id string) (*model.Consultat
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "问诊不存在")
 		}
-		return nil, fmt.Errorf("查询问诊失败: %w", err)
+		return nil, errors.WrapQueryError("问诊", err)
 	}
 	return &c, nil
 }
@@ -56,12 +56,12 @@ func (r *OutpatientRepository) ListConsultations(patientID, doctorID string, sta
 	}
 
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计问诊失败: %w", err)
+		return nil, 0, errors.WrapCountError("问诊", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询问诊列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("问诊列表", err)
 	}
 
 	return list, total, nil
@@ -80,7 +80,7 @@ func (r *OutpatientRepository) GetMessages(consultationID string) ([]model.Consu
 	var list []model.ConsultationMessage
 	if err := r.db.Where("consultation_id = ?", consultationID).
 		Order("created_at ASC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询消息失败: %w", err)
+		return nil, errors.WrapQueryError("消息", err)
 	}
 	return list, nil
 }
@@ -88,7 +88,7 @@ func (r *OutpatientRepository) GetMessages(consultationID string) ([]model.Consu
 // CreateContract 创建慢病签约
 func (r *OutpatientRepository) CreateContract(contract *model.ChronicContract) error {
 	if err := r.db.Create(contract).Error; err != nil {
-		return fmt.Errorf("创建签约失败: %w", err)
+		return errors.WrapCreateError("签约", err)
 	}
 	return nil
 }
@@ -104,7 +104,7 @@ func (r *OutpatientRepository) FindContract(patientID, doctorID string) (*model.
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "签约不存在")
 		}
-		return nil, fmt.Errorf("查询签约失败: %w", err)
+		return nil, errors.WrapQueryError("签约", err)
 	}
 	return &contract, nil
 }
@@ -122,7 +122,7 @@ func (r *OutpatientRepository) ListHealthData(patientID string) ([]model.HealthD
 	var list []model.HealthData
 	if err := r.db.Where("patient_id = ?", patientID).
 		Order("measure_time DESC").Limit(100).Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询健康数据失败: %w", err)
+		return nil, errors.WrapQueryError("健康数据", err)
 	}
 	return list, nil
 }

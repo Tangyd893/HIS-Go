@@ -21,6 +21,7 @@ import (
 	"his-go/pkg/logger"
 	"his-go/pkg/middleware"
 	"his-go/pkg/redis"
+	"his-go/pkg/security/auth"
 	"his-go/pkg/security/jwt"
 )
 
@@ -97,12 +98,14 @@ func setupUserRouter(cfg *config.Config, userHandler *handler.UserHandler, deps 
 	api := router.Group("/api/user")
 	api.Use(middleware.UserContext(jwtSvc))
 	{
-		// 患者
+		// 患者（读）
 		api.GET("/patients", userHandler.ListPatients)
+		api.GET("/patients/me", userHandler.GetMyPatient)
 		api.GET("/patients/:id", userHandler.GetPatient)
-		api.POST("/patients", userHandler.CreatePatient)
-		api.PUT("/patients/:id", userHandler.UpdatePatient)
-		api.DELETE("/patients/:id", userHandler.DeletePatient)
+		// 患者（写）— 需 patient:write 权限
+		api.POST("/patients", auth.RequirePerm("patient:write"), userHandler.CreatePatient)
+		api.PUT("/patients/:id", auth.RequirePerm("patient:write"), userHandler.UpdatePatient)
+		api.DELETE("/patients/:id", auth.RequirePerm("patient:write"), userHandler.DeletePatient)
 		// 科室
 		api.GET("/departments", userHandler.ListDepartments)
 		// 员工

@@ -5,6 +5,11 @@ export function login(data: { username: string; password: string }): Promise<{ t
   return http.post('/auth/login', data)
 }
 
+/** 获取当前登录用户对应的患者档案（替代 DEMO_PATIENT_MAP） */
+export function getMyPatient(): Promise<{ id: string; name: string }> {
+  return http.get('/user/patients/me')
+}
+
 /** 患者健康档案 */
 export function getHealthSummary(patientId: string): Promise<any> {
   return http.get(`/health-record/summary/${patientId}`)

@@ -25,7 +25,7 @@ func (s *InpatientService) AdmitPatient(record *model.InpatientRecord) error {
 		return errors.NewAppError(errors.CodeParamInvalid, "住院记录不能为空")
 	}
 	if record.PatientID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "患者ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errors.MsgPatientIDRequired)
 	}
 	if record.PatientName == "" {
 		return errors.NewAppError(errors.CodeParamInvalid, "患者姓名不能为空")

@@ -9,6 +9,7 @@ import (
 // Patient 患者模型，表名 patients
 type Patient struct {
 	ID             string         `gorm:"column:id;primaryKey;type:varchar(64);default:gen_random_uuid()" json:"id"`
+	UserID         *string        `gorm:"column:user_id;size:64" json:"userId,omitempty"`
 	Name           string         `gorm:"column:name;not null;size:50" json:"name"`
 	IdCard         string         `gorm:"column:id_card;uniqueIndex;not null;size:18" json:"idCard"`
 	Phone          string         `gorm:"column:phone;size:20" json:"phone,omitempty"`

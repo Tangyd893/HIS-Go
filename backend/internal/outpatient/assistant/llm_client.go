@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"his-go/pkg/errors"
 )
 
 // LLMClient DeepSeek Chat 客户端
@@ -103,7 +105,7 @@ func (c *LLMClient) GenerateTriageAdvice(symptom string, context string, departm
 	url := strings.TrimRight(c.cfg.DeepSeekBaseURL, "/") + "/v1/chat/completions"
 	httpReq, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		return "", fmt.Errorf("创建请求失败: %w", err)
+		return "", errors.WrapCreateError("请求", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+c.cfg.DeepSeekAPIKey)

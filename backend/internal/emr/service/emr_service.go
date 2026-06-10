@@ -76,7 +76,7 @@ func (s *EMRService) CDSSCheck(patientID, drugID, diagnosis string) ([]string, e
 // validateRecord SOAP结构体校验，各字段不能为空
 func (s *EMRService) validateRecord(record *model.MedicalRecord) error {
 	if record.PatientID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "患者ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errors.MsgPatientIDRequired)
 	}
 	if record.ChiefComplaint == "" {
 		return errors.NewAppError(errors.CodeParamInvalid, "主诉不能为空")

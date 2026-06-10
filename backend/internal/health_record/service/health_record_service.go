@@ -21,7 +21,7 @@ func NewHealthRecordService(repo *repository.HealthRecordRepository) *HealthReco
 // GetSummary 获取档案摘要
 func (s *HealthRecordService) GetSummary(patientID string) (*model.HealthRecordSummary, error) {
 	if patientID == "" {
-		return nil, errors.NewAppError(errors.CodeParamInvalid, "患者ID不能为空")
+		return nil, errors.NewAppError(errors.CodeParamInvalid, errors.MsgPatientIDRequired)
 	}
 	return s.repo.GetSummary(patientID)
 }
@@ -29,7 +29,7 @@ func (s *HealthRecordService) GetSummary(patientID string) (*model.HealthRecordS
 // GetTimeline 获取时间轴
 func (s *HealthRecordService) GetTimeline(patientID string) ([]model.TimelineEvent, error) {
 	if patientID == "" {
-		return nil, errors.NewAppError(errors.CodeParamInvalid, "患者ID不能为空")
+		return nil, errors.NewAppError(errors.CodeParamInvalid, errors.MsgPatientIDRequired)
 	}
 	return s.repo.GetTimeline(patientID)
 }
@@ -37,7 +37,7 @@ func (s *HealthRecordService) GetTimeline(patientID string) ([]model.TimelineEve
 // AddTimelineEvent 添加时间轴事件
 func (s *HealthRecordService) AddTimelineEvent(event *model.TimelineEvent) error {
 	if event.PatientID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "患者ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errors.MsgPatientIDRequired)
 	}
 	if event.EventType == "" {
 		return errors.NewAppError(errors.CodeParamInvalid, "事件类型不能为空")
@@ -54,10 +54,10 @@ func (s *HealthRecordService) AddTimelineEvent(event *model.TimelineEvent) error
 // GrantAuthorization 授权查看档案（设置30天有效期，防止重复授权）
 func (s *HealthRecordService) GrantAuthorization(auth *model.RecordAuthorization) error {
 	if auth.PatientID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "患者ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errors.MsgPatientIDRequired)
 	}
 	if auth.DoctorID == "" {
-		return errors.NewAppError(errors.CodeParamInvalid, "医生ID不能为空")
+		return errors.NewAppError(errors.CodeParamInvalid, errors.MsgDoctorIDRequired)
 	}
 
 	if s.repo.CheckAuthorization(auth.PatientID, auth.DoctorID) {

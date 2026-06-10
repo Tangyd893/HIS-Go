@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 
 	"his-go/internal/system/model"
@@ -23,7 +21,7 @@ func NewSystemRepository(db *gorm.DB) *SystemRepository {
 func (r *SystemRepository) ListDictTypes() ([]model.DictType, error) {
 	var list []model.DictType
 	if err := r.db.Where("status = 1").Order("created_at DESC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询字典类型失败: %w", err)
+		return nil, errors.WrapQueryError("字典类型", err)
 	}
 	return list, nil
 }
@@ -33,7 +31,7 @@ func (r *SystemRepository) ListDictItems(dictType string) ([]model.DictItem, err
 	var list []model.DictItem
 	if err := r.db.Where("dict_type = ? AND status = 1", dictType).
 		Order("sort_order ASC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询字典项失败: %w", err)
+		return nil, errors.WrapQueryError("字典项", err)
 	}
 	return list, nil
 }
@@ -41,7 +39,7 @@ func (r *SystemRepository) ListDictItems(dictType string) ([]model.DictItem, err
 // CreateDictItem 创建字典项
 func (r *SystemRepository) CreateDictItem(item *model.DictItem) error {
 	if err := r.db.Create(item).Error; err != nil {
-		return fmt.Errorf("创建字典项失败: %w", err)
+		return errors.WrapCreateError("字典项", err)
 	}
 	return nil
 }
@@ -50,7 +48,7 @@ func (r *SystemRepository) CreateDictItem(item *model.DictItem) error {
 func (r *SystemRepository) UpdateDictItem(item *model.DictItem) error {
 	result := r.db.Model(&model.DictItem{}).Where("id = ?", item.ID).Updates(item)
 	if result.Error != nil {
-		return fmt.Errorf("更新字典项失败: %w", result.Error)
+		return errors.WrapUpdateError("字典项", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return errors.NewAppError(errors.CodeNotFound, "字典项不存在")
@@ -62,7 +60,7 @@ func (r *SystemRepository) UpdateDictItem(item *model.DictItem) error {
 func (r *SystemRepository) ListParams() ([]model.SystemParam, error) {
 	var list []model.SystemParam
 	if err := r.db.Order("created_at DESC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询系统参数失败: %w", err)
+		return nil, errors.WrapQueryError("系统参数", err)
 	}
 	return list, nil
 }
@@ -71,7 +69,7 @@ func (r *SystemRepository) ListParams() ([]model.SystemParam, error) {
 func (r *SystemRepository) UpdateParam(param *model.SystemParam) error {
 	result := r.db.Model(&model.SystemParam{}).Where("id = ?", param.ID).Updates(param)
 	if result.Error != nil {
-		return fmt.Errorf("更新系统参数失败: %w", result.Error)
+		return errors.WrapUpdateError("系统参数", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return errors.NewAppError(errors.CodeNotFound, "系统参数不存在")
@@ -82,7 +80,7 @@ func (r *SystemRepository) UpdateParam(param *model.SystemParam) error {
 // CreateOperationLog 创建操作日志
 func (r *SystemRepository) CreateOperationLog(log *model.OperationLog) error {
 	if err := r.db.Create(log).Error; err != nil {
-		return fmt.Errorf("创建操作日志失败: %w", err)
+		return errors.WrapCreateError("操作日志", err)
 	}
 	return nil
 }
@@ -101,12 +99,12 @@ func (r *SystemRepository) ListOperationLogs(userID, module string, page, pageSi
 	}
 
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计操作日志失败: %w", err)
+		return nil, 0, errors.WrapCountError("操作日志", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询操作日志失败: %w", err)
+		return nil, 0, errors.WrapQueryError("操作日志", err)
 	}
 
 	return list, total, nil

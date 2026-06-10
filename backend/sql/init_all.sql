@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS msg_record (
 
 CREATE TABLE IF NOT EXISTS patients (
     id VARCHAR(64) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    user_id VARCHAR(64),
     name VARCHAR(100) NOT NULL,
     id_card VARCHAR(18) UNIQUE,
     phone VARCHAR(20),

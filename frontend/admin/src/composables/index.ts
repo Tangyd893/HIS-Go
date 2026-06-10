@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { message } from 'ant-design-vue'
 import type { PageQuery, PageData } from '@/api/types'
 
@@ -102,5 +102,3 @@ export function useWindowSize() {
 
   return { width, height, isMobile }
 }
-
-import { computed } from 'vue'

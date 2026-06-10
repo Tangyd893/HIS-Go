@@ -39,9 +39,9 @@ INSERT INTO departments (id, name, parent_id, description, sort_order) VALUES
 ('dept_012', '康复科', NULL, '康复理疗科', 12);
 
 -- 演示患者
-INSERT INTO patients (id, name, id_card, phone, gender, birth_date, address) VALUES
-('patient_001', '王小明', '110101199001011234', '13900000001', 'M', '1990-01-01', '北京市朝阳区'),
-('patient_002', '李小红', '110101199502022345', '13900000002', 'F', '1995-02-02', '北京市海淀区');
+INSERT INTO patients (id, user_id, name, id_card, phone, gender, birth_date, address) VALUES
+('patient_001', 'demo-patient', '王小明', '110101199001011234', '13900000001', 'M', '1990-01-01', '北京市朝阳区'),
+('patient_002', NULL, '李小红', '110101199502022345', '13900000002', 'F', '1995-02-02', '北京市海淀区');
 
 \c his_system;
 
@@ -260,12 +260,12 @@ INSERT INTO followup_tasks (id, plan_id, assignee_id, execute_date, type, conten
 \c his_user;
 
 -- 补充患者
-INSERT INTO patients (id, name, id_card, phone, gender, birth_date, address) VALUES
-('patient_003', '张三', '110101198503031234', '13900000003', 'M', '1985-03-03', '北京市东城区'),
-('patient_004', '赵四', '110101199207041234', '13900000004', 'M', '1992-07-04', '北京市西城区'),
-('patient_005', '孙七', '110101198811051234', '13900000005', 'F', '1988-11-05', '北京市通州区'),
-('patient_006', '周八', '110101199509061234', '13900000006', 'F', '1995-09-06', '北京市丰台区'),
-('patient_007', '吴九', '110101197804071234', '13900000007', 'M', '1978-04-07', '北京市石景山区');
+INSERT INTO patients (id, user_id, name, id_card, phone, gender, birth_date, address) VALUES
+('patient_003', NULL, '张三', '110101198503031234', '13900000003', 'M', '1985-03-03', '北京市东城区'),
+('patient_004', NULL, '赵四', '110101199207041234', '13900000004', 'M', '1992-07-04', '北京市西城区'),
+('patient_005', NULL, '孙七', '110101198811051234', '13900000005', 'F', '1988-11-05', '北京市通州区'),
+('patient_006', NULL, '周八', '110101199509061234', '13900000006', 'F', '1995-09-06', '北京市丰台区'),
+('patient_007', NULL, '吴九', '110101197804071234', '13900000007', 'M', '1978-04-07', '北京市石景山区');
 
 -- 补充员工
 INSERT INTO employees (id, user_id, name, phone, dept_id, title, status) VALUES

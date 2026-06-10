@@ -23,7 +23,7 @@ func NewPrescriptionRepository(db *gorm.DB) *PrescriptionRepository {
 func (r *PrescriptionRepository) Create(p *model.Prescription, details []model.PrescriptionDetail) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(p).Error; err != nil {
-			return fmt.Errorf("创建处方失败: %w", err)
+			return errors.WrapCreateError("处方", err)
 		}
 
 		for i := range details {
@@ -31,7 +31,7 @@ func (r *PrescriptionRepository) Create(p *model.Prescription, details []model.P
 		}
 		if len(details) > 0 {
 			if err := tx.Create(&details).Error; err != nil {
-				return fmt.Errorf("创建处方明细失败: %w", err)
+				return errors.WrapCreateError("处方明细", err)
 			}
 		}
 
@@ -46,7 +46,7 @@ func (r *PrescriptionRepository) FindByID(id string) (*model.Prescription, error
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "处方不存在")
 		}
-		return nil, fmt.Errorf("查询处方失败: %w", err)
+		return nil, errors.WrapQueryError("处方", err)
 	}
 	return &p, nil
 }
@@ -61,13 +61,13 @@ func (r *PrescriptionRepository) ListByPatient(patientID string, page, pageSize 
 		query = query.Where("patient_id = ?", patientID)
 	}
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计处方失败: %w", err)
+		return nil, 0, errors.WrapCountError("处方", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).
 		Preload("Details").Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询处方列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("处方列表", err)
 	}
 
 	return list, total, nil
@@ -80,13 +80,13 @@ func (r *PrescriptionRepository) ListByDoctor(doctorID string, page, pageSize in
 
 	query := r.db.Model(&model.Prescription{}).Where("doctor_id = ?", doctorID)
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计处方失败: %w", err)
+		return nil, 0, errors.WrapCountError("处方", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).
 		Preload("Details").Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询处方列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("处方列表", err)
 	}
 
 	return list, total, nil
@@ -99,13 +99,13 @@ func (r *PrescriptionRepository) UpdateStatus(id string, status int8) error {
 		if err == gorm.ErrRecordNotFound {
 			return errors.NewAppError(errors.CodeNotFound, "处方不存在")
 		}
-		return fmt.Errorf("查询处方失败: %w", err)
+		return errors.WrapQueryError("处方", err)
 	}
 
 	p.Status = status
 	result := r.db.Model(&p).Select("status", "version").Updates(&p)
 	if result.Error != nil {
-		return fmt.Errorf("更新处方状态失败: %w", result.Error)
+		return errors.WrapUpdateError("处方状态", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return errors.NewAppError(errors.CodeConflict, "处方信息已变更，请重新尝试")
@@ -121,7 +121,7 @@ func (r *PrescriptionRepository) Review(id string, approved bool, comment string
 		if err == gorm.ErrRecordNotFound {
 			return errors.NewAppError(errors.CodeNotFound, "处方不存在")
 		}
-		return fmt.Errorf("查询处方失败: %w", err)
+		return errors.WrapQueryError("处方", err)
 	}
 
 	if p.Status != 1 {

@@ -35,6 +35,11 @@ func NewUserService(
 
 // ---- 患者管理 ----
 
+// GetPatientByUserID 根据登录用户 ID 查找患者档案
+func (s *UserService) GetPatientByUserID(userID string) (*model.Patient, error) {
+	return s.patientRepo.FindByUserID(userID)
+}
+
 // GetPatient 获取患者详情
 func (s *UserService) GetPatient(id string) (*model.Patient, error) {
 	return s.patientRepo.FindByID(id)

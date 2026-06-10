@@ -1,20 +1,16 @@
-/** 演示环境：登录账号与 his_user.patients 表 ID 映射 */
-const DEMO_PATIENT_MAP: Record<string, string> = {
-  'demo-patient': 'patient_001',
-  'patient_001': 'patient_001',
-  'patient_002': 'patient_002',
-  'patient_003': 'patient_003',
-  'patient_004': 'patient_004',
-  'patient_005': 'patient_005',
-  'patient_006': 'patient_006',
-  'patient_007': 'patient_007',
-}
+import { useAuthStore } from '@/store/auth'
 
-/** 获取当前登录用户对应的患者档案 ID */
+/**
+ * 获取当前登录用户对应的患者档案 ID。
+ * 优先读取 auth store 中由 GET /api/user/patients/me 填充的 patientId，
+ * 回退到 userInfo.userId（兼容 admin/doctor 等非患者角色直接使用 userId）。
+ */
 export function resolvePatientId(userInfo: { userId?: string; username?: string } | null): string {
-  const userId = userInfo?.userId || userInfo?.username || ''
-  // 先查演示映射表，再回退到 userId 本身（适用于 userId 即为 patientId 的场景）
-  return DEMO_PATIENT_MAP[userId] || userId
+  const authStore = useAuthStore()
+  if (authStore.patientId) {
+    return authStore.patientId
+  }
+  return userInfo?.userId || userInfo?.username || ''
 }
 
 const TIME_SLOT_LABELS: Record<number, string> = {

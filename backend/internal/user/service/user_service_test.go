@@ -23,6 +23,7 @@ func setupUserService(t *testing.T) (*UserService, *gorm.DB) {
 	tables := []string{
 		`CREATE TABLE IF NOT EXISTS patients (
 			id TEXT PRIMARY KEY,
+			user_id TEXT,
 			name TEXT NOT NULL,
 			id_card TEXT NOT NULL UNIQUE,
 			phone TEXT,

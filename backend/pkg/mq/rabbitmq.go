@@ -7,6 +7,8 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+
+	"his-go/pkg/errors"
 )
 
 const defaultConfirmTimeout = 5 * time.Second
@@ -39,7 +41,7 @@ func NewRabbitMQ(host string, port int, user, password, vhost string) (*RabbitMQ
 	ch, err := conn.Channel()
 	if err != nil {
 		conn.Close()
-		return nil, fmt.Errorf("创建 RabbitMQ Channel 失败: %w", err)
+		return nil, errors.WrapCreateError("RabbitMQ Channel", err)
 	}
 
 	// 启用发布确认模式

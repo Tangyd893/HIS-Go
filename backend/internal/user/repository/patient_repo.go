@@ -26,6 +26,16 @@ func (r *PatientRepository) FindByID(id string) (*model.Patient, error) {
 	return &patient, nil
 }
 
+// FindByUserID 根据登录用户 ID 查找患者
+func (r *PatientRepository) FindByUserID(userID string) (*model.Patient, error) {
+	var patient model.Patient
+	err := r.db.Where("user_id = ?", userID).First(&patient).Error
+	if err != nil {
+		return nil, err
+	}
+	return &patient, nil
+}
+
 // FindByIdCard 根据身份证号查找患者
 func (r *PatientRepository) FindByIdCard(idCard string) (*model.Patient, error) {
 	var patient model.Patient

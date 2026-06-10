@@ -23,7 +23,7 @@ func NewFollowupRepository(db *gorm.DB) *FollowupRepository {
 func (r *FollowupRepository) CreatePlan(plan *model.FollowupPlan, tasks []model.FollowupTask) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(plan).Error; err != nil {
-			return fmt.Errorf("创建随访计划失败: %w", err)
+			return errors.WrapCreateError("随访计划", err)
 		}
 
 		for i := range tasks {
@@ -31,7 +31,7 @@ func (r *FollowupRepository) CreatePlan(plan *model.FollowupPlan, tasks []model.
 		}
 		if len(tasks) > 0 {
 			if err := tx.Create(&tasks).Error; err != nil {
-				return fmt.Errorf("创建随访任务失败: %w", err)
+				return errors.WrapCreateError("随访任务", err)
 			}
 		}
 
@@ -46,7 +46,7 @@ func (r *FollowupRepository) FindPlanByID(id string) (*model.FollowupPlan, error
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "随访计划不存在")
 		}
-		return nil, fmt.Errorf("查询随访计划失败: %w", err)
+		return nil, errors.WrapQueryError("随访计划", err)
 	}
 	return &plan, nil
 }
@@ -65,12 +65,12 @@ func (r *FollowupRepository) ListPlans(patientID string, status int, page, pageS
 	}
 
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计随访计划失败: %w", err)
+		return nil, 0, errors.WrapCountError("随访计划", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询随访计划列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("随访计划列表", err)
 	}
 
 	return list, total, nil
@@ -104,7 +104,7 @@ func (r *FollowupRepository) SubmitSurvey(survey *model.SatisfactionSurvey) erro
 func (r *FollowupRepository) GetTasksByPlanID(planID string) ([]model.FollowupTask, error) {
 	var list []model.FollowupTask
 	if err := r.db.Where("plan_id = ?", planID).Order("execute_date ASC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询随访任务失败: %w", err)
+		return nil, errors.WrapQueryError("随访任务", err)
 	}
 	return list, nil
 }

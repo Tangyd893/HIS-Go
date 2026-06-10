@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 
 	"his-go/internal/clinic/model"
@@ -22,7 +20,7 @@ func NewClinicRepository(db *gorm.DB) *ClinicRepository {
 // CreateRecord 创建门诊诊疗记录
 func (r *ClinicRepository) CreateRecord(record *model.ClinicRecord) error {
 	if err := r.db.Create(record).Error; err != nil {
-		return fmt.Errorf("创建诊疗记录失败: %w", err)
+		return errors.WrapCreateError("诊疗记录", err)
 	}
 	return nil
 }
@@ -34,7 +32,7 @@ func (r *ClinicRepository) FindByID(id string) (*model.ClinicRecord, error) {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, "诊疗记录不存在")
 		}
-		return nil, fmt.Errorf("查询诊疗记录失败: %w", err)
+		return nil, errors.WrapQueryError("诊疗记录", err)
 	}
 	return &record, nil
 }
@@ -49,12 +47,12 @@ func (r *ClinicRepository) ListByPatient(patientID string, page, pageSize int) (
 		query = query.Where("patient_id = ?", patientID)
 	}
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计诊疗记录失败: %w", err)
+		return nil, 0, errors.WrapCountError("诊疗记录", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询诊疗记录列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("诊疗记录列表", err)
 	}
 
 	return list, total, nil
@@ -67,12 +65,12 @@ func (r *ClinicRepository) ListByDoctor(doctorID string, page, pageSize int) ([]
 
 	query := r.db.Model(&model.ClinicRecord{}).Where("doctor_id = ?", doctorID)
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, fmt.Errorf("统计诊疗记录失败: %w", err)
+		return nil, 0, errors.WrapCountError("诊疗记录", err)
 	}
 
 	offset := (page - 1) * pageSize
 	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
-		return nil, 0, fmt.Errorf("查询诊疗记录列表失败: %w", err)
+		return nil, 0, errors.WrapQueryError("诊疗记录列表", err)
 	}
 
 	return list, total, nil
@@ -82,7 +80,7 @@ func (r *ClinicRepository) ListByDoctor(doctorID string, page, pageSize int) ([]
 func (r *ClinicRepository) UpdateRecord(record *model.ClinicRecord) error {
 	result := r.db.Model(&model.ClinicRecord{}).Where("id = ?", record.ID).Updates(record)
 	if result.Error != nil {
-		return fmt.Errorf("更新诊疗记录失败: %w", result.Error)
+		return errors.WrapUpdateError("诊疗记录", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return errors.NewAppError(errors.CodeNotFound, "诊疗记录不存在")
@@ -93,7 +91,7 @@ func (r *ClinicRepository) UpdateRecord(record *model.ClinicRecord) error {
 // CreateExamRequest 创建检查申请单
 func (r *ClinicRepository) CreateExamRequest(request *model.ExaminationRequest) error {
 	if err := r.db.Create(request).Error; err != nil {
-		return fmt.Errorf("创建检查申请失败: %w", err)
+		return errors.WrapCreateError("检查申请", err)
 	}
 	return nil
 }
@@ -103,7 +101,7 @@ func (r *ClinicRepository) ListExamRequests(patientID string) ([]model.Examinati
 	var list []model.ExaminationRequest
 	if err := r.db.Where("patient_id = ?", patientID).
 		Order("created_at DESC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询检查申请列表失败: %w", err)
+		return nil, errors.WrapQueryError("检查申请列表", err)
 	}
 	return list, nil
 }

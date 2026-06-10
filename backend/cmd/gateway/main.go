@@ -161,7 +161,20 @@ func setupRouter(cfg *config.Config) *gin.Engine {
 	router.GET("/ready", health.ReadinessHandler("his-gateway", nil))
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	router.Any("/api/*path", gatewayJwtAuth(), proxyHandler)
+	// 管理类 API：仅 admin 角色可访问
+	adminGroup := router.Group("/api")
+	adminGroup.Use(gatewayJwtAuth(), auth.RequireRole("admin"))
+	{
+		adminGroup.Any("/system/*path", proxyHandler)
+		adminGroup.Any("/statistics/*path", proxyHandler)
+	}
+
+	// 通用 API：JWT 认证即可
+	apiGroup := router.Group("/api")
+	apiGroup.Use(gatewayJwtAuth())
+	{
+		apiGroup.Any("/*path", proxyHandler)
+	}
 
 	return router
 }

@@ -8,6 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
+
+	"his-go/pkg/errors"
 )
 
 var kacp = keepalive.ClientParameters{
@@ -27,7 +29,7 @@ func NewGrpcClient(host string, port int) (*grpc.ClientConn, error) {
 		grpc.WithUnaryInterceptor(UnaryClientInterceptor()),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("创建 gRPC 客户端连接失败: %w", err)
+		return nil, errors.WrapCreateError("gRPC 客户端连接", err)
 	}
 
 	return conn, nil

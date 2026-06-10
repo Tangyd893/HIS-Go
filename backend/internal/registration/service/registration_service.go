@@ -122,7 +122,7 @@ func (s *RegistrationService) GetQueueStatus(registrationID string) (int64, erro
 
 	rank, err := s.repo.GetQueueRank(ctx, reg.ScheduleID, registrationID)
 	if err != nil {
-		return 0, fmt.Errorf("查询排队状态失败: %w", err)
+		return 0, errors.WrapQueryError("排队状态", err)
 	}
 
 	return rank, nil

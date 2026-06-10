@@ -73,7 +73,7 @@ func (r *ScheduleRepository) FindByDeptAndDate(deptID, date string) ([]model.Sch
 		q = q.Where("dept_id = ?", deptID)
 	}
 	if err := q.Order("dept_id ASC, time_slot ASC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询排班失败: %w", err)
+		return nil, errors.WrapQueryError("排班", err)
 	}
 	return list, nil
 }
@@ -83,7 +83,7 @@ func (r *ScheduleRepository) FindByDoctor(doctorID, date string) ([]model.Schedu
 	var list []model.ScheduleInfo
 	if err := r.db.Where("doctor_id = ? AND work_date = ?", doctorID, date).
 		Order("time_slot ASC").Find(&list).Error; err != nil {
-		return nil, fmt.Errorf("查询排班失败: %w", err)
+		return nil, errors.WrapQueryError("排班", err)
 	}
 	return list, nil
 }
@@ -92,7 +92,7 @@ func (r *ScheduleRepository) FindByDoctor(doctorID, date string) ([]model.Schedu
 func (r *ScheduleRepository) UpdateSchedule(schedule *model.ScheduleInfo) error {
 	result := r.db.Model(&model.ScheduleInfo{}).Where("id = ?", schedule.ID).Updates(schedule)
 	if result.Error != nil {
-		return fmt.Errorf("更新排班失败: %w", result.Error)
+		return errors.WrapUpdateError("排班", result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return errors.NewAppError(errors.CodeNotFound, "排班不存在")

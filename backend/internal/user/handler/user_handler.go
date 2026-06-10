@@ -9,6 +9,7 @@ import (
 	"his-go/internal/user/service"
 	apperrors "his-go/pkg/errors"
 	"his-go/pkg/response"
+	"his-go/pkg/security/auth"
 )
 
 // UserHandler 用户管理接口处理器
@@ -41,6 +42,22 @@ func (h *UserHandler) ListPatients(c *gin.Context) {
 		return
 	}
 	response.SuccessPage(c, list, total, page, pageSize)
+}
+
+// GetMyPatient 获取当前登录用户对应的患者档案
+func (h *UserHandler) GetMyPatient(c *gin.Context) {
+	userCtx := auth.GetUserContext(c)
+	if userCtx == nil || userCtx.UserID == "" {
+		response.Fail(c, apperrors.CodeUnauthorized)
+		return
+	}
+
+	patient, err := h.svc.GetPatientByUserID(userCtx.UserID)
+	if err != nil {
+		response.Fail(c, apperrors.CodeNotFound)
+		return
+	}
+	response.Success(c, patient)
 }
 
 // GetPatient 患者详情查询接口

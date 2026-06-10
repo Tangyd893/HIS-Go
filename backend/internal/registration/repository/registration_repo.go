@@ -42,7 +42,7 @@ func (r *RegistrationRepository) FindByID(id string) (*model.Registration, error
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NewAppError(errors.CodeNotFound, errRegNotFound)
 		}
-		return nil, fmt.Errorf("查询挂号记录失败: %w", err)
+		return nil, errors.WrapQueryError("挂号记录", err)
 	}
 	return &reg, nil
 }
@@ -128,7 +128,7 @@ func (r *RegistrationRepository) Create(reg *model.Registration) error {
 
 		// 4. 插入挂号记录
 		if err := tx.Create(reg).Error; err != nil {
-			return fmt.Errorf("创建挂号记录失败: %w", err)
+			return errors.WrapCreateError("挂号记录", err)
 		}
 
 		return nil
@@ -200,7 +200,7 @@ func (r *RegistrationRepository) ListSchedules(deptID, date string) ([]model.Sch
 		query = query.Where("date = ?", date)
 	}
 	if err := query.Order("time_slot ASC").Find(&schedules).Error; err != nil {
-		return nil, fmt.Errorf("查询号源列表失败: %w", err)
+		return nil, errors.WrapQueryError("号源列表", err)
 	}
 	return schedules, nil
 }

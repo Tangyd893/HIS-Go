@@ -1,6 +1,16 @@
 // Package errors 统一错误码定义
 package errors
 
+import "fmt"
+
+// 常用校验错误消息（避免字符串重复 go:S1192）
+const (
+	MsgPatientIDRequired = "患者ID不能为空"
+	MsgDoctorIDRequired  = "医生ID不能为空"
+	MsgDeptIDRequired    = "科室ID不能为空"
+	MsgNameRequired      = "名称不能为空"
+)
+
 // 错误码定义
 const (
 	CodeSuccess        = 0
@@ -53,6 +63,26 @@ var codeMessages = map[int]string{
 	CodeAuthExpired:         "授权已过期",
 	CodeAuthDuplicate:       "重复授权",
 	CodeAuthNotFound:        "授权不存在",
+}
+
+// WrapQueryError 统一查询错误包装（消除 ~28 处字符串重复 go:S1192）
+func WrapQueryError(entity string, err error) error {
+	return fmt.Errorf("查询%s失败: %w", entity, err)
+}
+
+// WrapCreateError 统一创建错误包装
+func WrapCreateError(entity string, err error) error {
+	return fmt.Errorf("创建%s失败: %w", entity, err)
+}
+
+// WrapUpdateError 统一更新错误包装
+func WrapUpdateError(entity string, err error) error {
+	return fmt.Errorf("更新%s失败: %w", entity, err)
+}
+
+// WrapCountError 统一统计查询错误包装
+func WrapCountError(entity string, err error) error {
+	return fmt.Errorf("统计%s失败: %w", entity, err)
 }
 
 // GetMessage 获取错误码对应消息
