@@ -59,3 +59,15 @@ todo/
 
 # 学习手册（个人笔记，不入仓库）
 docs/学习手册.md
+
+# 答辩演示材料（PPT / Gamma 提示词，非项目源码）
+演示/
+
+# 本地调试产物
+tmp-*.json
+.sonar-raw.json
+.sonar-issues-p2.json
+.reasonix/
+
+# Office 临时锁文件
+.~lock.*
